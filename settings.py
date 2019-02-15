@@ -1,8 +1,7 @@
 from decimal import Decimal
 import os
 
-
-ENVIRONMENTS = { 
+ENVIRONMENTS = {
     "streaming": {
         "real": "stream-fxtrade.oanda.com",
         "practice": "stream-fxpractice.oanda.com",
@@ -15,8 +14,10 @@ ENVIRONMENTS = {
     }
 }
 
-CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
-OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', '/Users/lorne.luo/Workspace/lorne/qsforex/tick_data/')
+OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', '/Users/lorne.luo/Workspace/lorne/qsforex/result/')
 
 DOMAIN = "practice"
 STREAM_DOMAIN = ENVIRONMENTS["streaming"][DOMAIN]
@@ -26,7 +27,6 @@ ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
 
 BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
-
 
 try:
     from .local import *
