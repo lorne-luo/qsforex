@@ -24,8 +24,8 @@ if __name__ == "__main__":
     sns.set_context(rc={"figure.figsize": (8, 4)})
 
     equity_file = os.path.join(OUTPUT_RESULTS_DIR, "equity.csv")
-    equity = pd.io.parsers.read_csv(
-        equity_file, parse_dates=True, header=0, index_col=0
+    equity = pd.read_csv(
+        equity_file, parse_dates=True, header=0, index_col=0,
     )
 
     # Plot three charts: Equity curve, period returns, drawdowns
