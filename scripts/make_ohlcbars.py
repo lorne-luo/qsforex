@@ -168,6 +168,21 @@ if __name__ == "__main__":
             os.system("sed -i 's/\"//g' %s " % ohlc_bid15m_file)
             os.system("sed -i 's/\"//g' %s " % ohlc_ask15m_file)
 
+
+            ohlc_bid30m = s_bid.resample("1800s", how="ohlc", closed="right", label="right", loffset="-1800s")
+            ohlc_ask30m = s_ask.resample("1800s", how="ohlc", closed="right", label="right", loffset="-1800s")
+            ohlc_bid30m['vol'] = pd.Series(0, index=ohlc_bid30m.index)
+            ohlc_ask30m['vol'] = pd.Series(0, index=ohlc_ask30m.index)
+            ohlc_bid30m_file = settings.CSV_DATA_DIR + "%s/30m/%02d/%s_%02d%02d%02d_bid15m.csv" % (
+            symbol, y, symbol, y, m, d)
+            ohlc_ask30m_file = settings.CSV_DATA_DIR + "%s/30m/%02d/%s_%02d%02d%02d_ask15m.csv" % (
+            symbol, y, symbol, y, m, d)
+            ohlc_bid30m.to_csv(ohlc_bid30m_file, date_format='%Y.%m.%d,%H:%M', header=False)
+            ohlc_ask30m.to_csv(ohlc_ask30m_file, date_format='%Y.%m.%d,%H:%M', header=False)
+            os.system("sed -i 's/\"//g' %s " % ohlc_bid30m_file)
+            os.system("sed -i 's/\"//g' %s " % ohlc_ask30m_file)
+
+
             ohlc_bid1h = s_bid.resample("1h", how="ohlc", closed="right", label="right", fill_method="ffill",
                                         loffset="-1h")
             ohlc_ask1h = s_ask.resample("1h", how="ohlc", closed="right", label="right", fill_method="ffill",
