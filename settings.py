@@ -16,8 +16,8 @@ ENVIRONMENTS = {
 
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', '/Users/lorne.luo/Workspace/lorne/qsforex/data/')
-OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', '/Users/lorne.luo/Workspace/lorne/qsforex/result/')
+CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
+OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
 
 DOMAIN = "practice"
 STREAM_DOMAIN = ENVIRONMENTS["streaming"][DOMAIN]
