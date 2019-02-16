@@ -19,7 +19,6 @@ class TickerMock(object):
         }
 
 
-
 # =====================================
 # GBP Home Currency with GBP/USD traded
 # =====================================
@@ -29,6 +28,7 @@ class TestLongGBPUSDPosition(unittest.TestCase):
     Unit tests that cover going long GBP/USD with an account
     denominated currency of GBP, using 2,000 units of GBP/USD.
     """
+
     def setUp(self):
         home_currency = "GBP"
         position_type = "long"
@@ -36,7 +36,7 @@ class TestLongGBPUSDPosition(unittest.TestCase):
         units = Decimal("2000")
         ticker = TickerMock()
         self.position = Position(
-            home_currency, position_type, 
+            home_currency, position_type,
             currency_pair, units, ticker
         )
 
@@ -78,6 +78,7 @@ class TestShortGBPUSDPosition(unittest.TestCase):
     Unit tests that cover going short GBP/USD with an account
     denominated currency of GBP, using 2,000 units of GBP/USD.
     """
+
     def setUp(self):
         home_currency = "GBP"
         position_type = "short"
@@ -85,7 +86,7 @@ class TestShortGBPUSDPosition(unittest.TestCase):
         units = Decimal("2000")
         ticker = TickerMock()
         self.position = Position(
-            home_currency, position_type, 
+            home_currency, position_type,
             currency_pair, units, ticker
         )
 
@@ -131,6 +132,7 @@ class TestLongEURUSDPosition(unittest.TestCase):
     Unit tests that cover going long EUR/USD with an account
     denominated currency of GBP, using 2,000 units of EUR/USD.
     """
+
     def setUp(self):
         home_currency = "GBP"
         position_type = "long"
@@ -138,7 +140,7 @@ class TestLongEURUSDPosition(unittest.TestCase):
         units = Decimal("2000")
         ticker = TickerMock()
         self.position = Position(
-            home_currency, position_type, 
+            home_currency, position_type,
             currency_pair, units, ticker
         )
 
@@ -181,6 +183,7 @@ class TestLongEURUSDPosition(unittest.TestCase):
     Unit tests that cover going short EUR/USD with an account
     denominated currency of GBP, using 2,000 units of EUR/USD.
     """
+
     def setUp(self):
         home_currency = "GBP"
         position_type = "short"
@@ -188,7 +191,7 @@ class TestLongEURUSDPosition(unittest.TestCase):
         units = Decimal("2000")
         ticker = TickerMock()
         self.position = Position(
-            home_currency, position_type, 
+            home_currency, position_type,
             currency_pair, units, ticker
         )
 

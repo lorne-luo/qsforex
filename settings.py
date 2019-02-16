@@ -17,12 +17,17 @@ ENVIRONMENTS = {
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
+
 OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
 
-DOMAIN = "practice"
+DOMAIN = os.environ.get('DOMAIN', 'practice')
+
 STREAM_DOMAIN = ENVIRONMENTS["streaming"][DOMAIN]
+
 API_DOMAIN = ENVIRONMENTS["api"][DOMAIN]
+
 ACCESS_TOKEN = os.environ.get('OANDA_API_ACCESS_TOKEN', None)
+
 ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
 
 BASE_CURRENCY = "USD"

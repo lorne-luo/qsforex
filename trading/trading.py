@@ -2,6 +2,7 @@ import copy
 from decimal import Decimal, getcontext
 import logging
 import logging.config
+
 try:
     import Queue as queue
 except ImportError:
@@ -57,12 +58,12 @@ if __name__ == "__main__":
     equity = settings.EQUITY
 
     # Pairs to include in streaming data set
-    pairs = ["EURUSD", "GBPUSD"]
+    pairs = ["GBPUSD"]
 
     # Create the OANDA market price streaming class
     # making sure to provide authentication commands
     prices = StreamingForexPrices(
-        settings.STREAM_DOMAIN, settings.ACCESS_TOKEN, 
+        settings.STREAM_DOMAIN, settings.ACCESS_TOKEN,
         settings.ACCOUNT_ID, pairs, events
     )
 
@@ -80,11 +81,11 @@ if __name__ == "__main__":
     # Create the execution handler making sure to
     # provide authentication commands
     execution = OANDAExecutionHandler(
-        settings.API_DOMAIN, 
-        settings.ACCESS_TOKEN, 
+        settings.API_DOMAIN,
+        settings.ACCESS_TOKEN,
         settings.ACCOUNT_ID
     )
-    
+
     # Create two separate threads: One for the trading loop
     # and another for the market price streaming class
     trade_thread = threading.Thread(
@@ -93,7 +94,7 @@ if __name__ == "__main__":
         )
     )
     price_thread = threading.Thread(target=prices.stream_to_queue, args=[])
-    
+
     # Start both threads
     logger.info("Starting trading thread")
     trade_thread.start()

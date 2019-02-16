@@ -1,16 +1,19 @@
 from __future__ import print_function
 
 from abc import ABCMeta, abstractmethod
+
 try:
     import httplib
 except ImportError:
     import http.client as httplib
 import logging
+
 try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
 import urllib3
+
 urllib3.disable_warnings()
 
 
@@ -38,6 +41,7 @@ class SimulatedExecution(object):
     Instead, the Portfolio object actually provides fill handling.
     This will be modified in later versions.
     """
+
     def execute_order(self, event):
         pass
 
@@ -60,16 +64,15 @@ class OANDAExecutionHandler(ExecutionHandler):
             "Authorization": "Bearer " + self.access_token
         }
         params = urlencode({
-            "instrument" : instrument,
-            "units" : event.units,
-            "type" : event.order_type,
-            "side" : event.side
+            "instrument": instrument,
+            "units": event.units,
+            "type": event.order_type,
+            "side": event.side
         })
         self.conn.request(
-            "POST", 
-            "/v1/accounts/%s/orders" % str(self.account_id), 
+            "POST",
+            "/v1/accounts/%s/orders" % str(self.account_id),
             params, headers
         )
-        response = self.conn.getresponse().read().decode("utf-8").replace("\n","").replace("\t","")
+        response = self.conn.getresponse().read().decode("utf-8").replace("\n", "").replace("\t", "")
         self.logger.debug(response)
-        

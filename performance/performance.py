@@ -21,12 +21,12 @@ def create_drawdowns(pnl):
 
     # Create the drawdown and duration series
     idx = pnl.index
-    drawdown = pd.Series(index = idx)
-    duration = pd.Series(index = idx)
+    drawdown = pd.Series(index=idx)
+    duration = pd.Series(index=idx)
 
     # Loop over the index range
     for t in range(1, len(idx)):
-        hwm.append(max(hwm[t-1], pnl.ix[t]))
-        drawdown.ix[t]= (hwm[t]-pnl.ix[t])
-        duration.ix[t]= (0 if drawdown.ix[t] == 0 else duration.ix[t-1]+1)
+        hwm.append(max(hwm[t - 1], pnl.ix[t]))
+        drawdown.ix[t] = (hwm[t] - pnl.ix[t])
+        duration.ix[t] = (0 if drawdown.ix[t] == 0 else duration.ix[t - 1] + 1)
     return drawdown, drawdown.max(), duration.max()

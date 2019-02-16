@@ -13,6 +13,7 @@ class TestStrategy(object):
     It is used to test that the backtester/live trading system is
     behaving as expected.
     """
+
     def __init__(self, pairs, events):
         self.pairs = pairs
         self.events = events
@@ -49,13 +50,14 @@ class MovingAverageCrossStrategy(object):
     increase efficiency by eliminating the need to call two
     full moving average calculations on each tick.
     """
+
     def __init__(
-        self, pairs, events, 
-        short_window=500, long_window=2000
+            self, pairs, events,
+            short_window=500, long_window=2000
     ):
         self.pairs = pairs
         self.pairs_dict = self.create_pairs_dict()
-        self.events = events      
+        self.events = events
         self.short_window = short_window
         self.long_window = long_window
 

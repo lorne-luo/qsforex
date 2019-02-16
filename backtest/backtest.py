@@ -14,11 +14,12 @@ class Backtest(object):
     Enscapsulates the settings and components for carrying out
     an event-driven backtest on the foreign exchange markets.
     """
+
     def __init__(
-        self, pairs, data_handler, strategy, 
-        strategy_params, portfolio, execution, 
-        equity=100000.0, heartbeat=0.0, 
-        max_iters=10000000000
+            self, pairs, data_handler, strategy,
+            strategy_params, portfolio, execution,
+            equity=100000.0, heartbeat=0.0,
+            max_iters=10000000000
     ):
         """
         Initialises the backtest.
