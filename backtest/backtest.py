@@ -1,9 +1,6 @@
 from __future__ import print_function
 
-try:
-    import Queue as queue
-except ImportError:
-    import queue
+import queue
 import time
 
 from qsforex import settings

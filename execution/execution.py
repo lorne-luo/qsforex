@@ -3,15 +3,12 @@ from __future__ import print_function
 import json
 import logging
 from abc import ABCMeta, abstractmethod
+import http.client as httplib
 
+import oandapyV20
 from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
-import oandapyV20
 
-try:
-    import httplib
-except ImportError:
-    import http.client as httplib
 
 class ExecutionHandler(object):
     """

@@ -7,7 +7,7 @@ import json
 import requests
 
 from qsforex.event.event import TickEvent
-from qsforex.data.price import PriceHandler
+from qsforex.price.price import PriceHandler
 
 
 class StreamingForexPrices(PriceHandler):
