@@ -16,6 +16,7 @@ class Backtest(object):
             self, pairs, data_handler, strategy,
             strategy_params, portfolio, execution,
             equity=100000.0, heartbeat=0.0,
+            base_currency=settings.BASE_CURRENCY,
             startday=20150110, endday=20150208,
             max_iters=10000000000
     ):
@@ -34,9 +35,10 @@ class Backtest(object):
         )
         self.equity = equity
         self.heartbeat = heartbeat
+        self.base_currency = base_currency
         self.max_iters = max_iters
         self.portfolio = portfolio(
-            self.ticker, self.events, equity=self.equity, backtest=True
+            self.ticker, self.events, equity=self.equity, base_currency=self.base_currency, backtest=True
         )
         self.execution = execution()
 

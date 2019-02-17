@@ -1,7 +1,7 @@
 from decimal import Decimal
 import unittest
 
-from position import Position
+from .position import Position
 
 
 class TickerMock(object):

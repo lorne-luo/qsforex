@@ -23,6 +23,7 @@ if __name__ == "__main__":
         pairs, HistoricCSVPriceHandler,
         MovingAverageCrossStrategy, strategy_params,
         Portfolio, SimulatedExecution,
-        equity=settings.EQUITY
+        equity=settings.EQUITY,
+        base_currency=settings.BASE_CURRENCY
     )
     backtest.simulate_trading()

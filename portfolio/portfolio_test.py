@@ -5,17 +5,19 @@ from qsforex.portfolio.portfolio import Portfolio
 from qsforex.portfolio.position_test import TickerMock
 from qsforex.portfolio.position import Position
 
+import settings
+
 
 class TestPortfolio(unittest.TestCase):
     def setUp(self):
-        home_currency = "GBP"
+        base_currency = settings.BASE_CURRENCY
         leverage = 20
         equity = Decimal("100000.00")
         risk_per_trade = Decimal("0.02")
         ticker = TickerMock()
         events = {}
         self.port = Portfolio(
-            ticker, events, home_currency=home_currency,
+            ticker, events, base_currency=base_currency,
             leverage=leverage, equity=equity,
             risk_per_trade=risk_per_trade
         )

@@ -12,16 +12,18 @@ from qsforex.performance.performance import create_drawdowns
 from qsforex.portfolio.position import Position
 from qsforex.settings import OUTPUT_RESULTS_DIR
 
+import settings
+
 
 class Portfolio(object):
     def __init__(
-            self, ticker, events, home_currency="GBP",
+            self, ticker, events, base_currency=settings.BASE_CURRENCY,
             leverage=20, equity=Decimal("100000.00"),
             risk_per_trade=Decimal("0.02"), backtest=True
     ):
         self.ticker = ticker
         self.events = events
-        self.home_currency = home_currency
+        self.base_currency = base_currency
         self.leverage = leverage
         self.equity = equity
         self.balance = deepcopy(self.equity)
@@ -40,7 +42,7 @@ class Portfolio(object):
             self, position_type, currency_pair, units, ticker
     ):
         ps = Position(
-            self.home_currency, position_type,
+            self.base_currency, position_type,
             currency_pair, units, ticker
         )
         self.positions[currency_pair] = ps
