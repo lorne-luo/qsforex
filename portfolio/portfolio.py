@@ -1,3 +1,6 @@
+"""
+takes SignalEvents from the Queue and generates OrderEvents that get added to the Queue.
+"""
 from __future__ import print_function
 
 from copy import deepcopy
@@ -18,7 +21,7 @@ import settings
 class Portfolio(object):
     def __init__(
             self, ticker, events, base_currency=settings.BASE_CURRENCY,
-            leverage=20, equity=Decimal("100000.00"),
+            leverage=20, equity=settings.EQUITY,
             risk_per_trade=Decimal("0.02"), backtest=True
     ):
         self.ticker = ticker
