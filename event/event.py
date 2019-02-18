@@ -1,10 +1,11 @@
 class Event(object):
-    pass
+    type = None
 
 
 class TickEvent(Event):
+    type = 'TICK'
+
     def __init__(self, instrument, time, bid, ask):
-        self.type = 'TICK'
         self.instrument = instrument
         self.time = time
         self.bid = bid
@@ -16,13 +17,11 @@ class TickEvent(Event):
             str(self.time), str(self.bid), str(self.ask)
         )
 
-    def __repr__(self):
-        return str(self)
-
 
 class SignalEvent(Event):
+    type = 'SIGNAL'
+
     def __init__(self, instrument, order_type, side, time):
-        self.type = 'SIGNAL'
         self.instrument = instrument
         self.order_type = order_type
         self.side = side
@@ -34,23 +33,26 @@ class SignalEvent(Event):
             str(self.order_type), str(self.side)
         )
 
-    def __repr__(self):
-        return str(self)
-
 
 class OrderEvent(Event):
-    def __init__(self, instrument, units, order_type, side):
-        self.type = 'ORDER'
+    type = 'ORDER'
+
+    def __init__(self, instrument, units, order_type, side, expiry=None, price=None, lowerBound=None, upperBound=None,
+                 stopLoss=None, takeProfit=None, trailingStop=None):
         self.instrument = instrument
         self.units = units
         self.order_type = order_type
         self.side = side
+        self.expiry = expiry
+        self.price = price
+        self.lowerBound = lowerBound
+        self.upperBound = upperBound
+        self.stopLoss = stopLoss
+        self.takeProfit = takeProfit
+        self.trailingStop = trailingStop
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Units: %s, Order Type: %s, Side: %s" % (
             str(self.type), str(self.instrument), str(self.units),
             str(self.order_type), str(self.side)
         )
-
-    def __repr__(self):
-        return str(self)
