@@ -31,7 +31,10 @@ ACCESS_TOKEN = os.environ.get('OANDA_API_ACCESS_TOKEN', None)
 ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
 
 BASE_CURRENCY = "USD"
+
 EQUITY = Decimal("1000.00")
+
+APPLICATION_NAME = 'qsforex'
 
 try:
     from .local import *

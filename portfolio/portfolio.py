@@ -16,6 +16,8 @@ from qsforex.portfolio.position import Position
 from qsforex.utils.file import create_folder
 from qsforex import settings
 
+from oanda_v20.constants import OrderType
+
 
 class Portfolio(object):
     def __init__(
@@ -191,7 +193,7 @@ class Portfolio(object):
                 elif side == "sell" and ps.position_type == "short":
                     self.add_position_units(currency_pair, units)
 
-            order = OrderEvent(currency_pair, units, "market", side)
+            order = OrderEvent(currency_pair, units, OrderType.MARKET, side)
             self.events.put(order)
 
             self.logger.info("Portfolio Balance: %s" % self.balance)
