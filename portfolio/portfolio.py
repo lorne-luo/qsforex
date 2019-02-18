@@ -13,9 +13,8 @@ import pandas as pd
 from qsforex.event.event import OrderEvent
 from qsforex.performance.performance import create_drawdowns
 from qsforex.portfolio.position import Position
-from qsforex.settings import OUTPUT_RESULTS_DIR
-
-import settings
+from qsforex.utils.file import create_folder
+from qsforex import settings
 
 
 class Portfolio(object):
@@ -79,7 +78,10 @@ class Portfolio(object):
 
     def create_equity_file(self):
         filename = "backtest.csv"
-        out_file = open(os.path.join(OUTPUT_RESULTS_DIR, filename), "w")
+        filepath = os.path.join(settings.OUTPUT_RESULTS_DIR, filename)
+        create_folder(filepath)
+        out_file = open(filepath, "w")
+
         header = "Timestamp,Balance"
         for pair in self.ticker.pairs:
             header += ",%s" % pair
@@ -96,8 +98,8 @@ class Portfolio(object):
 
         in_filename = "backtest.csv"
         out_filename = "equity.csv"
-        in_file = os.path.join(OUTPUT_RESULTS_DIR, in_filename)
-        out_file = os.path.join(OUTPUT_RESULTS_DIR, out_filename)
+        in_file = os.path.join(settings.OUTPUT_RESULTS_DIR, in_filename)
+        out_file = os.path.join(settings.OUTPUT_RESULTS_DIR, out_filename)
 
         # Create equity curve dataframe
         df = pd.read_csv(in_file, index_col=0)
@@ -166,7 +168,7 @@ class Portfolio(object):
                 ps = self.positions[currency_pair]
 
                 if side == "buy" and ps.position_type == "long":
-                    add_position_units(currency_pair, units)
+                    self.add_position_units(currency_pair, units)
 
                 elif side == "sell" and ps.position_type == "long":
                     if units == ps.units:
@@ -187,7 +189,7 @@ class Portfolio(object):
                         return
 
                 elif side == "sell" and ps.position_type == "short":
-                    add_position_units(currency_pair, units)
+                    self.add_position_units(currency_pair, units)
 
             order = OrderEvent(currency_pair, units, "market", side)
             self.events.put(order)

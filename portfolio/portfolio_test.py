@@ -4,8 +4,7 @@ import unittest
 from qsforex.portfolio.portfolio import Portfolio
 from qsforex.portfolio.position_test import TickerMock
 from qsforex.portfolio.position import Position
-
-import settings
+from qsforex import settings
 
 
 class TestPortfolio(unittest.TestCase):

@@ -15,7 +15,6 @@ class Position(object):
         self.set_up_currencies()
         self.profit_base = self.calculate_profit_base()
         self.profit_perc = self.calculate_profit_perc()
-        self.is_same_quote_base_currency_pair = None
 
     def set_up_currencies(self):
         self.quote_currency = self.currency_pair[3:]  # For EUR/USD, this is USD

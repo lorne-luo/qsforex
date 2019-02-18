@@ -17,7 +17,7 @@ class Backtest(object):
             strategy_params, portfolio, execution,
             equity=settings.EQUITY, heartbeat=0.0,
             base_currency=settings.BASE_CURRENCY,
-            startday=20150110, endday=20150208,
+            startday=20181202, endday=20181230,
             max_iters=10000000000
     ):
         """

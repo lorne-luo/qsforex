@@ -147,12 +147,12 @@ class HistoricCSVPriceHandler(PriceHandler):
             _dt = dt.strptime(date_str, '%Y%m%d')
             pair_path = os.path.join(self.csv_dir, '%s/tick/%d/%s_%s.csv' % (p, int(_dt.year), p, date_str))
             self.pair_frames[p] = pd.read_csv(
-                pair_path, header=False, index_col='Time',
+                pair_path, header=None, index_col='Time',
                 parse_dates=True, dayfirst=False,
                 names=['Time', 'Bid', 'Ask', 'BidVolume', 'AskVolume']
             )
             self.pair_frames[p]["Pair"] = p
-        return pd.concat(self.pair_frames.values()).sort().iterrows()
+        return pd.concat(self.pair_frames.values()).sort_index().iterrows()
 
     def _update_csv_for_day(self):
         try:
