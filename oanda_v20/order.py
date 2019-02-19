@@ -1,4 +1,3 @@
-from decimal import Decimal
 
 
 def lots_to_units(lot, side):
