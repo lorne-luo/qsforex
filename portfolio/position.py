@@ -1,4 +1,4 @@
-from decimal import Decimal, getcontext, ROUND_HALF_DOWN
+from decimal import Decimal, ROUND_HALF_DOWN
 
 
 class Position(object):
@@ -40,7 +40,7 @@ class Position(object):
         elif self.position_type == "short":
             mult = Decimal("-1")
         pips = (mult * (self.cur_price - self.avg_price)).quantize(
-            Decimal("0.00001"), ROUND_HALF_DOWN
+            Decimal("0.00001"), rounding=ROUND_HALF_DOWN
         )
         return pips
 
@@ -57,12 +57,12 @@ class Position(object):
 
         profit = pips * qh_close * self.units
         return profit.quantize(
-            Decimal("0.00001"), ROUND_HALF_DOWN
+            Decimal("0.00001"), rounding=ROUND_HALF_DOWN
         )
 
     def calculate_profit_perc(self):
         return (self.profit_base / self.units * Decimal("100.00")).quantize(
-            Decimal("0.00001"), ROUND_HALF_DOWN
+            Decimal("0.00001"), rounding=ROUND_HALF_DOWN
         )
 
     def update_position_price(self):
@@ -100,8 +100,7 @@ class Position(object):
         self.update_position_price()
         # Calculate PnL
         pnl = self.calculate_pips() * qh_close * dec_units
-        getcontext().rounding = ROUND_HALF_DOWN
-        return pnl.quantize(Decimal("0.01"))
+        return pnl.quantize(Decimal("0.01"), rounding=ROUND_HALF_DOWN)
 
     def close_position(self):
         ticker_cp = self.ticker.prices[self.currency_pair]
@@ -118,5 +117,4 @@ class Position(object):
         self.update_position_price()
         # Calculate PnL
         pnl = self.calculate_pips() * qh_close * self.units
-        getcontext().rounding = ROUND_HALF_DOWN
-        return pnl.quantize(Decimal("0.01"))
+        return pnl.quantize(Decimal("0.01"), rounding=ROUND_HALF_DOWN)
