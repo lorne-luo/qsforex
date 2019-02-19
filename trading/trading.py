@@ -11,7 +11,7 @@ from qsforex.execution.execution import OANDAExecutionHandler
 from qsforex.portfolio.portfolio import Portfolio
 from qsforex import settings
 from qsforex.strategy.strategy import TestStrategy
-from qsforex.price.streaming import StreamingForexPrices
+from qsforex.pricing.streaming import StreamingForexPrices
 
 
 def trade(events, strategy, portfolio, execution, heartbeat):

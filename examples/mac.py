@@ -5,7 +5,7 @@ from qsforex.execution.execution import SimulatedExecution
 from qsforex.portfolio.portfolio import Portfolio
 from qsforex import settings
 from qsforex.strategy.strategy import MovingAverageCrossStrategy
-from qsforex.price.price import HistoricCSVPriceHandler
+from qsforex.pricing.price import HistoricCSVPriceHandler
 
 if __name__ == "__main__":
     pairs = ["GBPUSD"]
