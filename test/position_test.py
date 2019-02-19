@@ -1,8 +1,14 @@
 from decimal import Decimal
 import unittest
+# import os,sys,inspect
+# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.insert(0,parentdir)
 
-from .position import Position
+from ..portfolio.position import Position
 
+
+# python -m test.position_test
 
 class TickerMock(object):
     """
