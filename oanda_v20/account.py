@@ -343,7 +343,7 @@ class Account(EntityBase):
             shortUnits=shortUnits
         )
 
-        if response.status == 200:
+        if response.status >= 200:
             return True, ''
         else:
             logger.error(

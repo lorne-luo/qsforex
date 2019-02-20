@@ -9,6 +9,9 @@ PERIOD_W1 = 10080
 PERIOD_MN1 = 43200
 PERIOD_CHOICES = [PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, PERIOD_W1, PERIOD_MN1]
 
+class OrderSide(object):
+    BUY = 'BUY'
+    SELL = 'SELL'
 
 def get_timeframe_name(timeframe_value):
     if timeframe_value == PERIOD_M1:

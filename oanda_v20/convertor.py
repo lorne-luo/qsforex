@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+from mt4.constants import OrderSide
+
 
 def get_symbol(symbol):
     '''MT4 symbol to Oanda V20 symbol name'''
@@ -6,11 +10,15 @@ def get_symbol(symbol):
     return symbol.upper()
 
 
-
 def lots_to_units(lot, side):
     RATIO = 100000
-    if side == 'BUY':
+    try:
+        lot = Decimal(str(lot))
+    except:
+        return None
+
+    if side == OrderSide.BUY:
         return lot * RATIO
-    elif side == 'SELL':
+    elif side == OrderSide.SELL:
         return lot * RATIO * -1
     raise Exception('Unknow direction.')
