@@ -15,6 +15,10 @@ class Account(EntityBase):
     v20 REST API. It is used for caching and updating Account state.
     """
     _instruments = {}
+    order_states = {}
+    positions = {}
+    transactions = []
+    details = None
 
     def __init__(self, account_id, transaction_cache_depth=100):
         """
@@ -94,45 +98,22 @@ class Account(EntityBase):
 
         print_trades_map(self.trades)
 
-    def trade_get(self, id):
-        """
-        Fetch an open Trade
-
-        Args:
-            id: The ID of the Trade to fetch
-
-        Returns:
-            The Trade with the matching ID if it exists, None otherwise
-        """
-
+    def get_trade(self, id):
+        """Fetch an open Trade"""
         return self.trades.get(id, None)
 
-    def order_get(self, id):
-        """
-        Fetch a pending Order
-
-        Args:
-            id: The ID of the Order to fetch
-
-        Returns:
-            The Order with the matching ID if it exists, None otherwise
-        """
+    def get_order(self, id):
+        """Fetch a pending Order"""
 
         return self.orders.get(id, None)
 
-    def position_get(self, instrument):
-        """
-        Fetch an open Position
-
-        Args:
-            instrument: The instrument of the Position to fetch
-
-        Returns:
-            The Position with the matching instrument if it exists, None
-            otherwise
-        """
-
+    def get_position(self, instrument):
+        """Fetch an open Position"""
+        instrument = get_symbol(instrument)
         return self.positions.get(instrument, None)
+
+    def get_detail(self, key):
+        return getattr(self.details, key)
 
     def apply_changes(self, changes):
         """
@@ -144,39 +125,39 @@ class Account(EntityBase):
         """
 
         for order in changes.ordersCreated:
-            print("[Order Created] {}".format(order.title()))
+            logger.info("[Order Created] {}".format(order.title()))
             self.orders[order.id] = order
 
         for order in changes.ordersCancelled:
-            print("[Order Cancelled] {}".format(order.title()))
+            logger.info("[Order Cancelled] {}".format(order.title()))
             self.orders.pop(order.id, None)
 
         for order in changes.ordersFilled:
-            print("[Order Filled] {}".format(order.title()))
+            logger.info("[Order Filled] {}".format(order.title()))
             self.orders.pop(order.id, None)
 
         for order in changes.ordersTriggered:
-            print("[Order Triggered] {}".format(order.title()))
+            logger.info("[Order Triggered] {}".format(order.title()))
             self.orders.pop(order.id, None)
 
         for trade in changes.tradesOpened:
-            print("[Trade Opened] {}".format(trade.title()))
+            logger.info("[Trade Opened] {}".format(trade.title()))
             self.trades[trade.id] = trade
 
         for trade in changes.tradesReduced:
-            print("[Trade Reduced] {}".format(trade.title()))
+            logger.info("[Trade Reduced] {}".format(trade.title()))
             self.trades[trade.id] = trade
 
         for trade in changes.tradesClosed:
-            print("[Trade Closed] {}".format(trade.title()))
+            logger.info("[Trade Closed] {}".format(trade.title()))
             self.trades.pop(trade.id, None)
 
         for position in changes.positions:
-            print("[Position Changed] {}".format(position.instrument))
+            logger.info("[Position Changed] {}".format(position.instrument))
             self.positions[position.instrument] = position
 
         for transaction in changes.transactions:
-            print("[Transaction] {}".format(transaction.title()))
+            logger.info("[Transaction] {}".format(transaction.title()))
 
             self.transactions.append(transaction)
 
@@ -193,7 +174,7 @@ class Account(EntityBase):
 
         """
         for trade_state in trade_states:
-            trade = self.trade_get(trade_state.id)
+            trade = self.get_trade(trade_state.id)
 
             if trade is None:
                 continue
@@ -212,7 +193,7 @@ class Account(EntityBase):
         """
 
         for position_state in position_states:
-            position = self.position_get(position_state.instrument)
+            position = self.get_position(position_state.instrument)
 
             if position is None:
                 continue
@@ -231,7 +212,7 @@ class Account(EntityBase):
         """
 
         for order_state in order_states:
-            order = self.order_get(order_state.id)
+            order = self.get_order(order_state.id)
 
             if order is None:
                 continue
@@ -303,6 +284,7 @@ class Account(EntityBase):
             return self.get_instruments()
 
     def get_instruments(self):
+        """get all avaliable instruments"""
         response = self.api.account.instruments(self.account_id)
         instruments = response.get("instruments", "200")
         if not len(instruments):
@@ -329,8 +311,8 @@ class Account(EntityBase):
         return self._instruments
 
     def get_pip_unit(self, instrument):
+        """get pip unit for instrument"""
         instrument = get_symbol(instrument)
-        print(instrument)
         try:
             unit = self.instruments[instrument].get('pip')
             return Decimal(str(unit))
@@ -338,10 +320,10 @@ class Account(EntityBase):
             return None
 
     def get_pip(self, value, instrument):
+        """calculate pip"""
         instrument = get_symbol(instrument)
         unit = self.get_pip_unit(instrument)
         value = Decimal(str(value))
         place_location = self.instruments[instrument]['displayPrecision'] + self.instruments[instrument]['pipLocation']
         places = 10 ** (place_location * -1)
-        print(value, unit, places)
         return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
