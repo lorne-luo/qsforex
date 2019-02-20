@@ -3,7 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 import oanda_v20.common.view as common_view
 from oanda_v20.common.entity import EntityBase
-from oanda_v20.constants import get_symbol
+from oanda_v20.convertor import get_symbol
 from oanda_v20.prints import print_positions_map, print_orders_map, print_trades_map
 
 logger = logging.getLogger(__name__)

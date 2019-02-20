@@ -57,10 +57,3 @@ class OrderTriggerCondition(Enum):
     BID = 'BID'  # Trigger an Order by comparing its price to the bid regardless of whether it is long or short.",
     ASK = 'ASK'  # Trigger an Order by comparing its price to the ask regardless of whether it is long or short.",
     MID = 'MID'  # Trigger an Order by comparing its price to the midpoint regardless of whether it is long or short."
-
-
-def get_symbol(symbol):
-    '''MT4 symbol to Oanda V20 symbol name'''
-    if '_' not in symbol:
-        return symbol[:-3] + '_' + symbol[-3:]
-    return symbol.upper()

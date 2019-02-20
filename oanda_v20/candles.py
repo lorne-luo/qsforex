@@ -2,7 +2,7 @@ import logging
 from oanda_v20.api import api, stream_api
 import pandas as pd
 
-from oanda_v20.constants import get_symbol
+from oanda_v20.convertor import get_symbol
 
 logger = logging.getLogger(__name__)
 
