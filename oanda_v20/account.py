@@ -1,18 +1,12 @@
-from v20.trade import TradeSummary
+import logging
+from decimal import Decimal, ROUND_HALF_UP
 
 import oanda_v20.common.view as common_view
-from oanda_v20.api import create_api_context
 from oanda_v20.common.entity import EntityBase
+from oanda_v20.constants import get_symbol
 from oanda_v20.prints import print_positions_map, print_orders_map, print_trades_map
 
-
-def update_attribute(dest, name, value):
-    """
-    Set dest[name] to value if it exists and is not None
-    """
-    if hasattr(dest, name) and \
-            getattr(dest, name) is not None:
-        setattr(dest, name, value)
+logger = logging.getLogger(__name__)
 
 
 class Account(EntityBase):
@@ -20,6 +14,7 @@ class Account(EntityBase):
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
     """
+    _instruments = {}
 
     def __init__(self, account_id, transaction_cache_depth=100):
         """
@@ -257,6 +252,14 @@ class Account(EntityBase):
         #
         # Update Account details from the state
         #
+        def update_attribute(dest, name, value):
+            """
+            Set dest[name] to value if it exists and is not None
+            """
+            if hasattr(dest, name) and \
+                    getattr(dest, name) is not None:
+                setattr(dest, name, value)
+
         for field in state.fields():
             update_attribute(self.details, field.name, field.value)
 
@@ -291,3 +294,54 @@ class Account(EntityBase):
             "lastTransactionID",
             "200"
         )
+
+    @property
+    def instruments(self):
+        if self._instruments:
+            return self._instruments
+        else:
+            return self.get_instruments()
+
+    def get_instruments(self):
+        response = self.api.account.instruments(self.account_id)
+        instruments = response.get("instruments", "200")
+        if not len(instruments):
+            return
+
+        # all_keys=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
+        columns = ['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'marginRate']
+        # all_currencies=[i.name for i in instruments]
+        currencies = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+
+        data = {}
+        for i in instruments:
+            if i.name in currencies:
+                data[i.name] = {'name': i.name,
+                                'type': i.type,
+                                'displayName': i.displayName,
+                                'pipLocation': i.pipLocation,
+                                'pip': 10 ** i.pipLocation,
+                                'displayPrecision': i.displayPrecision,
+                                'marginRateDisplay': "{:.0f}:1".format(1.0 / float(i.marginRate)),
+                                'marginRate': i.marginRate, }
+
+        self._instruments = data
+        return self._instruments
+
+    def get_pip_unit(self, instrument):
+        instrument = get_symbol(instrument)
+        print(instrument)
+        try:
+            unit = self.instruments[instrument].get('pip')
+            return Decimal(str(unit))
+        except KeyError:
+            return None
+
+    def get_pip(self, value, instrument):
+        instrument = get_symbol(instrument)
+        unit = self.get_pip_unit(instrument)
+        value = Decimal(str(value))
+        place_location = self.instruments[instrument]['displayPrecision'] + self.instruments[instrument]['pipLocation']
+        places = 10 ** (place_location * -1)
+        print(value, unit, places)
+        return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
