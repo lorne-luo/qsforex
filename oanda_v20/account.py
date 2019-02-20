@@ -327,3 +327,30 @@ class Account(EntityBase):
         place_location = self.instruments[instrument]['displayPrecision'] + self.instruments[instrument]['pipLocation']
         places = 10 ** (place_location * -1)
         return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
+
+    def clean_all_position(self):
+        instruments = self.positions.keys()
+        for i in instruments:
+            self.close_position(i, 'ALL', 'ALL')
+
+    def close_position(self, instrument, longUnits='ALL', shortUnits='ALL'):
+        instrument = get_symbol(instrument)
+
+        response = self.api.position.close(
+            self.account_id,
+            instrument,
+            longUnits=longUnits,
+            shortUnits=shortUnits
+        )
+
+        if response.status == 200:
+            return True, ''
+        else:
+            logger.error(
+                "[CLOSE_POSITION] {}, {}, {}\n".format(
+                    response.status,
+                    response.body['errorCode'],
+                    response.body['errorMessage'],
+                )
+            )
+            return False, response.body['errorMessage']
