@@ -2,18 +2,19 @@ import logging
 from oanda_v20.api import api, stream_api
 import pandas as pd
 
-from oanda_v20.convertor import get_symbol
+from oanda_v20.convertor import get_symbol, get_timeframe_granularity
 
 logger = logging.getLogger(__name__)
 
 
 def get_candle(instrument, granularity, count=50, fromTime=None, toTime=None, price_type='M', smooth=False):
     instrument = get_symbol(instrument)
+    granularity = get_timeframe_granularity(granularity)
     response = api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
                                       toTime=toTime, price=price_type, smooth=smooth)
 
     if response.status != 200:
-        logger.error('[GET_Candle]',response,response.body)
+        logger.error('[GET_Candle]', response, response.body)
         return []
 
     candles = response.get("candles", 200)
