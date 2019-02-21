@@ -1,9 +1,14 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
+from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
+
 import oanda_v20.common.view as common_view
+from mt4.constants import OrderSide
 from oanda_v20.common.entity import EntityBase
-from oanda_v20.convertor import get_symbol
+from oanda_v20.common.logger import log_error
+from oanda_v20.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
+from oanda_v20.convertor import get_symbol, lots_to_units
 from oanda_v20.prints import print_positions_map, print_orders_map, print_trades_map
 
 logger = logging.getLogger(__name__)
@@ -276,6 +281,7 @@ class Account(EntityBase):
             "200"
         )
 
+    # ===================== INSTRUMENT & PRICE =====================
     @property
     def instruments(self):
         if self._instruments:
@@ -328,8 +334,67 @@ class Account(EntityBase):
         places = 10 ** (place_location * -1)
         return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
 
-    def clean_all_position(self):
+    def calculate_price(self, base_price, side, pip, instrument):
+        instrument = get_symbol(instrument)
+        pip_unit = self.get_pip_unit(instrument)
+        base_price = Decimal(str(base_price))
+        pip = Decimal(str(pip))
+
+        if side == OrderSide.BUY:
+            return base_price + pip * pip_unit
+        elif side == OrderSide.SELL:
+            return base_price - pip * pip_unit
+
+    # ===================== POSITION =====================
+    def query_position(self, instrument):
+        instrument = get_symbol(instrument)
+        response = self.api.position.get(
+            self.account_id,
+            instrument
+        )
+        if response.status >= 200:
+            last_transaction_id = response.list('lastTransactionID', [])
+            position = response.get('position', None)
+            if position:
+                self.positions[position.instrument] = position
+
+            return True, position
+        else:
+            log_error(logger, response, 'QEURY_POSITION')
+            return False, response.body['errorMessage']
+
+    def list_all_positions(self):
+        response = self.api.position.close(
+            self.account_id,
+        )
+        if response.status >= 200:
+            last_transaction_id = response.list('lastTransactionID', [])
+            positions = response.list('positions', [])
+            for position in positions:
+                self.positions[position.instrument] = position
+
+            return True, positions
+        else:
+            log_error(logger, response, 'LIST_ALL_POSITION')
+            return False, response.body['errorMessage']
+
+    def list_open_positions(self):
+        response = self.api.position.close(
+            self.account_id,
+        )
+        if response.status >= 200:
+            last_transaction_id = response.list('lastTransactionID', [])
+            positions = response.list_open('positions', [])
+            for position in positions:
+                self.positions[position.instrument] = position
+            return True, positions
+        else:
+            log_error(logger, response, 'LIST_OPEN_POSITION')
+            return False, response.body['errorMessage']
+
+    def close_all_position(self):
         instruments = self.positions.keys()
+        logger.error('[CLOSE_ALL_POSITIONS] Start.')
         for i in instruments:
             self.close_position(i, 'ALL', 'ALL')
 
@@ -344,13 +409,23 @@ class Account(EntityBase):
         )
 
         if response.status >= 200:
+            longOrderCreateTransaction = response.get('longOrderCreateTransaction', None)
+            longOrderFillTransaction = response.get('longOrderFillTransaction', None)
+            longOrderCancelTransaction = response.get('longOrderCancelTransaction', None)
+            shortOrderCreateTransaction = response.get('shortOrderCreateTransaction', None)
+            shortOrderFillTransaction = response.get('shortOrderFillTransaction', None)
+            shortOrderCancelTransaction = response.get('shortOrderCancelTransaction', None)
+            relatedTransactionIDs = response.get('relatedTransactionIDs', None)
+            lastTransactionID = response.get('lastTransactionID', None)
+            print(longOrderCreateTransaction.__dict__)
+            print(longOrderFillTransaction.__dict__)
+            print(longOrderCancelTransaction.__dict__)
+            print(shortOrderCreateTransaction.__dict__)
+            print(shortOrderFillTransaction.__dict__)
+            print(shortOrderCancelTransaction.__dict__)
+            print(relatedTransactionIDs.__dict__)
+            print(lastTransactionID)
             return True, ''
         else:
-            logger.error(
-                "[CLOSE_POSITION] {}, {}, {}\n".format(
-                    response.status,
-                    response.body['errorCode'],
-                    response.body['errorMessage'],
-                )
-            )
+            log_error(logger, response, 'CLOSE_POSITION')
             return False, response.body['errorMessage']
