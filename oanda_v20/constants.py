@@ -57,6 +57,7 @@ class OrderTriggerCondition(object):
 
 
 class TransactionName(object):
+    """transaction name in order response"""
     orderCreateTransaction = 'orderCreateTransaction'
     longOrderCreateTransaction = 'longOrderCreateTransaction'
     shortOrderCreateTransaction = 'shortOrderCreateTransaction'
@@ -74,3 +75,44 @@ class TransactionName(object):
     @staticmethod
     def all():
         return [v for k, v in TransactionName.__dict__.items() if not k.startswith('_') and isinstance(v, str)]
+
+
+class TransactionType(object):
+    """type list of transaction object"""
+    CREATE = 'CREATE'  # Account Create Transaction
+    CLOSE = 'CLOSE'  # Account Close Transaction
+    REOPEN = 'REOPEN'  # Account Reopen Transaction
+    CLIENT_CONFIGURE = 'CLIENT_CONFIGURE'  # Client Configuration Transaction
+    CLIENT_CONFIGURE_REJECT = 'CLIENT_CONFIGURE_REJECT'  # Client Configuration Reject Transaction
+    TRANSFER_FUNDS = 'TRANSFER_FUNDS'  # Transfer Funds Transaction
+    TRANSFER_FUNDS_REJECT = 'TRANSFER_FUNDS_REJECT'  # Transfer Funds Reject Transaction
+    # ORDER
+    MARKET_ORDER = 'MARKET_ORDER'  # Market Order Transaction
+    MARKET_ORDER_REJECT = 'MARKET_ORDER_REJECT'  # Market Order Reject Transaction
+    FIXED_PRICE_ORDER = 'FIXED_PRICE_ORDER'  # Fixed Price Order Transaction
+    LIMIT_ORDER = 'LIMIT_ORDER'  # Limit Order Transaction
+    LIMIT_ORDER_REJECT = 'LIMIT_ORDER_REJECT'  # Limit Order Reject Transaction
+    STOP_ORDER = 'STOP_ORDER'  # Stop Order Transaction
+    STOP_ORDER_REJECT = 'STOP_ORDER_REJECT'  # Stop Order Reject Transaction
+    MARKET_IF_TOUCHED_ORDER = 'MARKET_IF_TOUCHED_ORDER'  # Market if Touched Order Transaction
+    MARKET_IF_TOUCHED_ORDER_REJECT = 'MARKET_IF_TOUCHED_ORDER_REJECT'  # Market if Touched Order Reject Transaction
+    TAKE_PROFIT_ORDER = 'TAKE_PROFIT_ORDER'  # Take Profit Order Transaction
+    TAKE_PROFIT_ORDER_REJECT = 'TAKE_PROFIT_ORDER_REJECT'  # Take Profit Order Reject Transaction
+    STOP_LOSS_ORDER = 'STOP_LOSS_ORDER'  # Stop Loss Order Transaction
+    STOP_LOSS_ORDER_REJECT = 'STOP_LOSS_ORDER_REJECT'  # Stop Loss Order Reject Transaction
+    TRAILING_STOP_LOSS_ORDER = 'TRAILING_STOP_LOSS_ORDER'  # Trailing Stop Loss Order Transaction
+    TRAILING_STOP_LOSS_ORDER_REJECT = 'TRAILING_STOP_LOSS_ORDER_REJECT'  # Trailing Stop Loss Order Reject Transaction
+    ORDER_FILL = 'ORDER_FILL'  # Order Fill Transaction
+    ORDER_CANCEL = 'ORDER_CANCEL'  # Order Cancel Transaction
+    ORDER_CANCEL_REJECT = 'ORDER_CANCEL_REJECT'  # Order Cancel Reject Transaction
+    ORDER_CLIENT_EXTENSIONS_MODIFY = 'ORDER_CLIENT_EXTENSIONS_MODIFY'  # Order Client Extensions Modify Transaction
+    ORDER_CLIENT_EXTENSIONS_MODIFY_REJECT = 'ORDER_CLIENT_EXTENSIONS_MODIFY_REJECT'  # Order Client Extensions Modify Reject Transaction
+    # Trade
+    TRADE_CLIENT_EXTENSIONS_MODIFY = 'TRADE_CLIENT_EXTENSIONS_MODIFY'  # Trade Client Extensions Modify Transaction
+    TRADE_CLIENT_EXTENSIONS_MODIFY_REJECT = 'TRADE_CLIENT_EXTENSIONS_MODIFY_REJECT'  # Trade Client Extensions Modify Reject Transaction
+    MARGIN_CALL_ENTER = 'MARGIN_CALL_ENTER'  # Margin Call Enter Transaction
+    MARGIN_CALL_EXTEND = 'MARGIN_CALL_EXTEND'  # Margin Call Extend Transaction
+    MARGIN_CALL_EXIT = 'MARGIN_CALL_EXIT'  # Margin Call Exit Transaction
+    DELAYED_TRADE_CLOSURE = 'DELAYED_TRADE_CLOSURE'  # Delayed Trade Closure Transaction
+    DAILY_FINANCING = 'DAILY_FINANCING'  # Daily Financing Transaction
+    RESET_RESETTABLE_PL = 'RESET_RESETTABLE_PL'  # Reset Resettable PL Transaction
