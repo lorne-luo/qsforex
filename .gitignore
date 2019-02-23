@@ -30,3 +30,5 @@ pip-log.txt
 
 data/
 local.py
+env/
+venv/

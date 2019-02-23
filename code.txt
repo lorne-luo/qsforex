@@ -1,0 +1,184 @@
+Time,Ask,Bid,AskVolume,BidVolume
+
+->
+
+Time,Bid,Ask,BidVolume,AskVolume
+
+
+ln -s `pwd` env/lib/python3.7/site-packages/qsforex
+
+curl -H "Authorization: Bearer 24655e327e5d3b21160261116d9f028b-c9779d30d729c87b093158a296568d7e" https://api-fxpractice.oanda.com/v3/accounts
+
+
+
+ac.trades['99'].__dict__
+Out[12]:
+{'id': '99',
+ 'instrument': 'EUR_USD',
+ 'price': 1.1337,
+ 'openTime': '2019-02-21T02:34:07.523411595Z',
+ 'state': 'OPEN',
+ 'initialUnits': 10000.0,
+ 'initialMarginRequired': 316.988,
+ 'currentUnits': 10000.0,
+ 'realizedPL': 0.0,
+ 'unrealizedPL': 0.2792,
+ 'marginUsed': 316.628,
+ 'averageClosePrice': None,
+ 'closingTransactionIDs': None,
+ 'financing': 0.0,
+ 'closeTime': None,
+ 'clientExtensions': <v20.transaction.ClientExtensions at 0x1135b2b70>,
+ 'takeProfitOrderID': None,
+ 'stopLossOrderID': '100',
+ 'trailingStopLossOrderID': '101'}
+ac.orders['100'].__dict__
+Out[13]:
+{'id': '100',
+ 'createTime': '2019-02-21T02:34:07.523411595Z',
+ 'state': 'PENDING',
+ 'clientExtensions': None,
+ 'type': 'STOP_LOSS',
+ 'guaranteedExecutionPremium': None,
+ 'tradeID': '99',
+ 'clientTradeID': None,
+ 'price': 1.1317,
+ 'distance': None,
+ 'timeInForce': 'GTC',
+ 'gtdTime': None,
+ 'triggerCondition': 'DEFAULT',
+ 'guaranteed': False,
+ 'fillingTransactionID': None,
+ 'filledTime': None,
+ 'tradeOpenedID': None,
+ 'tradeReducedID': None,
+ 'tradeClosedIDs': None,
+ 'cancellingTransactionID': None,
+ 'cancelledTime': None,
+ 'replacesOrderID': None,
+ 'replacedByOrderID': None}
+ac.orders['101'].__dict__
+Out[14]:
+{'id': '101',
+ 'createTime': '2019-02-21T02:34:07.523411595Z',
+ 'state': 'PENDING',
+ 'clientExtensions': None,
+ 'type': 'TRAILING_STOP_LOSS',
+ 'tradeID': '99',
+ 'clientTradeID': None,
+ 'distance': 0.001,
+ 'timeInForce': 'GTC',
+ 'gtdTime': None,
+ 'triggerCondition': 'DEFAULT',
+ 'trailingStopValue': 1.13299,
+ 'fillingTransactionID': None,
+ 'filledTime': None,
+ 'tradeOpenedID': None,
+ 'tradeReducedID': None,
+ 'tradeClosedIDs': None,
+ 'cancellingTransactionID': None,
+ 'cancelledTime': None,
+ 'replacesOrderID': None,
+ 'replacedByOrderID': None}
+ac.trades['99'].clientExtensions.__dict__
+Out[15]: {'id': None, 'tag': 'test', 'comment': 'test'}
+
+
+
+
+"""
+MarketOrderTransaction
+====================  ==============================
+Transaction ID        50
+Time                  2019-02-20T11:07:09.929954793Z
+User ID               10496264
+Account ID            101-011-10496264-001
+Transaction Batch ID  50
+Request ID            78561536958074011
+Type                  MARKET_ORDER
+Instrument            EUR_USD
+Amount                10000.0
+Time In Force         FOK
+Position Fill         DEFAULT
+Reason                CLIENT_ORDER
+====================  ==============================
+
+OrderFillTransaction
+=================================  ==============================
+Transaction ID                     51
+Time                               2019-02-20T11:07:09.929954793Z
+User ID                            10496264
+Account ID                         101-011-10496264-001
+Transaction Batch ID               50
+Request ID                         78561536958074011
+Type                               ORDER_FILL
+Filled Order ID                    50
+Fill Instrument                    EUR_USD
+Fill Units                         10000.0
+Gain Quote Home Conversion Factor  1.397799863016
+Loss Quote Home Conversion Factor  1.398053908959
+Fill Price                         1.13392
+Full VWAP                          1.13392
+Price                              <pricing.ClientPrice>
+Fill Reason                        MARKET_ORDER
+Profit/Loss                        0.0
+Financing                          0.0
+Commission                         0.0
+Guranteed Execution Fee            0.0
+Account Balance                    99999.8521
+Trade Opened                       <transaction.TradeOpen>
+Half Spread Cost                   0.9087
+=================================  ==============================
+
+{'id': '50',
+ 'time': '2019-02-20T11:07:09.929954793Z',
+ 'userID': 10496264,
+ 'accountID': '101-011-10496264-001',
+ 'batchID': '50',
+ 'requestID': '78561536958074011',
+ 'type': 'MARKET_ORDER',
+ 'instrument': 'EUR_USD',
+ 'units': 10000.0,
+ 'timeInForce': 'FOK',
+ 'priceBound': None,
+ 'positionFill': 'DEFAULT',
+ 'tradeClose': None,
+ 'longPositionCloseout': None,
+ 'shortPositionCloseout': None,
+ 'marginCloseout': None,
+ 'delayedTradeClose': None,
+ 'reason': 'CLIENT_ORDER',
+ 'clientExtensions': None,
+ 'takeProfitOnFill': None,
+ 'stopLossOnFill': None,
+ 'trailingStopLossOnFill': None,
+ 'tradeClientExtensions': None}
+
+{'id': '51',
+ 'time': '2019-02-20T11:07:09.929954793Z',
+ 'userID': 10496264,
+ 'accountID': '101-011-10496264-001',
+ 'batchID': '50',
+ 'requestID': '78561536958074011',
+ 'type': 'ORDER_FILL',
+ 'orderID': '50',
+ 'clientOrderID': None,
+ 'instrument': 'EUR_USD',
+ 'units': 10000.0,
+ 'gainQuoteHomeConversionFactor': 1.397799863016,
+ 'lossQuoteHomeConversionFactor': 1.398053908959,
+ 'price': 1.13392,
+ 'fullVWAP': 1.13392,
+ 'fullPrice': <v20.pricing.ClientPrice at 0x118f9f3c8>,
+ 'reason': 'MARKET_ORDER',
+ 'pl': 0.0,
+ 'financing': 0.0,
+ 'commission': 0.0,
+ 'guaranteedExecutionFee': 0.0,
+ 'accountBalance': 99999.8521,
+ 'tradeOpened': <v20.transaction.TradeOpen at 0x118f9f470>,
+ 'tradesClosed': None,
+ 'tradeReduced': None,
+ 'halfSpreadCost': 0.9087}
+
+"""
