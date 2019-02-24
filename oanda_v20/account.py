@@ -18,18 +18,11 @@ import settings
 logger = logging.getLogger(__name__)
 
 
-class Account(EntityBase):
+class Account(PositionMixin, OrderMixin, InstrumentMixin):
     """
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
     """
-    _instruments = {}
-    order_states = {}
-    positions = {}
-    transactions = []
-    trades = {}
-    orders = {}
-    details = None
 
     def __init__(self, account_id, transaction_cache_depth=100):
         """
@@ -44,6 +37,9 @@ class Account(EntityBase):
         #
         self.account_id = account_id
         response = self.api.account.get(account_id)
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, 'GET_ACCOUNT')
+
         account = response.get("account", "200")
 
         for trade in getattr(account, "trades", []):
@@ -87,6 +83,9 @@ class Account(EntityBase):
         # The Account details
         #
         self.details = account
+
+    def __str__(self):
+        return '%s # %s' % (self.details.id, self.details.alias)
 
     def dump(self):
         """
@@ -266,232 +265,11 @@ class Account(EntityBase):
         )
 
         self.apply_changes(
-            response.get(
-                "changes",
-                "200"
-            )
+            response.get("changes", "200")
         )
 
         self.apply_state(
-            response.get(
-                "state",
-                "200"
-            )
+            response.get("state", "200")
         )
 
-        self.details.lastTransactionID = response.get(
-            "lastTransactionID",
-            "200"
-        )
-
-    # ===================== INSTRUMENT & PRICE =====================
-    @property
-    def instruments(self):
-        if self._instruments:
-            return self._instruments
-        else:
-            return self.list_instruments()
-
-    def list_instruments(self):
-        """get all avaliable instruments"""
-        response = self.api.account.instruments(self.account_id)
-        instruments = response.get("instruments", "200")
-        if not len(instruments):
-            return
-
-        # all_keys=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
-        columns = ['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'marginRate']
-        # all_currencies=[i.name for i in instruments]
-        currencies = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
-
-        data = {}
-        for i in instruments:
-            if i.name in currencies:
-                data[i.name] = {'name': i.name,
-                                'type': i.type,
-                                'displayName': i.displayName,
-                                'pipLocation': i.pipLocation,
-                                'pip': 10 ** i.pipLocation,
-                                'displayPrecision': i.displayPrecision,
-                                'marginRateDisplay': "{:.0f}:1".format(1.0 / float(i.marginRate)),
-                                'marginRate': i.marginRate, }
-
-        self._instruments = data
-        return self._instruments
-
-    def get_pip_unit(self, instrument):
-        """get pip unit for instrument"""
-        instrument = get_symbol(instrument)
-        try:
-            unit = self.instruments[instrument].get('pip')
-            return Decimal(str(unit))
-        except KeyError:
-            return None
-
-    def get_pip(self, value, instrument):
-        """calculate pip"""
-        instrument = get_symbol(instrument)
-        unit = self.get_pip_unit(instrument)
-        value = Decimal(str(value))
-        place_location = self.instruments[instrument]['displayPrecision'] + self.instruments[instrument]['pipLocation']
-        places = 10 ** (place_location * -1)
-        return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
-
-    def calculate_price(self, base_price, side, pip, instrument):
-        instrument = get_symbol(instrument)
-        pip_unit = self.get_pip_unit(instrument)
-        base_price = Decimal(str(base_price))
-        pip = Decimal(str(pip))
-
-        if side == OrderSide.BUY:
-            return base_price + pip * pip_unit
-        elif side == OrderSide.SELL:
-            return base_price - pip * pip_unit
-
-    # ===================== POSITION =====================
-    def pull_position(self, instrument):
-        """pull position by instrument"""
-        instrument = get_symbol(instrument)
-        response = self.api.position.get(self.account_id, instrument)
-
-        if response.status >= 200:
-            last_transaction_id = response.list('lastTransactionID', [])
-            position = response.get('position', None)
-            if position:
-                self.positions[position.instrument] = position
-
-            return True, position
-        else:
-            log_error(logger, response, 'QEURY_POSITION')
-            return False, response.body['errorMessage']
-
-    def list_all_positions(self):
-        response = self.api.position.close(
-            self.account_id,
-        )
-        if response.status >= 200:
-            last_transaction_id = response.list('lastTransactionID', [])
-            positions = response.list('positions', [])
-            for position in positions:
-                self.positions[position.instrument] = position
-
-            return True, positions
-        else:
-            log_error(logger, response, 'LIST_ALL_POSITION')
-            return False, response.body['errorMessage']
-
-    def list_open_positions(self):
-        response = self.api.position.close(
-            self.account_id,
-        )
-        if response.status >= 200:
-            last_transaction_id = response.list('lastTransactionID', [])
-            positions = response.list_open('positions', [])
-            for position in positions:
-                self.positions[position.instrument] = position
-            return True, positions
-        else:
-            log_error(logger, response, 'LIST_OPEN_POSITION')
-            return False, response.body['errorMessage']
-
-    def close_all_position(self):
-        instruments = self.positions.keys()
-        logger.error('[CLOSE_ALL_POSITIONS] Start.')
-        for i in instruments:
-            self.close_position(i, 'ALL', 'ALL')
-
-    def close_position(self, instrument, longUnits='ALL', shortUnits='ALL'):
-        instrument = get_symbol(instrument)
-
-        response = self.api.position.close(
-            self.account_id,
-            instrument,
-            longUnits=longUnits,
-            shortUnits=shortUnits
-        )
-
-        if response.status >= 200:
-            longOrderCreateTransaction = response.get('longOrderCreateTransaction', None)
-            longOrderFillTransaction = response.get('longOrderFillTransaction', None)
-            longOrderCancelTransaction = response.get('longOrderCancelTransaction', None)
-            shortOrderCreateTransaction = response.get('shortOrderCreateTransaction', None)
-            shortOrderFillTransaction = response.get('shortOrderFillTransaction', None)
-            shortOrderCancelTransaction = response.get('shortOrderCancelTransaction', None)
-            relatedTransactionIDs = response.get('relatedTransactionIDs', None)
-            lastTransactionID = response.get('lastTransactionID', None)
-            print(longOrderCreateTransaction.__dict__)
-            print(longOrderFillTransaction.__dict__)
-            print(longOrderCancelTransaction.__dict__)
-            print(shortOrderCreateTransaction.__dict__)
-            print(shortOrderFillTransaction.__dict__)
-            print(shortOrderCancelTransaction.__dict__)
-            print(relatedTransactionIDs.__dict__)
-            print(lastTransactionID)
-            return True, 'done'
-        else:
-            log_error(logger, response, 'CLOSE_POSITION')
-            return False, response.body['errorMessage']
-
-    # ================= ORDER =================
-    def market_order(self, instrument, side,
-                     lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
-                     priceBound=None, positionFill=OrderPositionFill.DEFAULT,
-                     take_profit_price=None,
-                     stop_loss_pip=None,
-                     trailing_pip=None,
-                     client_id=None, client_tag=None, client_comment=None):
-        instrument = get_symbol(instrument)
-        units = lots_to_units(lots, side)
-        pip_unit = self.get_pip_unit(instrument)
-
-        # client extension
-        client_args = {'id': client_id, 'tag': client_tag, 'comment': client_comment}
-        if any(client_args.values()):
-            tradeClientExtensions = ClientExtensions(**client_args)
-        else:
-            tradeClientExtensions = None
-
-        # stop loss
-        if stop_loss_pip:
-            stop_loss_price = pip_unit * Decimal(str(stop_loss_pip))
-            stop_loss_details = StopLossDetails(distance=str(stop_loss_price), clientExtensions=tradeClientExtensions)
-        else:
-            stop_loss_details = None
-
-        take_profit_detail = TakeProfitDetails(price=str(take_profit_price), clientExtensions=tradeClientExtensions)
-
-        if trailing_pip:
-            trailing_distance_price = pip_unit * Decimal(str(trailing_pip))
-            trailing_details = TrailingStopLossDetails(distance=str(trailing_distance_price),
-                                                       clientExtensions=tradeClientExtensions)
-        else:
-            trailing_details = None
-
-        response = self.api.order.market(
-            self.account_id,
-            instrument=instrument, units=str(units), type=type, timeInForce=timeInForce,
-            priceBound=priceBound, positionFill=positionFill,
-            takeProfitOnFill=take_profit_detail,
-            stopLossOnFill=stop_loss_details,
-            trailingStopLossOnFill=trailing_details,
-            tradeClientExtensions=tradeClientExtensions
-        )
-
-        if response.status >= 200:
-            transactions = []
-            for name in TransactionName.all():
-                try:
-                    transaction = response.get(name, None)
-                    transactions.append(transaction)
-                except:
-                    pass
-            for t in transactions:
-                common_view.print_entity(t, title=t.__class__.__name__)
-                print('')
-
-            # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
-            # todo success:MARKET_ORDER + ORDER_FILL
-            return transactions
-        else:
-            log_error(logger, response, 'MARKET_ORDER')
-            return False, response.body.get('errorMessage')
+        self.details.lastTransactionID = response.get("lastTransactionID", "200")

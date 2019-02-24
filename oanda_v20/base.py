@@ -53,3 +53,11 @@ stream_api = SingletonContext(hostname=settings.STREAM_DOMAIN,
 class EntityBase(object):
     api = api
     account_id = None
+
+    _instruments = {}
+    order_states = {}
+    positions = {}
+    transactions = []
+    trades = {}
+    orders = {}
+    details = None

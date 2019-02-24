@@ -12,62 +12,67 @@ import settings
 logger = logging.getLogger(__name__)
 
 
-def create_market_order(instrument, side, lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
-                        priceBound=None, positionFill=OrderPositionFill.DEFAULT,
-                        takeProfitOnFill=None, stopLossOnFill=None, trailingStopLossOnFill=None,
-                        client_id=None, client_tag=None, client_comment=None):
-    instrument = get_symbol(instrument)
-    units = lots_to_units(lots, side)
+class OrderMixin(EntityBase):
 
+    def market_order(self, instrument, side,
+                     lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
+                     priceBound=None, positionFill=OrderPositionFill.DEFAULT,
+                     take_profit_price=None,
+                     stop_loss_pip=None,
+                     trailing_pip=None,
+                     client_id=None, client_tag=None, client_comment=None):
+        instrument = get_symbol(instrument)
+        units = lots_to_units(lots, side)
+        pip_unit = self.get_pip_unit(instrument)
 
-    if stopLossOnFill:
-        stopLossOnFill = StopLossDetails(price=str(stopLossOnFill))
+        # client extension
+        client_args = {'id': client_id, 'tag': client_tag, 'comment': client_comment}
+        if any(client_args.values()):
+            tradeClientExtensions = ClientExtensions(**client_args)
+        else:
+            tradeClientExtensions = None
 
-    if takeProfitOnFill:
-        takeProfitOnFill = TakeProfitDetails(price=str(takeProfitOnFill))
+        # stop loss
+        if stop_loss_pip:
+            stop_loss_price = pip_unit * Decimal(str(stop_loss_pip))
+            stop_loss_details = StopLossDetails(distance=str(stop_loss_price), clientExtensions=tradeClientExtensions)
+        else:
+            stop_loss_details = None
 
-    if trailingStopLossOnFill:
-        trailingStopLossOnFill = TrailingStopLossDetails(distance=str(trailingStopLossOnFill))
+        take_profit_detail = TakeProfitDetails(price=str(take_profit_price), clientExtensions=tradeClientExtensions)
 
-    # client extension
-    client_args = {'id': client_id, 'tag': client_tag, 'comment': client_comment}
-    if any(client_args.values()):
-        tradeClientExtensions = ClientExtensions(**client_args)
-    else:
-        tradeClientExtensions = None
+        if trailing_pip:
+            trailing_distance_price = pip_unit * Decimal(str(trailing_pip))
+            trailing_details = TrailingStopLossDetails(distance=str(trailing_distance_price),
+                                                       clientExtensions=tradeClientExtensions)
+        else:
+            trailing_details = None
 
-    response = api.order.market(
-        settings.ACCOUNT_ID,
-        instrument=instrument, units=str(units), type=type, timeInForce=timeInForce,
-        priceBound=priceBound, positionFill=positionFill, clientExtensions=None,
-        takeProfitOnFill=takeProfitOnFill, stopLossOnFill=stopLossOnFill, trailingStopLossOnFill=trailingStopLossOnFill,
-        tradeClientExtensions=tradeClientExtensions
-    )
-
-    if response.status >= 200:
-        transactions = []
-        for name in TransactionName.all():
-            try:
-                transaction = response.get(name, None)
-                transactions.append(transaction)
-            except:
-                pass
-        for t in transactions:
-            print_entity(t, title=t.__class__.__name__)
-            print('')
-
-        #todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
-        return transactions
-    else:
-        logger.error(
-            "[Market_order] {}, {}, {}\n".format(
-                response.status,
-                response.body.get('errorCode'),
-                response.body.get('errorMessage'),
-            )
+        response = self.api.order.market(
+            self.account_id,
+            instrument=instrument, units=str(units), type=type, timeInForce=timeInForce,
+            priceBound=priceBound, positionFill=positionFill,
+            takeProfitOnFill=take_profit_detail,
+            stopLossOnFill=stop_loss_details,
+            trailingStopLossOnFill=trailing_details,
+            tradeClientExtensions=tradeClientExtensions
         )
-        return False, response.body.get('errorMessage')
 
+        if response.status >= 200:
+            transactions = []
+            for name in TransactionName.all():
+                try:
+                    transaction = response.get(name, None)
+                    transactions.append(transaction)
+                except:
+                    pass
+            for t in transactions:
+                print_entity(t, title=t.__class__.__name__)
+                print('')
 
-# from oanda_v20.order import *
-# response=create_market_order('EUR_USD','BUY',stopLossOnFill='1.3145',client_tag='test',client_comment='test')
+            # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
+            # todo success:MARKET_ORDER + ORDER_FILL
+            return transactions
+        else:
+            log_error(logger, response, 'MARKET_ORDER')
+            return False, response.body.get('errorMessage')
