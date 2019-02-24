@@ -23,6 +23,8 @@ class Account(EntityBase):
     order_states = {}
     positions = {}
     transactions = []
+    trades = {}
+    orders = {}
     details = None
 
     def __init__(self, account_id, transaction_cache_depth=100):
@@ -40,8 +42,6 @@ class Account(EntityBase):
         response = self.api.account.get(account_id)
         account = response.get("account", "200")
 
-        self.trades = {}
-
         for trade in getattr(account, "trades", []):
             self.trades[trade.id] = trade
 
@@ -50,7 +50,6 @@ class Account(EntityBase):
         #
         # The collection of Orders pending in the Account
         #
-        self.orders = {}
 
         for order in getattr(account, "orders", []):
             self.orders[order.id] = order
@@ -287,9 +286,9 @@ class Account(EntityBase):
         if self._instruments:
             return self._instruments
         else:
-            return self.get_instruments()
+            return self.list_instruments()
 
-    def get_instruments(self):
+    def list_instruments(self):
         """get all avaliable instruments"""
         response = self.api.account.instruments(self.account_id)
         instruments = response.get("instruments", "200")
@@ -346,12 +345,11 @@ class Account(EntityBase):
             return base_price - pip * pip_unit
 
     # ===================== POSITION =====================
-    def query_position(self, instrument):
+    def pull_position(self, instrument):
+        """pull position by instrument"""
         instrument = get_symbol(instrument)
-        response = self.api.position.get(
-            self.account_id,
-            instrument
-        )
+        response = self.api.position.get(self.account_id, instrument)
+
         if response.status >= 200:
             last_transaction_id = response.list('lastTransactionID', [])
             position = response.get('position', None)
@@ -425,7 +423,7 @@ class Account(EntityBase):
             print(shortOrderCancelTransaction.__dict__)
             print(relatedTransactionIDs.__dict__)
             print(lastTransactionID)
-            return True, ''
+            return True, 'done'
         else:
             log_error(logger, response, 'CLOSE_POSITION')
             return False, response.body['errorMessage']

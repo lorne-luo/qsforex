@@ -49,5 +49,7 @@ stream_api = SingletonContext(hostname=settings.STREAM_DOMAIN,
                               application=settings.APPLICATION_NAME,
                               token=settings.ACCESS_TOKEN, )
 
+
 class EntityBase(object):
     api = api
+    account_id = None

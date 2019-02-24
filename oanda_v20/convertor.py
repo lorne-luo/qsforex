@@ -6,6 +6,9 @@ from mt4.constants import OrderSide, PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M3
 
 def get_symbol(symbol):
     '''MT4 symbol to Oanda V20 symbol name'''
+    if '/' in symbol:
+        symbol = symbol.replace("/", "_")
+
     if '_' not in symbol:
         return symbol[:-3] + '_' + symbol[-3:]
     return symbol.upper()

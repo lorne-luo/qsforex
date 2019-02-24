@@ -72,8 +72,8 @@ class TransactionName(object):
     orderReissueRejectTransaction = 'orderReissueRejectTransaction'
     replacingOrderCancelTransaction = 'replacingOrderCancelTransaction'
 
-    @staticmethod
-    def all():
+    @classmethod
+    def all(cls):
         return [v for k, v in TransactionName.__dict__.items() if not k.startswith('_') and isinstance(v, str)]
 
 
