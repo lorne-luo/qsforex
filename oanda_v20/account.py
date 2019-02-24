@@ -7,9 +7,13 @@ import oanda_v20.common.view as common_view
 from mt4.constants import OrderSide
 from oanda_v20.base import EntityBase
 from oanda_v20.common.logger import log_error
-from oanda_v20.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
-from oanda_v20.convertor import get_symbol, lots_to_units
-from oanda_v20.prints import print_positions_map, print_orders_map, print_trades_map
+from oanda_v20.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
+from oanda_v20.common.convertor import get_symbol, lots_to_units
+from oanda_v20.instrument import InstrumentMixin
+from oanda_v20.order import OrderMixin
+from oanda_v20.position import PositionMixin
+from oanda_v20.common.prints import print_positions_map, print_orders_map, print_trades_map
+import settings
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 import v20
-from qsforex import settings
+import settings
 
 
 def create_api_context():

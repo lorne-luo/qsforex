@@ -2,7 +2,7 @@ import logging
 from oanda_v20.base import api, stream_api
 import pandas as pd
 
-from oanda_v20.convertor import get_symbol, get_timeframe_granularity
+from oanda_v20.common.convertor import get_symbol, get_timeframe_granularity
 
 logger = logging.getLogger(__name__)
 

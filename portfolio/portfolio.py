@@ -16,7 +16,7 @@ from qsforex.portfolio.position import Position
 from qsforex.utils.file import create_folder
 from qsforex import settings
 
-from oanda_v20.constants import OrderType
+from oanda_v20.common.constants import OrderType
 
 
 class Portfolio(object):
