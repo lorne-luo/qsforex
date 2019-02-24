@@ -5,7 +5,7 @@ from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLoss
 
 import oanda_v20.common.view as common_view
 from mt4.constants import OrderSide
-from oanda_v20.common.entity import EntityBase
+from oanda_v20.base import EntityBase
 from oanda_v20.common.logger import log_error
 from oanda_v20.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
 from oanda_v20.convertor import get_symbol, lots_to_units

@@ -1,5 +1,5 @@
 import logging
-from oanda_v20.api import api, stream_api
+from oanda_v20.base import api, stream_api
 import pandas as pd
 
 from oanda_v20.convertor import get_symbol, get_timeframe_granularity

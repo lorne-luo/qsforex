@@ -2,8 +2,7 @@ import logging
 from decimal import Decimal, ROUND_HALF_UP
 
 from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
-
-from oanda_v20.api import api
+from oanda_v20.base import api
 from oanda_v20.common.view import print_entity
 from oanda_v20.convertor import get_symbol, lots_to_units
 from qsforex.oanda_v20.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce
