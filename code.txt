@@ -9,6 +9,7 @@ ln -s `pwd` env/lib/python3.7/site-packages/qsforex
 
 curl -H "Authorization: Bearer 24655e327e5d3b21160261116d9f028b-c9779d30d729c87b093158a296568d7e" https://api-fxpractice.oanda.com/v3/accounts
 
+python -m unittest oanda_v20/tests.py
 
 
 ac.trades['99'].__dict__

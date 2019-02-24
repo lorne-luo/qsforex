@@ -3,7 +3,7 @@ def log_error(logger, response, title):
         "[{}] {}, {}, {}\n".format(
             title,
             response.status,
-            response.body['errorCode'],
-            response.body['errorMessage'],
+            response.body.get('errorCode') or response.body.get('errorMessage'),
+            response.body.get('errorMessage'),
         )
     )

@@ -37,6 +37,6 @@ EQUITY = Decimal("1000.00")
 APPLICATION_NAME = 'qsforex'
 
 try:
-    from .local import *
+    from local import *
 except ImportError:
     pass
