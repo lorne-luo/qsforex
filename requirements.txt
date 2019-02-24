@@ -14,7 +14,7 @@ six==1.9.0
 urllib3==1.24.1
 v20==3.0.25.0
 oandapyV20==0.6.3
-pyyaml==3.13
+pyyaml==4.2b1
 tabulate==0.8.2
 requests==2.20.0
 ujson==1.35
