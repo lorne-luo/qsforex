@@ -41,6 +41,73 @@ class OrderMixin(EntityBase):
         response = api.order.list_pending(self.account_id)
         return self._process_orders(response)
 
+    # order creation
+    def _process_paramters(self, **kwargs):
+        data = {}
+        instrument = get_symbol(kwargs['instrument'])
+        pip_unit = self.get_pip_unit(instrument)
+
+        if 'instrument' in kwargs:
+            data['instrument'] = instrument
+
+        if 'lots' in kwargs:
+            units = lots_to_units(kwargs['lots'], kwargs['side'])
+            data['units'] = str(units)
+
+        if 'type' in kwargs:
+            data['type'] = kwargs['type']
+
+        if 'timeInForce' in kwargs:
+            data['timeInForce'] = kwargs['timeInForce'] or TimeInForce.FOK
+
+        if 'priceBound' in kwargs:
+            data['priceBound'] = kwargs['priceBound']
+
+        if 'positionFill' in kwargs:
+            data['positionFill'] = kwargs['positionFill'] or OrderPositionFill.DEFAULT
+
+        if 'client_id' in kwargs or 'client_tag' in kwargs or 'client_comment' in kwargs:
+            data['tradeClientExtensions'] = ClientExtensions(id=kwargs['client_id'],
+                                                             tag=kwargs['client_tag'],
+                                                             comment=kwargs['client_comment'])
+
+        if 'take_profit_price' in kwargs:
+            data['takeProfitOnFill'] = TakeProfitDetails(
+                price=str(kwargs['take_profit_price']),
+                clientExtensions=data['tradeClientExtensions']
+            )
+
+        if 'stop_loss_pip' in kwargs:
+            stop_loss_price = pip_unit * Decimal(str(kwargs['stop_loss_pip']))
+            data['stopLossOnFill'] = StopLossDetails(distance=str(stop_loss_price),
+                                                     clientExtensions=data['tradeClientExtensions'])
+
+        if 'trailing_pip' in kwargs:
+            trailing_distance_price = pip_unit * Decimal(str(kwargs['trailing_pip']))
+            data['trailingStopLossOnFill'] = TrailingStopLossDetails(distance=str(trailing_distance_price),
+                                                                     clientExtensions=data['tradeClientExtensions'])
+
+        return data
+
+    def create_order(self):
+        pass
+
+    def get_order(self, order_id):
+        response = api.order.get(self.account_id, order_id)
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, 'GET_ORDER')
+            return False, response.body.get('errorMessage')
+
+        order = response.get("order", "200")
+        self.orders[order.id] = order
+
+        if settings.DEBUG:
+            print_orders([order])
+        return True, order
+
+    def market_if_touched(self):
+        pass
+
     def market_order(self, instrument, side,
                      lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
                      priceBound=None, positionFill=OrderPositionFill.DEFAULT,
@@ -48,45 +115,14 @@ class OrderMixin(EntityBase):
                      stop_loss_pip=None,
                      trailing_pip=None,
                      client_id=None, client_tag=None, client_comment=None):
-        instrument = get_symbol(instrument)
-        units = lots_to_units(lots, side)
-        pip_unit = self.get_pip_unit(instrument)
 
-        # client extension
-        client_args = {'id': client_id, 'tag': client_tag, 'comment': client_comment}
-        if any(client_args.values()):
-            tradeClientExtensions = ClientExtensions(**client_args)
-        else:
-            tradeClientExtensions = None
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+                'priceBound': priceBound, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
+                'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
+                'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_paramters(**data)
 
-        # stop loss
-        if stop_loss_pip:
-            stop_loss_price = pip_unit * Decimal(str(stop_loss_pip))
-            stop_loss_details = StopLossDetails(distance=str(stop_loss_price), clientExtensions=tradeClientExtensions)
-        else:
-            stop_loss_details = None
-
-        if take_profit_price:
-            take_profit_detail = TakeProfitDetails(price=str(take_profit_price), clientExtensions=tradeClientExtensions)
-        else:
-            take_profit_detail = None
-
-        if trailing_pip:
-            trailing_distance_price = pip_unit * Decimal(str(trailing_pip))
-            trailing_details = TrailingStopLossDetails(distance=str(trailing_distance_price),
-                                                       clientExtensions=tradeClientExtensions)
-        else:
-            trailing_details = None
-
-        response = self.api.order.market(
-            self.account_id,
-            instrument=instrument, units=str(units), type=type, timeInForce=timeInForce,
-            priceBound=priceBound, positionFill=positionFill,
-            takeProfitOnFill=take_profit_detail,
-            stopLossOnFill=stop_loss_details,
-            trailingStopLossOnFill=trailing_details,
-            tradeClientExtensions=tradeClientExtensions
-        )
+        response = self.api.order.market(self.account_id, **kwargs)
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'MARKET_ORDER')
