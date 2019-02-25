@@ -7,7 +7,7 @@ from oanda_v20.common.logger import log_error
 from oanda_v20.common.prints import print_orders
 from oanda_v20.common.view import print_entity, print_response_entity
 from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce
+from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
 import settings
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class OrderMixin(EntityBase):
         return self._process_orders(response)
 
     # order creation
-    def _process_paramters(self, **kwargs):
+    def _process_order_paramters(self, **kwargs):
         data = {}
         instrument = get_symbol(kwargs['instrument'])
         pip_unit = self.get_pip_unit(instrument)
@@ -61,7 +61,10 @@ class OrderMixin(EntityBase):
             data['timeInForce'] = kwargs['timeInForce'] or TimeInForce.FOK
 
         if 'priceBound' in kwargs:
-            data['priceBound'] = kwargs['priceBound']
+            data['priceBound'] = str(kwargs['priceBound'])
+
+        if 'price' in kwargs:
+            data['price'] = str(kwargs['price'])
 
         if 'positionFill' in kwargs:
             data['positionFill'] = kwargs['positionFill'] or OrderPositionFill.DEFAULT
@@ -87,7 +90,33 @@ class OrderMixin(EntityBase):
             data['trailingStopLossOnFill'] = TrailingStopLossDetails(distance=str(trailing_distance_price),
                                                                      clientExtensions=data['tradeClientExtensions'])
 
+        if 'trigger_condition' in kwargs:
+            data['triggerCondition'] = kwargs['trigger_condition'] or OrderTriggerCondition.DEFAULT
+
+        if 'gtd_time' in kwargs:
+            # todo confirm gtdTime format
+            data['gtdTime'] = str(kwargs['gtd_time'])
+
         return data
+
+    def _process_order_response(self, response, func_name):
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, func_name)
+            return False, response.body.get('errorMessage')
+
+        transactions = []
+        for name in TransactionName.all():
+            try:
+                transaction = response.get(name, "200")
+                transactions.append(transaction)
+            except:
+                pass
+
+        if settings.DEBUG:
+            for t in transactions:
+                print_entity(t, title=t.__class__.__name__)
+                print('')
+        return True, transactions
 
     def create_order(self):
         pass
@@ -108,6 +137,50 @@ class OrderMixin(EntityBase):
     def market_if_touched(self):
         pass
 
+    def limit_order(self, instrument, side, price,
+                    lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
+                    positionFill=OrderPositionFill.DEFAULT,
+                    trigger_condition=OrderTriggerCondition.DEFAULT,
+                    gtd_time=None,
+                    take_profit_price=None,
+                    stop_loss_pip=None,
+                    trailing_pip=None,
+                    client_id=None, client_tag=None, client_comment=None):
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+                'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
+                'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
+                'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+
+        response = self.api.order.limit(self.account_id, **kwargs)
+
+        success, transactions = self._process_order_response(response, 'LIMIT_ORDER')
+
+        return success, transactions
+
+    def stop_order(self, instrument, side, price,
+                    lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
+                    positionFill=OrderPositionFill.DEFAULT,priceBound=None,
+                    trigger_condition=OrderTriggerCondition.DEFAULT,
+                    gtd_time=None,
+                    take_profit_price=None,
+                    stop_loss_pip=None,
+                    trailing_pip=None,
+                    client_id=None, client_tag=None, client_comment=None):
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+                'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,'priceBound': priceBound,
+                'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
+                'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+
+        response = self.api.order.stop(self.account_id, **kwargs)
+
+        success, transactions = self._process_order_response(response, 'STOP_ORDER')
+
+        return success, transactions
+
     def market_order(self, instrument, side,
                      lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
                      priceBound=None, positionFill=OrderPositionFill.DEFAULT,
@@ -120,24 +193,11 @@ class OrderMixin(EntityBase):
                 'priceBound': priceBound, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
                 'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
                 'client_tag': client_tag, 'client_comment': client_comment}
-        kwargs = self._process_paramters(**data)
+        kwargs = self._process_order_paramters(**data)
 
         response = self.api.order.market(self.account_id, **kwargs)
 
-        if response.status < 200 or response.status > 299:
-            log_error(logger, response, 'MARKET_ORDER')
-            return False, response.body.get('errorMessage')
-
-        transactions = []
-        for name in TransactionName.all():
-            try:
-                transaction = response.get(name, "200")
-                transactions.append(transaction)
-            except:
-                pass
-        for t in transactions:
-            print_entity(t, title=t.__class__.__name__)
-            print('')
+        success, transactions = self._process_order_response(response, 'MARKET_ORDER')
 
         # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
         # todo success:MARKET_ORDER + ORDER_FILL
