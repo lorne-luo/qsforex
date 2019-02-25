@@ -14,27 +14,22 @@ ENVIRONMENTS = {
     }
 }
 
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
-
-OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
-
 DOMAIN = os.environ.get('DOMAIN', 'practice')
-
+API_DOMAIN = ENVIRONMENTS["api"][DOMAIN]
 STREAM_DOMAIN = ENVIRONMENTS["streaming"][DOMAIN]
 
-API_DOMAIN = ENVIRONMENTS["api"][DOMAIN]
+
+CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
+OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
+
 
 ACCESS_TOKEN = os.environ.get('OANDA_API_ACCESS_TOKEN', None)
-
 ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
 
-BASE_CURRENCY = "USD"
-
-EQUITY = Decimal("1000.00")
-
 APPLICATION_NAME = 'qsforex'
+BASE_CURRENCY = "USD"
+EQUITY = Decimal("1000.00")
+DEBUG = os.environ.get('DEBUG', False)
 
 try:
     from local import *
