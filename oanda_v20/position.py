@@ -15,45 +15,50 @@ class PositionMixin(EntityBase):
         instrument = get_symbol(instrument)
         response = self.api.position.get(self.account_id, instrument)
 
-        if response.status >= 200:
-            last_transaction_id = response.get('lastTransactionID', "200")
-            position = response.get('position', "200")
-            if position:
-                self.positions[position.instrument] = position
-
-            return True, position
-        else:
+        if response.status < 200 or response.status > 299:
             log_error(logger, response, 'QEURY_POSITION')
             return False, response.body['errorMessage']
+
+        last_transaction_id = response.get('lastTransactionID', 200)
+        position = response.get('position', 200)
+        if position:
+            self.positions[position.instrument] = position
+
+        return True, position
+
 
     def list_all_positions(self):
         response = self.api.position.list(
             self.account_id,
         )
-        if response.status >= 200:
-            last_transaction_id = response.get('lastTransactionID', "200")
-            positions = response.get('positions', "200")
-            for position in positions:
-                self.positions[position.instrument] = position
 
-            return True, positions
-        else:
+        if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_ALL_POSITION')
             return False, response.body['errorMessage']
+
+        last_transaction_id = response.get('lastTransactionID', 200)
+        positions = response.get('positions', 200)
+        for position in positions:
+            self.positions[position.instrument] = position
+
+        return True, positions
+
 
     def list_open_positions(self):
         response = self.api.position.list_open(
             self.account_id,
         )
-        if response.status >= 200:
-            last_transaction_id = response.get('lastTransactionID', "200")
-            positions = response.get('positions', "200")
-            for position in positions:
-                self.positions[position.instrument] = position
-            return True, positions
-        else:
+
+        if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_OPEN_POSITION')
             return False, response.body['errorMessage']
+
+        last_transaction_id = response.get('lastTransactionID', 200)
+        positions = response.get('positions', 200)
+        for position in positions:
+            self.positions[position.instrument] = position
+        return True, positions
+
 
     def close_all_position(self):
         instruments = self.positions.keys()
@@ -71,24 +76,25 @@ class PositionMixin(EntityBase):
             shortUnits=shortUnits
         )
 
-        if response.status >= 200:
-            longOrderCreateTransaction = response.get('longOrderCreateTransaction', None)
-            longOrderFillTransaction = response.get('longOrderFillTransaction', None)
-            longOrderCancelTransaction = response.get('longOrderCancelTransaction', None)
-            shortOrderCreateTransaction = response.get('shortOrderCreateTransaction', None)
-            shortOrderFillTransaction = response.get('shortOrderFillTransaction', None)
-            shortOrderCancelTransaction = response.get('shortOrderCancelTransaction', None)
-            relatedTransactionIDs = response.get('relatedTransactionIDs', None)
-            lastTransactionID = response.get('lastTransactionID', None)
-            print(longOrderCreateTransaction.__dict__)
-            print(longOrderFillTransaction.__dict__)
-            print(longOrderCancelTransaction.__dict__)
-            print(shortOrderCreateTransaction.__dict__)
-            print(shortOrderFillTransaction.__dict__)
-            print(shortOrderCancelTransaction.__dict__)
-            print(relatedTransactionIDs.__dict__)
-            print(lastTransactionID)
-            return True, 'done'
-        else:
+        if response.status < 200 or response.status > 299:
             log_error(logger, response, 'CLOSE_POSITION')
             return False, response.body['errorMessage']
+
+        longOrderCreateTransaction = response.get('longOrderCreateTransaction', None)
+        longOrderFillTransaction = response.get('longOrderFillTransaction', None)
+        longOrderCancelTransaction = response.get('longOrderCancelTransaction', None)
+        shortOrderCreateTransaction = response.get('shortOrderCreateTransaction', None)
+        shortOrderFillTransaction = response.get('shortOrderFillTransaction', None)
+        shortOrderCancelTransaction = response.get('shortOrderCancelTransaction', None)
+        relatedTransactionIDs = response.get('relatedTransactionIDs', None)
+        lastTransactionID = response.get('lastTransactionID', None)
+        print(longOrderCreateTransaction.__dict__)
+        print(longOrderFillTransaction.__dict__)
+        print(longOrderCancelTransaction.__dict__)
+        print(shortOrderCreateTransaction.__dict__)
+        print(shortOrderFillTransaction.__dict__)
+        print(shortOrderCancelTransaction.__dict__)
+        print(relatedTransactionIDs.__dict__)
+        print(lastTransactionID)
+        return True, 'done'
+

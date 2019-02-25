@@ -58,21 +58,22 @@ class OrderMixin(EntityBase):
             tradeClientExtensions=tradeClientExtensions
         )
 
-        if response.status >= 200:
-            transactions = []
-            for name in TransactionName.all():
-                try:
-                    transaction = response.get(name, None)
-                    transactions.append(transaction)
-                except:
-                    pass
-            for t in transactions:
-                print_entity(t, title=t.__class__.__name__)
-                print('')
-
-            # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
-            # todo success:MARKET_ORDER + ORDER_FILL
-            return transactions
-        else:
+        if response.status < 200 or response.status > 299:
             log_error(logger, response, 'MARKET_ORDER')
             return False, response.body.get('errorMessage')
+
+        transactions = []
+        for name in TransactionName.all():
+            try:
+                transaction = response.get(name, "200")
+                transactions.append(transaction)
+            except:
+                pass
+        for t in transactions:
+            print_entity(t, title=t.__class__.__name__)
+            print('')
+
+        # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
+        # todo success:MARKET_ORDER + ORDER_FILL
+        return True, transactions
+
