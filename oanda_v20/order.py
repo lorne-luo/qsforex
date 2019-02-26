@@ -17,11 +17,11 @@ class OrderMixin(EntityBase):
 
     # order list
     def _process_orders(self, response):
-        orders = response.get("orders", "200")
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_ORDER')
             return False, response.body.get('errorMessage')
 
+        orders = response.get("orders", "200")
         if len(orders) == 0:
             logger.debug("Account {} has no pending Orders to cancel".format(
                 self.account_id
@@ -33,8 +33,19 @@ class OrderMixin(EntityBase):
             print_orders(orders)
         return True, orders
 
-    def list_order(self, ids=None, state=None, instrument=None, count=None, beforeID=None):
-        response = api.order.list(self.account_id, ids, state, instrument, count, beforeID)
+    def list_order(self, ids=None, state=None, instrument=None, count=20, beforeID=None):
+        data = {}
+        if ids:
+            data['ids'] = ids
+        if state:
+            data['state'] = state
+        if instrument:
+            data['instrument'] = instrument
+        if count:
+            data['count'] = count
+        if beforeID:
+            data['beforeID'] = beforeID
+        response = api.order.list(self.account_id, **data)
         return self._process_orders(response)
 
     def list_pending_order(self):
@@ -134,9 +145,6 @@ class OrderMixin(EntityBase):
                 print('')
         return True, transactions
 
-    def create_order(self):
-        pass
-
     def get_order(self, order_id):
         response = api.order.get(self.account_id, order_id)
         if response.status < 200 or response.status > 299:
@@ -225,7 +233,7 @@ class OrderMixin(EntityBase):
 
         # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
         # todo success:MARKET_ORDER + ORDER_FILL
-        return True, transactions
+        return success, transactions
 
     def market_if_touched(self, instrument, side, price, lots=0.1,
                           priceBound=None, timeInForce=TimeInForce.GTC,
@@ -255,6 +263,7 @@ class OrderMixin(EntityBase):
         return True, transactions
 
     # TP , SL and trailing SL
+
     def take_profit_replace(self, order_id, price, client_trade_id=None,
                             timeInForce=TimeInForce.GTC, gtd_time=None,
                             trigger_condition=OrderTriggerCondition.DEFAULT,
