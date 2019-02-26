@@ -154,14 +154,14 @@ class OrderMixin(EntityBase):
         response = api.order.get(self.account_id, str(order_id))
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'GET_ORDER')
-            return False, response.body.get('errorMessage')
+            return None
 
         order = response.get("order", "200")
         self.orders[order.id] = order
 
         if settings.DEBUG:
             print_orders([order])
-        return True, order
+        return order
 
     def limit_order(self, instrument, side, price,
                     lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,

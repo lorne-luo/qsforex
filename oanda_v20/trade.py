@@ -57,14 +57,14 @@ class TradeMixin(EntityBase):
         response = api.trade.get(self.account_id, str(trade_id))
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'GET_TRADE')
-            return False, response.body.get('errorMessage')
+            return None
 
         trade = response.get("trade", "200")
         self.trades[trade.id] = trade
 
         if settings.DEBUG:
             print_trades([trade])
-        return True, trade
+        return trade
 
     def close(self, trade_id, lots='ALL'):
         # units : (string, default=ALL)
