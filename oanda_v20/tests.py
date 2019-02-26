@@ -67,10 +67,16 @@ class TestAccount(unittest.TestCase):
         self.account.close_all_position()
 
     def test_order(self):
+        self.account.list_prices()
+        self.assertTrue(len(self.account._prices))
+        ask = self.account._prices.get(self.currency).get('ask')
+        tp_price = self.account.calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
+
         success, trades = self.account.list_trade()
         trade_exists = len(trades)
 
-        success, transactions = self.account.market_order('EUR_USD', OrderSide.BUY, lots=0.1, stop_loss_pip=40)
+        success, transactions = self.account.market_order(self.currency, OrderSide.BUY, lots=0.1,
+                                                          take_profit_price=tp_price, stop_loss_pip=40)
         self.assertTrue(success)
 
         success, trades = self.account.list_trade()
@@ -99,10 +105,11 @@ class TestAccount(unittest.TestCase):
         success, transactions = self.account.trailing_stop_loss(trade_id=trade_id, stop_loss_pip=40.1)
         self.assertTrue(success)
 
-        success, transactions = self.account.close('109', lots=0.04)
+        success, transactions = self.account.close(trade_id, lots=0.04)
         self.assertTrue(success)
-        success, transactions = self.account.close('109')
+        success, transactions = self.account.close(trade_id)
         self.assertTrue(success)
+        self.assertFalse(trade_id in self.account.trades)
 
     def test_trade(self):
         pass
