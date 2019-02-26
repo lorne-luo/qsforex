@@ -31,14 +31,14 @@ class InstrumentMixin(EntityBase):
         if not len(instruments):
             return
 
-        # all_keys=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
-        columns = ['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'marginRate']
+        # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
+        # columns = ['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'marginRate']
         # all_currencies=[i.name for i in instruments]
-        currencies = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+        # currencies = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
         data = {}
         for i in instruments:
-            if i.name in currencies:
+            if i.name in self.DEFAULT_CURRENCIES:
                 data[i.name] = {'name': i.name,
                                 'type': i.type,
                                 'displayName': i.displayName,

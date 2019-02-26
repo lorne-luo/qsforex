@@ -14,16 +14,20 @@ from oanda_v20.order import OrderMixin
 from oanda_v20.position import PositionMixin
 from oanda_v20.common.prints import print_positions_map, print_orders_map, print_trades_map
 import settings
+from oanda_v20.price import PriceMixin
 from oanda_v20.trade import TradeMixin
 
 logger = logging.getLogger(__name__)
 
 
-class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin):
+class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin):
     """
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
     """
+
+    # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
+    DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
     def __init__(self, account_id, transaction_cache_depth=100):
         """
