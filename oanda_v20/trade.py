@@ -85,12 +85,21 @@ class TradeMixin(EntityBase):
             return False, response.body.get('errorMessage')
 
         transactions = []
+        trade_ids = []
+
         for name in TransactionName.all():
             try:
                 transaction = response.get(name, "200")
                 transactions.append(transaction)
+
+                tcs = getattr(transaction, 'tradesClosed', [])
+                for tc in tcs:
+                    trade_ids.append(tc.tradeID)
             except:
                 pass
+
+        if trade_ids:
+            self.pull()
 
         if settings.DEBUG:
             for t in transactions:

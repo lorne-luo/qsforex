@@ -148,12 +148,20 @@ class OrderMixin(EntityBase):
             return False, response.body.get('errorMessage')
 
         transactions = []
+        trade_ids = []
         for name in TransactionName.all():
             try:
                 transaction = response.get(name, response_status)
                 transactions.append(transaction)
+
+                to = getattr(transaction, 'tradeOpened', None)
+                if to:
+                    trade_ids.append(to.tradeID)
             except:
                 pass
+
+        if trade_ids:
+            self.pull()
 
         if settings.DEBUG:
             for t in transactions:
