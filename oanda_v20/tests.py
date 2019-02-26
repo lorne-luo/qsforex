@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 from pandas import DataFrame
+from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopOrderTransaction
 
 import settings
 from mt4.constants import OrderSide, PERIOD_M5
@@ -66,7 +67,7 @@ class TestAccount(unittest.TestCase):
         # close_all_position
         self.account.close_all_position()
 
-    def test_order(self):
+    def test_market_order(self):
         self.account.list_prices()
         self.assertTrue(len(self.account._prices))
         ask = self.account._prices.get(self.currency).get('ask')
@@ -111,5 +112,26 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(success)
         self.assertFalse(trade_id in self.account.trades)
 
-    def test_trade(self):
-        pass
+    def test_pending_order(self):
+        self.account.list_prices()
+        self.assertTrue(len(self.account._prices))
+        ask = self.account._prices.get(self.currency).get('ask')
+        limit_price = self.account.calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
+
+        success, transactions = self.account.limit_order(self.currency, OrderSide.SELL, price=limit_price, lots=0.1)
+        self.assertTrue(success)
+        self.assertTrue(isinstance(transactions[0], LimitOrderTransaction))
+
+        success, transaction = self.account.cancel_order(transactions[0].id)
+        self.assertTrue(success)
+        self.assertTrue(isinstance(transaction, OrderCancelTransaction))
+        self.assertTrue(transaction.id not in self.account.orders)
+
+        success, transactions = self.account.stop_buy(self.currency, price=limit_price, lots=0.1)
+        self.assertTrue(success)
+        self.assertTrue(isinstance(transactions[0], StopOrderTransaction))
+
+        success, transaction = self.account.cancel_order(transactions[0].id)
+        self.assertTrue(success)
+        self.assertTrue(isinstance(transaction, OrderCancelTransaction))
+        self.assertTrue(transaction.id not in self.account.orders)
