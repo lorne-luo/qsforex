@@ -23,6 +23,7 @@ def create_streaming_context():
         hostname=settings.STREAM_DOMAIN,
         application=settings.APPLICATION_NAME,
         token=settings.ACCESS_TOKEN,
+        datetime_format='RFC3339'
     )
 
     return ctx
@@ -39,19 +40,22 @@ class SingletonDecorator:
         return self.instance
 
 
-SingletonContext = SingletonDecorator(v20.Context)
+SingletonAPIContext = SingletonDecorator(v20.Context)
+SingletonStreamAPIContext = SingletonDecorator(v20.Context)
 
-api = SingletonContext(hostname=settings.API_DOMAIN,
+api = SingletonAPIContext(hostname=settings.API_DOMAIN,
                        application=settings.APPLICATION_NAME,
                        token=settings.ACCESS_TOKEN, )
 
-stream_api = SingletonContext(hostname=settings.STREAM_DOMAIN,
+stream_api = SingletonStreamAPIContext(hostname=settings.STREAM_DOMAIN,
                               application=settings.APPLICATION_NAME,
-                              token=settings.ACCESS_TOKEN, )
+                              token=settings.ACCESS_TOKEN,
+                              datetime_format='RFC3339')
 
 
 class EntityBase(object):
     api = api
+    stream_api = stream_api
     account_id = None
 
     _instruments = {}
