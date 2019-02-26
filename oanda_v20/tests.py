@@ -26,7 +26,7 @@ class TestAccount(unittest.TestCase):
         # pip unit
         pip_unit = self.account.get_pip_unit(self.currency)
         self.assertEqual(pip_unit, Decimal('0.0001'))
-        pips = self.account.get_pip(0.00315, self.currency)
+        pips = self.account.get_pips(0.00315, self.currency)
         self.assertEqual(pips, 31.5)
 
         # calculate_price

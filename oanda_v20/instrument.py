@@ -60,7 +60,7 @@ class InstrumentMixin(EntityBase):
         except KeyError:
             return None
 
-    def get_pip(self, value, instrument):
+    def get_pips(self, value, instrument):
         """calculate pip"""
         instrument = get_symbol(instrument)
         unit = self.get_pip_unit(instrument)
