@@ -110,15 +110,6 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
 
         print_trades_map(self.trades)
 
-    def get_trade(self, id):
-        """Fetch an open Trade"""
-        return self.trades.get(id, None)
-
-    def get_order(self, id):
-        """Fetch a pending Order"""
-
-        return self.orders.get(id, None)
-
     def get_position(self, instrument):
         """Fetch an open Position"""
         instrument = get_symbol(instrument)

@@ -7,7 +7,7 @@ from oanda_v20.common.convertor import get_symbol
 from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
 from oanda_v20.base import api, EntityBase
 from oanda_v20.common.logger import log_error
-from oanda_v20.common.prints import print_orders
+from oanda_v20.common.prints import print_trades
 from oanda_v20.common.view import print_entity, print_response_entity
 from oanda_v20.common.convertor import get_symbol, lots_to_units
 from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
@@ -30,7 +30,7 @@ class TradeMixin(EntityBase):
             self.trades[trade.id] = trade
 
         if settings.DEBUG:
-            print_orders(trades)
+            print_trades(trades)
         return True, trades
 
     def list_trade(self, ids=None, state=None, instrument=None, count=20, beforeID=None):
@@ -54,7 +54,7 @@ class TradeMixin(EntityBase):
         return self._process_trades(response)
 
     def get_trade(self, trade_id):
-        response = api.trade.get(self.account_id, trade_id)
+        response = api.trade.get(self.account_id, str(trade_id))
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'GET_TRADE')
             return False, response.body.get('errorMessage')
@@ -63,7 +63,7 @@ class TradeMixin(EntityBase):
         self.trades[trade.id] = trade
 
         if settings.DEBUG:
-            print_orders([trade])
+            print_trades([trade])
         return True, trade
 
     def close(self, trade_id, lots='ALL'):
@@ -75,11 +75,11 @@ class TradeMixin(EntityBase):
         # the magnitude of the value cannot exceed the magnitude of the Trade’s
         # open units.
         if lots != 'ALL':
-            units = lots_to_units(lots, OrderSide.BUY)
+            units = str(lots_to_units(lots, OrderSide.BUY))
         else:
             units = 'ALL'
 
-        response = api.trade.close(self.account_id, trade_id, units=units)
+        response = api.trade.close(self.account_id, trade_id, units=str(units))
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'CLOSE_TRADE')
             return False, response.body.get('errorMessage')
@@ -113,7 +113,7 @@ class TradeMixin(EntityBase):
         response = self.api.order.take_profit(self.account_id, **kwargs)
 
         success, transactions = self._process_order_response(response, 'TAKE_PROFIT')
-
+        # succeed: MarketOrderTransaction, OrderFillTransaction
         return success, transactions
 
     def stop_loss(self, trade_id, distance=None, price=None, client_trade_id=None,
