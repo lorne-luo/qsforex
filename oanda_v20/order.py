@@ -69,10 +69,17 @@ class OrderMixin(EntityBase):
         if 'positionFill' in kwargs:
             data['positionFill'] = kwargs['positionFill'] or OrderPositionFill.DEFAULT
 
+        # The Client Extensions to update for the Order. Do not set, modify, or
+        # delete clientExtensions if your account is associated with MT4.
         if 'client_id' in kwargs or 'client_tag' in kwargs or 'client_comment' in kwargs:
-            data['tradeClientExtensions'] = ClientExtensions(id=kwargs['client_id'],
-                                                             tag=kwargs['client_tag'],
-                                                             comment=kwargs['client_comment'])
+            data['clientExtensions'] = ClientExtensions(id=kwargs['client_id'],
+                                                        tag=kwargs['client_tag'],
+                                                        comment=kwargs['client_comment'])
+
+        if 'trade_client_id' in kwargs or 'trade_client_tag' in kwargs or 'trade_client_comment' in kwargs:
+            data['tradeClientExtensions'] = ClientExtensions(id=kwargs['trade_client_id'],
+                                                             tag=kwargs['trade_client_tag'],
+                                                             comment=kwargs['trade_client_comment'])
 
         if 'take_profit_price' in kwargs:
             data['takeProfitOnFill'] = TakeProfitDetails(
@@ -96,6 +103,15 @@ class OrderMixin(EntityBase):
         if 'gtd_time' in kwargs:
             # todo confirm gtdTime format
             data['gtdTime'] = str(kwargs['gtd_time'])
+
+        if 'trade_id' in kwargs:
+            data['tradeID'] = kwargs['trade_id']
+
+        if 'client_trade_id' in kwargs:
+            data['clientTradeID'] = kwargs['client_trade_id']
+
+        if 'guaranteed' in kwargs:
+            data['guaranteed'] = kwargs['guaranteed']
 
         return data
 
@@ -133,9 +149,6 @@ class OrderMixin(EntityBase):
         if settings.DEBUG:
             print_orders([order])
         return True, order
-
-    def market_if_touched(self):
-        pass
 
     def limit_order(self, instrument, side, price,
                     lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
@@ -190,17 +203,20 @@ class OrderMixin(EntityBase):
         return success, transactions
 
     def market_order(self, instrument, side,
-                     lots=0.1, type=OrderType.MARKET, timeInForce=TimeInForce.FOK,
+                     lots=0.1, timeInForce=TimeInForce.FOK,
                      priceBound=None, positionFill=OrderPositionFill.DEFAULT,
                      take_profit_price=None,
                      stop_loss_pip=None,
                      trailing_pip=None,
-                     client_id=None, client_tag=None, client_comment=None):
+                     client_id=None, client_tag=None, client_comment=None,
+                     trade_client_id=None, trade_client_tag=None, trade_client_comment=None):
 
-        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.MARKET,
+                'timeInForce': timeInForce,
                 'priceBound': priceBound, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
                 'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
-                'client_tag': client_tag, 'client_comment': client_comment}
+                'client_tag': client_tag, 'client_comment': client_comment, 'trade_client_id': trade_client_id,
+                'trade_client_tag': trade_client_tag, 'trade_client_comment': trade_client_comment}
         kwargs = self._process_order_paramters(**data)
 
         response = self.api.order.market(self.account_id, **kwargs)
@@ -211,7 +227,86 @@ class OrderMixin(EntityBase):
         # todo success:MARKET_ORDER + ORDER_FILL
         return True, transactions
 
-    # cancel
+    def market_if_touched(self, instrument, side, price, lots=0.1,
+                          priceBound=None, timeInForce=TimeInForce.GTC,
+                          gtd_time=None, positionFill=OrderPositionFill.DEFAULT,
+                          trigger_condition=OrderTriggerCondition.DEFAULT,
+                          take_profit_price=None,
+                          stop_loss_pip=None,
+                          trailing_pip=None,
+                          order_id=None,  # order to replace
+                          client_id=None, client_tag=None, client_comment=None,
+                          trade_client_id=None, trade_client_tag=None, trade_client_comment=None):
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.MARKET_IF_TOUCHED,
+                'timeInForce': timeInForce, 'gtd_time': gtd_time, 'trigger_condition': trigger_condition,
+                'priceBound': priceBound, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
+                'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
+                'client_tag': client_tag, 'client_comment': client_comment, 'trade_client_id': trade_client_id,
+                'trade_client_tag': trade_client_tag, 'trade_client_comment': trade_client_comment, 'price': price}
+        kwargs = self._process_order_paramters(**data)
+
+        if order_id:
+            response = self.api.order.market_if_touched_replace(self.account_id, order_id, **kwargs)
+        else:
+            response = self.api.order.market_if_touched(self.account_id, **kwargs)
+
+        success, transactions = self._process_order_response(response, 'MARKET_IF_TOUCHED')
+
+        return True, transactions
+
+    # TP , SL and trailing SL
+    def take_profit_replace(self, order_id, price, client_trade_id=None,
+                            timeInForce=TimeInForce.GTC, gtd_time=None,
+                            trigger_condition=OrderTriggerCondition.DEFAULT,
+                            client_id=None, client_tag=None, client_comment=None):
+        data = {'price': price, 'client_trade_id': client_trade_id,
+                'type': OrderType.TAKE_PROFIT, 'timeInForce': timeInForce,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
+                'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+
+        response = self.api.order.take_profit_replace(self.account_id, order_id, **kwargs)
+
+        success, transactions = self._process_order_response(response, 'TAKE_PROFIT_REPLACE')
+
+        return success, transactions
+
+    def stop_loss_replace(self, order_id, distance=None, price=None, client_trade_id=None,
+                          timeInForce=TimeInForce.GTC, gtd_time=None,
+                          trigger_condition=OrderTriggerCondition.DEFAULT,
+                          guaranteed=None,
+                          client_id=None, client_tag=None, client_comment=None):
+        data = {'client_trade_id': client_trade_id,
+                'price': price, 'distance': distance,
+                'type': OrderType.STOP_LOSS, 'timeInForce': timeInForce, 'guaranteed': guaranteed,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
+                'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+
+        response = self.api.order.stop_loss_replace(self.account_id, order_id ** kwargs)
+
+        success, transactions = self._process_order_response(response, 'STOP_LOSS_REPLACE')
+
+        return success, transactions
+
+    def trailing_stop_loss_replace(self, order_id, distance, client_trade_id=None,
+                                   timeInForce=TimeInForce.GTC, gtd_time=None,
+                                   trigger_condition=OrderTriggerCondition.DEFAULT,
+                                   client_id=None, client_tag=None, client_comment=None):
+        data = {'client_trade_id': client_trade_id,
+                'distance': distance,
+                'type': OrderType.TRAILING_STOP_LOSS, 'timeInForce': timeInForce,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
+                'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+
+        response = self.api.order.trailing_stop_loss_replace(self.account_id, order_id, **kwargs)
+
+        success, transactions = self._process_order_response(response, 'TRAILING_STOP_LOSS_REPLACE')
+
+        return success, transactions
+
+    # cancel & extensions
     def cancel_order(self, order_id):
         response = api.order.cancel(self.account_id, order_id)
 
