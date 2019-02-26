@@ -209,6 +209,50 @@ class OrderMixin(EntityBase):
 
         return success, transactions
 
+    def limit_buy(self, instrument, price,
+                  lots=0.1, timeInForce=TimeInForce.GTC,
+                  positionFill=OrderPositionFill.DEFAULT,
+                  trigger_condition=OrderTriggerCondition.DEFAULT,
+                  gtd_time=None,
+                  take_profit_price=None,
+                  stop_loss_pip=None,
+                  trailing_pip=None,
+                  order_id=None,  # order to replace
+                  client_id=None, client_tag=None, client_comment=None):
+        """buy shortcut for limit order"""
+        return self.limit_order(instrument=instrument, side=OrderSide.BUY, price=price,
+                                lots=lots, timeInForce=timeInForce,
+                                positionFill=positionFill,
+                                trigger_condition=trigger_condition,
+                                gtd_time=gtd_time,
+                                take_profit_price=take_profit_price,
+                                stop_loss_pip=stop_loss_pip,
+                                trailing_pip=trailing_pip,
+                                order_id=order_id,
+                                client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+
+    def limit_sell(self, instrument, price,
+                   lots=0.1, timeInForce=TimeInForce.GTC,
+                   positionFill=OrderPositionFill.DEFAULT,
+                   trigger_condition=OrderTriggerCondition.DEFAULT,
+                   gtd_time=None,
+                   take_profit_price=None,
+                   stop_loss_pip=None,
+                   trailing_pip=None,
+                   order_id=None,  # order to replace
+                   client_id=None, client_tag=None, client_comment=None):
+        """sell shortcut for limit order"""
+        return self.limit_order(instrument=instrument, side=OrderSide.SELL, price=price,
+                                lots=lots, timeInForce=timeInForce,
+                                positionFill=positionFill,
+                                trigger_condition=trigger_condition,
+                                gtd_time=gtd_time,
+                                take_profit_price=take_profit_price,
+                                stop_loss_pip=stop_loss_pip,
+                                trailing_pip=trailing_pip,
+                                order_id=order_id,
+                                client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+
     def stop_order(self, instrument, side, price,
                    lots=0.1, timeInForce=TimeInForce.GTC,
                    positionFill=OrderPositionFill.DEFAULT, priceBound=None,
@@ -235,6 +279,50 @@ class OrderMixin(EntityBase):
         success, transactions = self._process_order_response(response, 'STOP_ORDER', "201")
 
         return success, transactions
+
+    def stop_buy(self, instrument, price,
+                 lots=0.1, timeInForce=TimeInForce.GTC,
+                 positionFill=OrderPositionFill.DEFAULT, priceBound=None,
+                 trigger_condition=OrderTriggerCondition.DEFAULT,
+                 gtd_time=None,
+                 take_profit_price=None,
+                 stop_loss_pip=None,
+                 trailing_pip=None,
+                 order_id=None,  # order to replace
+                 client_id=None, client_tag=None, client_comment=None):
+        """buy shortcut for stop order"""
+        return self.stop_order(instrument=instrument, side=OrderSide.BUY, price=price,
+                               lots=lots, timeInForce=timeInForce, priceBound=priceBound,
+                               positionFill=positionFill,
+                               trigger_condition=trigger_condition,
+                               gtd_time=gtd_time,
+                               take_profit_price=take_profit_price,
+                               stop_loss_pip=stop_loss_pip,
+                               trailing_pip=trailing_pip,
+                               order_id=order_id,
+                               client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+
+    def stop_sell(self, instrument, price,
+                  lots=0.1, timeInForce=TimeInForce.GTC,
+                  positionFill=OrderPositionFill.DEFAULT, priceBound=None,
+                  trigger_condition=OrderTriggerCondition.DEFAULT,
+                  gtd_time=None,
+                  take_profit_price=None,
+                  stop_loss_pip=None,
+                  trailing_pip=None,
+                  order_id=None,  # order to replace
+                  client_id=None, client_tag=None, client_comment=None):
+        """sell shortcut for stop order"""
+        return self.stop_order(instrument=instrument, side=OrderSide.SELL, price=price,
+                               lots=lots, timeInForce=timeInForce, priceBound=priceBound,
+                               positionFill=positionFill,
+                               trigger_condition=trigger_condition,
+                               gtd_time=gtd_time,
+                               take_profit_price=take_profit_price,
+                               stop_loss_pip=stop_loss_pip,
+                               trailing_pip=trailing_pip,
+                               order_id=order_id,
+                               client_id=client_id, client_tag=client_tag, client_comment=client_comment)
 
     def market_order(self, instrument, side,
                      lots=0.1, timeInForce=TimeInForce.FOK,
