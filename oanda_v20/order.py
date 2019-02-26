@@ -183,7 +183,7 @@ class OrderMixin(EntityBase):
         return order
 
     def limit_order(self, instrument, side, price,
-                    lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
+                    lots=0.1, timeInForce=TimeInForce.GTC,
                     positionFill=OrderPositionFill.DEFAULT,
                     trigger_condition=OrderTriggerCondition.DEFAULT,
                     gtd_time=None,
@@ -192,7 +192,8 @@ class OrderMixin(EntityBase):
                     trailing_pip=None,
                     order_id=None,  # order to replace
                     client_id=None, client_tag=None, client_comment=None):
-        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.LIMIT,
+                'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
                 'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
                 'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
@@ -209,7 +210,7 @@ class OrderMixin(EntityBase):
         return success, transactions
 
     def stop_order(self, instrument, side, price,
-                   lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
+                   lots=0.1, timeInForce=TimeInForce.GTC,
                    positionFill=OrderPositionFill.DEFAULT, priceBound=None,
                    trigger_condition=OrderTriggerCondition.DEFAULT,
                    gtd_time=None,
@@ -218,7 +219,8 @@ class OrderMixin(EntityBase):
                    trailing_pip=None,
                    order_id=None,  # order to replace
                    client_id=None, client_tag=None, client_comment=None):
-        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
+        data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.STOP,
+                'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
                 'trigger_condition': trigger_condition, 'gtd_time': gtd_time, 'priceBound': priceBound,
                 'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
