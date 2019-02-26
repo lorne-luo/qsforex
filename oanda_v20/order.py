@@ -145,6 +145,7 @@ class OrderMixin(EntityBase):
                     take_profit_price=None,
                     stop_loss_pip=None,
                     trailing_pip=None,
+                    order_id=None,  # order to replace
                     client_id=None, client_tag=None, client_comment=None):
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
@@ -153,29 +154,36 @@ class OrderMixin(EntityBase):
                 'client_tag': client_tag, 'client_comment': client_comment}
         kwargs = self._process_order_paramters(**data)
 
-        response = self.api.order.limit(self.account_id, **kwargs)
+        if order_id:
+            response = self.api.order.limit_replace(self.account_id, order_id, **kwargs)
+        else:
+            response = self.api.order.limit(self.account_id, **kwargs)
 
         success, transactions = self._process_order_response(response, 'LIMIT_ORDER')
 
         return success, transactions
 
     def stop_order(self, instrument, side, price,
-                    lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
-                    positionFill=OrderPositionFill.DEFAULT,priceBound=None,
-                    trigger_condition=OrderTriggerCondition.DEFAULT,
-                    gtd_time=None,
-                    take_profit_price=None,
-                    stop_loss_pip=None,
-                    trailing_pip=None,
-                    client_id=None, client_tag=None, client_comment=None):
+                   lots=0.1, type=OrderType.LIMIT, timeInForce=TimeInForce.GTC,
+                   positionFill=OrderPositionFill.DEFAULT, priceBound=None,
+                   trigger_condition=OrderTriggerCondition.DEFAULT,
+                   gtd_time=None,
+                   take_profit_price=None,
+                   stop_loss_pip=None,
+                   trailing_pip=None,
+                   order_id=None,  # order to replace
+                   client_id=None, client_tag=None, client_comment=None):
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': type, 'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit_price,
-                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,'priceBound': priceBound,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time, 'priceBound': priceBound,
                 'stop_loss_pip': stop_loss_pip, 'trailing_pip': trailing_pip, 'client_id': client_id,
                 'client_tag': client_tag, 'client_comment': client_comment}
         kwargs = self._process_order_paramters(**data)
 
-        response = self.api.order.stop(self.account_id, **kwargs)
+        if order_id:
+            response = self.api.order.stop_replace(self.account_id, order_id, **kwargs)
+        else:
+            response = self.api.order.stop(self.account_id, **kwargs)
 
         success, transactions = self._process_order_response(response, 'STOP_ORDER')
 
