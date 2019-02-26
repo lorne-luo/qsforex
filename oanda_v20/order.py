@@ -107,7 +107,7 @@ class OrderMixin(EntityBase):
         if kwargs.get('take_profit_price'):
             data['takeProfitOnFill'] = TakeProfitDetails(
                 price=str(kwargs['take_profit_price']),
-                clientExtensions=data['tradeClientExtensions']
+                clientExtensions=data.get('clientExtensions')
             )
 
         if kwargs.get('stop_loss_pip') and pip_unit:
@@ -142,7 +142,7 @@ class OrderMixin(EntityBase):
 
         return data
 
-    def _process_order_response(self, response, func_name):
+    def _process_order_response(self, response, func_name, response_status="200"):
         if response.status < 200 or response.status > 299:
             log_error(logger, response, func_name)
             return False, response.body.get('errorMessage')
@@ -150,7 +150,7 @@ class OrderMixin(EntityBase):
         transactions = []
         for name in TransactionName.all():
             try:
-                transaction = response.get(name, "200")
+                transaction = response.get(name, response_status)
                 transactions.append(transaction)
             except:
                 pass
@@ -196,7 +196,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.limit(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'LIMIT_ORDER')
+        success, transactions = self._process_order_response(response, 'LIMIT_ORDER', "201")
 
         return success, transactions
 
@@ -222,7 +222,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.stop(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'STOP_ORDER')
+        success, transactions = self._process_order_response(response, 'STOP_ORDER', "201")
 
         return success, transactions
 
@@ -245,7 +245,7 @@ class OrderMixin(EntityBase):
 
         response = self.api.order.market(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'MARKET_ORDER')
+        success, transactions = self._process_order_response(response, 'MARKET_ORDER', "201")
 
         # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
         # todo success:MARKET_ORDER + ORDER_FILL
@@ -274,7 +274,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.market_if_touched(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'MARKET_IF_TOUCHED')
+        success, transactions = self._process_order_response(response, 'MARKET_IF_TOUCHED', "201")
 
         return True, transactions
 
@@ -295,7 +295,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.take_profit(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'TAKE_PROFIT_REPLACE')
+        success, transactions = self._process_order_response(response, 'TAKE_PROFIT', "201")
 
         return success, transactions
 
@@ -316,7 +316,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.stop_loss(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'STOP_LOSS_REPLACE')
+        success, transactions = self._process_order_response(response, 'STOP_LOSS', "201")
 
         return success, transactions
 
@@ -336,7 +336,7 @@ class OrderMixin(EntityBase):
         else:
             response = self.api.order.trailing_stop_loss(self.account_id, **kwargs)
 
-        success, transactions = self._process_order_response(response, 'TRAILING_STOP_LOSS_REPLACE')
+        success, transactions = self._process_order_response(response, 'TRAILING_STOP_LOSS', "201")
 
         return success, transactions
 
