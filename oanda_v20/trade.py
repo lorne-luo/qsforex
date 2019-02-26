@@ -68,3 +68,10 @@ class TradeMixin(EntityBase):
 
         return success, transactions
 
+    def trade_client_extensions(self, trade_id, client_id=None, client_tag=None, client_comment=None):
+        data = {'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+        response = api.trade.set_client_extensions(self.account_id, trade_id, **kwargs)
+        success, transactions = self._process_order_response(response, 'TRADE_CLIENT_EXTENSIONS')
+
+        return success, transactions

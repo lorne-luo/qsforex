@@ -323,3 +323,11 @@ class OrderMixin(EntityBase):
             print_entity(transaction, title='Order Canceled')
 
         return True, transaction
+
+    def order_client_extensions(self, order_id, client_id=None, client_tag=None, client_comment=None):
+        data = {'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
+        kwargs = self._process_order_paramters(**data)
+        response = api.order.set_client_extensions(self.account_id, order_id, **kwargs)
+        success, transactions = self._process_order_response(response, 'ORDER_CLIENT_EXTENSIONS')
+
+        return success, transactions
