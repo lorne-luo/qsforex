@@ -1,5 +1,7 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
+
+from mt4.constants import OrderSide
 from oanda_v20.common.convertor import get_symbol
 
 from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
@@ -15,6 +17,87 @@ logger = logging.getLogger(__name__)
 
 
 class TradeMixin(EntityBase):
+
+    # list
+    def _process_trades(self, response):
+
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, 'LIST_TRADE')
+            return False, response.body.get('errorMessage')
+
+        trades = response.get("trades", "200")
+        for trade in trades:
+            self.trades[trade.id] = trade
+
+        if settings.DEBUG:
+            print_orders(trades)
+        return True, trades
+
+    def list_trade(self, ids=None, state=None, instrument=None, count=20, beforeID=None):
+        data = {}
+        if ids:
+            data['ids'] = ids
+        if state:
+            data['state'] = state
+        if instrument:
+            data['instrument'] = instrument
+        if count:
+            data['count'] = count
+        if beforeID:
+            data['beforeID'] = beforeID
+
+        response = api.trade.list(self.account_id, **data)
+        return self._process_trades(response)
+
+    def list_open_trade(self):
+        response = api.trade.list_open(self.account_id)
+        return self._process_trades(response)
+
+    def get_trade(self, trade_id):
+        response = api.trade.get(self.account_id, trade_id)
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, 'GET_TRADE')
+            return False, response.body.get('errorMessage')
+
+        trade = response.get("trade", "200")
+        self.trades[trade.id] = trade
+
+        if settings.DEBUG:
+            print_orders([trade])
+        return True, trade
+
+    def close(self, trade_id, lots='ALL'):
+        # units : (string, default=ALL)
+        # Indication of how much of the Trade to close. Either the string “ALL”
+        # (indicating that all of the Trade should be closed), or a DecimalNumber
+        # representing the number of units of the open Trade to Close using a
+        # TradeClose MarketOrder. The units specified must always be positive, and
+        # the magnitude of the value cannot exceed the magnitude of the Trade’s
+        # open units.
+        if lots != 'ALL':
+            units = lots_to_units(lots, OrderSide.BUY)
+        else:
+            units = 'ALL'
+
+        response = api.trade.close(self.account_id, trade_id, units=units)
+        if response.status < 200 or response.status > 299:
+            log_error(logger, response, 'CLOSE_TRADE')
+            return False, response.body.get('errorMessage')
+
+        transactions = []
+        for name in TransactionName.all():
+            try:
+                transaction = response.get(name, "200")
+                transactions.append(transaction)
+            except:
+                pass
+
+        if settings.DEBUG:
+            for t in transactions:
+                print_entity(t, title=t.__class__.__name__)
+                print('')
+        # orderCreateTransaction, orderFillTransaction, orderCancelTransaction
+        return True, transactions
 
     # update SL and TP
     def take_profit(self, trade_id, price, client_trade_id=None,

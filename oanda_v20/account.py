@@ -14,11 +14,12 @@ from oanda_v20.order import OrderMixin
 from oanda_v20.position import PositionMixin
 from oanda_v20.common.prints import print_positions_map, print_orders_map, print_trades_map
 import settings
+from oanda_v20.trade import TradeMixin
 
 logger = logging.getLogger(__name__)
 
 
-class Account(PositionMixin, OrderMixin, InstrumentMixin):
+class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin):
     """
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
