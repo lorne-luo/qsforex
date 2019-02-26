@@ -1,7 +1,8 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
-from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
+from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails, \
+    LimitOrderTransaction, StopOrderTransaction
 
 from mt4.constants import OrderSide
 from oanda_v20.base import api, EntityBase
@@ -9,7 +10,8 @@ from oanda_v20.common.logger import log_error
 from oanda_v20.common.prints import print_orders
 from oanda_v20.common.view import print_entity, print_response_entity
 from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
+from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, \
+    OrderTriggerCondition, OrderState
 import settings
 
 logger = logging.getLogger(__name__)
@@ -149,6 +151,7 @@ class OrderMixin(EntityBase):
 
         transactions = []
         trade_ids = []
+        order_ids = []
         for name in TransactionName.all():
             try:
                 transaction = response.get(name, response_status)
@@ -157,10 +160,13 @@ class OrderMixin(EntityBase):
                 to = getattr(transaction, 'tradeOpened', None)
                 if to:
                     trade_ids.append(to.tradeID)
+
+                if isinstance(transaction, LimitOrderTransaction) or isinstance(transaction, StopOrderTransaction):
+                    order_ids.append(transaction.id)
             except:
                 pass
 
-        if trade_ids:
+        if trade_ids or order_ids:
             self.pull()
 
         if settings.DEBUG:
@@ -442,7 +448,7 @@ class OrderMixin(EntityBase):
     def cancel_order(self, order_id):
         response = api.order.cancel(self.account_id, str(order_id))
 
-        print("Response: {} ({})".format(response.status, response.reason))
+        # print("Response: {} ({})".format(response.status, response.reason))
 
         if response.status < 200 or response.status > 299:
             transaction = response.get('orderCancelRejectTransaction', "404")
@@ -454,7 +460,23 @@ class OrderMixin(EntityBase):
         if settings.DEBUG:
             print_entity(transaction, title='Order Canceled')
 
+        order_id = transaction.orderID
+        if order_id in self.orders:
+            self.orders.pop(order_id)
+
         return True, transaction
+
+    def cancel_pending_order(self):
+        """cancel all pending orders"""
+        if not self.orders:
+            self.list_order()
+
+        ids = self.orders.keys()
+
+        for id in ids:
+            order = self.orders.get(id)
+            if order.state == OrderState.PENDING:
+                self.cancel_order(id)
 
     def order_client_extensions(self, order_id, client_id=None, client_tag=None, client_comment=None):
         data = {'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
