@@ -21,7 +21,7 @@ class OrderMixin(EntityBase):
     def _process_orders(self, response):
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_ORDER')
-            return False, response.body.get('errorMessage')
+            return []
 
         orders = response.get("orders", "200")
         if len(orders) == 0:
@@ -33,20 +33,20 @@ class OrderMixin(EntityBase):
 
         if settings.DEBUG:
             print_orders(orders)
-        return True, orders
+        return orders
 
     def list_order(self, ids=None, state=None, instrument=None, count=20, beforeID=None):
         data = {}
         if ids:
-            data['ids'] = ids
+            data['ids'] = str(ids)
         if state:
             data['state'] = state
         if instrument:
             data['instrument'] = instrument
         if count:
-            data['count'] = count
+            data['count'] = str(count)
         if beforeID:
-            data['beforeID'] = beforeID
+            data['beforeID'] = str(beforeID)
         response = api.order.list(self.account_id, **data)
         return self._process_orders(response)
 

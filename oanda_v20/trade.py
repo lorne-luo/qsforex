@@ -23,7 +23,7 @@ class TradeMixin(EntityBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_TRADE')
-            return False, response.body.get('errorMessage')
+            return []
 
         trades = response.get("trades", "200")
         for trade in trades:
@@ -31,20 +31,20 @@ class TradeMixin(EntityBase):
 
         if settings.DEBUG:
             print_trades(trades)
-        return True, trades
+        return trades
 
     def list_trade(self, ids=None, state=None, instrument=None, count=20, beforeID=None):
         data = {}
         if ids:
-            data['ids'] = ids
+            data['ids'] = str(ids)
         if state:
             data['state'] = state
         if instrument:
             data['instrument'] = instrument
         if count:
-            data['count'] = count
+            data['count'] = str(count)
         if beforeID:
-            data['beforeID'] = beforeID
+            data['beforeID'] = str(beforeID)
 
         response = api.trade.list(self.account_id, **data)
         return self._process_trades(response)

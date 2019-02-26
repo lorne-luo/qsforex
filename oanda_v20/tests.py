@@ -89,7 +89,10 @@ class TestAccount(unittest.TestCase):
 
         order = self.account.get_order(trade.takeProfitOrder.id)
         self.assertTrue(order)
-        
+
+        orders = self.account.list_order()
+        self.assertTrue(orders)
+
         success, transactions = self.account.take_profit(trade_id, order_id=trade.takeProfitOrder.id, price='1.44444')
         self.assertTrue(success)
 
