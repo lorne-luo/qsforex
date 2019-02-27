@@ -1,7 +1,7 @@
 from decimal import Decimal
 import os
 
-ENVIRONMENTS = {
+OANDA_ENVIRONMENTS = {
     "streaming": {
         "real": "stream-fxtrade.oanda.com",
         "practice": "stream-fxpractice.oanda.com",
@@ -15,8 +15,8 @@ ENVIRONMENTS = {
 }
 
 DOMAIN = os.environ.get('DOMAIN', 'practice')
-API_DOMAIN = ENVIRONMENTS["api"][DOMAIN]
-STREAM_DOMAIN = ENVIRONMENTS["streaming"][DOMAIN]
+API_DOMAIN = OANDA_ENVIRONMENTS["api"][DOMAIN]
+STREAM_DOMAIN = OANDA_ENVIRONMENTS["streaming"][DOMAIN]
 
 
 CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
