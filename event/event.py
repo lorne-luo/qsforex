@@ -1,9 +1,60 @@
+class EventType(object):
+    STARTUP = 'STARTUP'
+    SHUTDOWN = 'SHUTDOWN'
+    HEARTBEAT = 'HEARTBEAT'
+    TICK = 'TICK'
+    TICK_PRICE = 'TICK_PRICE'
+    TIMEFRAME = 'TIMEFRAME'
+    SIGNAL = 'SIGNAL'
+    ORDER = 'ORDER'
+    CLOSE = 'CLOSE'
+    MARKET_OPEN = 'MARKET_OPEN'
+    MARKET_CLOSE = 'MARKET_CLOSE'
+
+
 class Event(object):
     type = None
 
 
+class HeartBeatEvent(Event):
+    type = EventType.HEARTBEAT
+
+
+class TimeFrameEvent(Event):
+    type = EventType.TIMEFRAME
+
+    def __init__(self, timeframe):
+        self.timeframe = timeframe
+
+
+class MarketOpenEvent(Event):
+    type = EventType.MARKET_OPEN
+    open = True
+
+
+class MarketCloseEvent(Event):
+    type = EventType.MARKET_CLOSE
+    open = False
+
+
 class TickEvent(Event):
-    type = 'TICK'
+    type = EventType.TICK
+
+    def __init__(self, instrument, time, bid, ask):
+        self.instrument = instrument
+        self.time = time
+        self.bid = bid
+        self.ask = ask
+
+    def __str__(self):
+        return "Type: %s, Instrument: %s, Time: %s, Bid: %s, Ask: %s" % (
+            str(self.type), str(self.instrument),
+            str(self.time), str(self.bid), str(self.ask)
+        )
+
+
+class TickPriceEvent(Event):
+    type = EventType.TICK_PRICE
 
     def __init__(self, instrument, time, bid, ask):
         self.instrument = instrument
@@ -19,7 +70,7 @@ class TickEvent(Event):
 
 
 class SignalEvent(Event):
-    type = 'SIGNAL'
+    type = EventType.SIGNAL
 
     def __init__(self, instrument, order_type, side, time):
         self.instrument = instrument
@@ -35,7 +86,7 @@ class SignalEvent(Event):
 
 
 class OrderEvent(Event):
-    type = 'ORDER'
+    type = EventType.ORDER
 
     def __init__(self, instrument, units, order_type, side, expiry=None, price=None, lowerBound=None, upperBound=None,
                  stopLoss=None, takeProfit=None, trailingStop=None):
