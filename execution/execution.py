@@ -9,6 +9,8 @@ import oandapyV20
 from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
 
+from oanda_v20.common.convertor import get_symbol
+
 
 class ExecutionHandler(object):
     """
@@ -51,7 +53,7 @@ class OANDAExecutionHandler(ExecutionHandler):
         return httplib.HTTPSConnection(self.domain)
 
     def execute_order(self, event):
-        instrument = "%s_%s" % (event.instrument[:3], event.instrument[3:])
+        instrument = get_symbol(event.instrument)
         if event.order_type == 'market':
             if event.side == 'buy':
                 mktOrder = MarketOrderRequest(
@@ -87,4 +89,3 @@ class OANDAExecutionHandler(ExecutionHandler):
 
         # response = self.conn.getresponse().read().decode("utf-8").replace("\n","").replace("\t","")
         self.logger.debug(json.dumps(rv, indent=2))
-

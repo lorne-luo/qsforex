@@ -1,6 +1,8 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
+import dateparser
+
 from mt4.constants import OrderSide
 from oanda_v20.common.convertor import get_symbol
 
@@ -21,7 +23,7 @@ class PriceMixin(EntityBase):
 
     def _process_price(self,price):
         instrument = price.instrument
-        time = price.time
+        time = dateparser.parse(price.time)
         bid = Decimal(str(price.bids[0].price))
         ask = Decimal(str(price.asks[0].price))
         spread = self.get_pips(ask - bid, instrument)

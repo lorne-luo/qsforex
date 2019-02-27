@@ -35,7 +35,7 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(price, Decimal('1.11639'))
 
         # get_candle
-        from_time = datetime.now()
+        from_time = datetime.utcnow()
         to_time = from_time - relativedelta(minutes=101)
         count = 20
 
