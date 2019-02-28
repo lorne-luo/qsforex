@@ -16,7 +16,11 @@ from qsforex.portfolio.position import Position
 from qsforex.utils.file import create_folder
 from qsforex import settings
 
+from oanda_v20.account import Account
+from oanda_v20.base import SingletonAPIContext
 from oanda_v20.common.constants import OrderType
+from oanda_v20.common.convertor import lots_to_units, get_symbol, units_to_lots
+from settings import OANDA_ENVIRONMENTS
 
 
 class Portfolio(object):
@@ -199,3 +203,82 @@ class Portfolio(object):
             self.logger.info("Portfolio Balance: %s" % self.balance)
         else:
             self.logger.info("Unable to execute order as price data was insufficient.")
+
+
+class OandaV20Portfolio(object):
+    def __init__(
+            self, domain, access_token, account_id, queue, base_currency=settings.BASE_CURRENCY,
+            leverage=100, equity=settings.EQUITY,
+            risk_ratio=Decimal("0.05")
+    ):
+        self.account_id = account_id
+        self.account = Account(domain=domain, account_id=account_id, access_token=access_token)
+        self.base_leverage = int(1 / self.account.instruments['EUR_USD']['marginRate'])
+
+        self.queue = queue
+        self.base_currency = self.account.details.currency
+        self.leverage = leverage
+        self.risk_ratio = risk_ratio  # risk_per_trade
+        self.positions = {}
+        self.margin_rate = Decimal(str(self.account.details.marginRate))
+        self.logger = logging.getLogger(__name__)
+
+    @property
+    def alias(self):
+        return self.account.details.alias
+
+    @property
+    def equity(self):
+        return Decimal(str(self.account.details.NAV))
+
+    @property
+    def balance(self):
+        return Decimal(str(self.account.details.balance))
+
+    @property
+    def open_trade_count(self):
+        return self.account.details.openTradeCount
+
+    @property
+    def pending_order_count(self):
+        return self.account.details.pendingOrderCount
+
+    @property
+    def margin_used(self):
+        return self.account.details.marginUsed
+
+    @property
+    def margin_level(self):
+        return self.account.margin_level
+
+    def dump(self):
+        self.account.dump()
+
+    def trade_units(self, instrument, stop_loss_pips):
+        """get max units for this instrument"""
+        instrument = get_symbol(instrument)
+        pip_unit = self.account.get_pip_unit(instrument)
+
+        risk = self.equity * self.risk_ratio
+        value = risk / stop_loss_pips / pip_unit
+
+        if instrument.upper().startswith('USD'):
+            price = self.account.get_price(instrument)
+            value = value * price
+        elif instrument.upper().endswith('USD'):
+            pass
+        else:
+            # cross pair
+            raise NotImplementedError
+
+        return int(value / 100) * 100
+
+
+if __name__ == '__main__':
+    profile = OandaV20Portfolio('practice', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
+    units = profile.trade_units('EURUSD', 30)
+    print(units)
+    print(units_to_lots(units))
+    units = profile.trade_units('USDJPY', 30)
+    print(units)
+    print(units_to_lots(units))
