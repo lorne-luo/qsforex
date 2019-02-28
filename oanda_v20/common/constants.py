@@ -1,3 +1,6 @@
+UNIT_RATIO = 100000
+
+
 class OrderType(object):
     MARKET = "MARKET"  # A Market Order
     LIMIT = "LIMIT"  # A Limit Order
