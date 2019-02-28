@@ -8,7 +8,9 @@ from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopO
 import settings
 from mt4.constants import OrderSide, PERIOD_M5
 from oanda_v20.account import Account
+from oanda_v20.common.convertor import units_to_lots
 from oanda_v20.common.prints import print_positions
+from portfolio.portfolio import OandaV20Portfolio
 
 
 class TestAccount(unittest.TestCase):
@@ -135,3 +137,13 @@ class TestAccount(unittest.TestCase):
         self.assertTrue(success)
         self.assertTrue(isinstance(transaction, OrderCancelTransaction))
         self.assertTrue(transaction.id not in self.account.orders)
+
+
+class TestPortifolio(unittest.TestCase):
+
+    def test_oanda_portifolio(self):
+        profile = OandaV20Portfolio('practice', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
+        units = profile.trade_units('EURUSD', 30)
+        print(units_to_lots(units))
+        units = profile.trade_units('USDJPY', 30)
+        print(units_to_lots(units))
