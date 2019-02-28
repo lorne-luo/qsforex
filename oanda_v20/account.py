@@ -5,7 +5,7 @@ from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLoss
 
 import oanda_v20.common.view as common_view
 from mt4.constants import OrderSide
-from oanda_v20.base import EntityBase
+from oanda_v20.base import EntityBase, SingletonAPIContext
 from oanda_v20.common.logger import log_error
 from oanda_v20.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
 from oanda_v20.common.convertor import get_symbol, lots_to_units
@@ -29,13 +29,20 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
     DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
-    def __init__(self, account_id, transaction_cache_depth=100):
+    def setup_api(self, domain, access_token):
+        hostname = settings.OANDA_ENVIRONMENTS["api"][domain]
+        stream_hostname = settings.OANDA_ENVIRONMENTS["streaming"][domain]
+        self.api = SingletonAPIContext(hostname=hostname, token=access_token)
+        self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token)
+
+    def __init__(self, domain, account_id, access_token, transaction_cache_depth=100):
         """
         Create a new Account wrapper
 
         Args:
             account: a v20.account.Account fetched from the server
         """
+        self.setup_api(domain, access_token)
 
         #
         # The collection of Trades open in the Account
@@ -88,6 +95,9 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
         # The Account details
         #
         self.details = account
+
+        self.list_instruments()
+        self.base_leverage = int(1 / self.instruments['EUR_USD']['marginRate'])
 
     def __str__(self):
         return '%s # %s' % (self.details.id, self.details.alias)
@@ -269,3 +279,11 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
         )
 
         self.details.lastTransactionID = response.get("lastTransactionID", "200")
+
+    @property
+    def margin_level(self):
+        if self.details.marginUsed:
+            level = self.details.NAV / self.details.marginUsed * self.base_leverage
+
+            return Decimal(level).quantize(Decimal('0.01'))
+        return 0
