@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
 
 import oanda_v20.common.view as common_view
-from base.models import AccountBase
+from portfolio.base import AccountBase
 from mt4.constants import OrderSide
 from oanda_v20.base import EntityBase, SingletonAPIContext
 from oanda_v20.common.logger import log_error

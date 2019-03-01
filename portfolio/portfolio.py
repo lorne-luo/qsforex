@@ -207,17 +207,16 @@ class Portfolio(object):
 
 class OandaV20Portfolio(object):
     def __init__(
-            self, domain, access_token, account_id, queue, base_currency=settings.BASE_CURRENCY,
-            leverage=100, equity=settings.EQUITY,
+            self, type, access_token, account_id, queue,
+            leverage=None, equity=None, base_currency='USD',
             risk_ratio=Decimal("0.05")
     ):
-        self.account_id = account_id
-        self.account = Account(domain=domain, account_id=account_id, access_token=access_token)
-        self.base_leverage = int(1 / self.account.instruments['EUR_USD']['marginRate'])
-
         self.queue = queue
-        self.base_currency = self.account.details.currency
-        self.leverage = leverage
+        self.account_id = account_id
+        self.account = Account(type=type, account_id=account_id, access_token=access_token)
+        self.leverage = leverage or int(1 / self.account.instruments['EUR_USD']['marginRate'])
+
+        self.base_currency = base_currency or self.account.details.currency
         self.risk_ratio = risk_ratio  # risk_per_trade
         self.positions = {}
         self.margin_rate = Decimal(str(self.account.details.marginRate))
@@ -275,6 +274,7 @@ class OandaV20Portfolio(object):
 
 
 if __name__ == '__main__':
+    from portfolio.portfolio import *
     profile = OandaV20Portfolio('DEMO', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
     units = profile.trade_units('EURUSD', 30)
     print(units)
