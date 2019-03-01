@@ -4,10 +4,11 @@ from decimal import Decimal, ROUND_HALF_UP
 from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
 
 import oanda_v20.common.view as common_view
+from base.models import AccountBase
 from mt4.constants import OrderSide
 from oanda_v20.base import EntityBase, SingletonAPIContext
 from oanda_v20.common.logger import log_error
-from oanda_v20.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill
+from oanda_v20.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill, ENVIRONMENTS
 from oanda_v20.common.convertor import get_symbol, lots_to_units
 from oanda_v20.instrument import InstrumentMixin
 from oanda_v20.order import OrderMixin
@@ -20,34 +21,37 @@ from oanda_v20.trade import TradeMixin
 logger = logging.getLogger(__name__)
 
 
-class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin):
+class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, AccountBase):
     """
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
     """
+    broker = 'Oanda'
 
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
     DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
-    def setup_api(self, domain, access_token, application_name):
-        hostname = settings.OANDA_ENVIRONMENTS["api"][domain]
-        stream_hostname = settings.OANDA_ENVIRONMENTS["streaming"][domain]
+    def setup_api(self, type, access_token, application_name):
+        self.type = type
+        hostname = ENVIRONMENTS["api"][type]
+        stream_hostname = ENVIRONMENTS["streaming"][type]
         self.api = SingletonAPIContext(hostname=hostname, token=access_token, application=application_name)
-        self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token, application=application_name)
+        self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token,
+                                              application=application_name)
 
-    def __init__(self, domain, account_id, access_token, application_name=None, transaction_cache_depth=100):
+    def __init__(self, type, account_id, access_token, application_name=None, transaction_cache_depth=100):
         """
         Create a new Account wrapper
 
         Args:
             account: a v20.account.Account fetched from the server
         """
-        self.setup_api(domain, access_token, application_name)
+        self.account_id = account_id
+        self.setup_api(type, access_token, application_name)
 
         #
         # The collection of Trades open in the Account
         #
-        self.account_id = account_id
         response = self.api.account.get(account_id)
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'GET_ACCOUNT')

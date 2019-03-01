@@ -275,7 +275,7 @@ class OandaV20Portfolio(object):
 
 
 if __name__ == '__main__':
-    profile = OandaV20Portfolio('practice', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
+    profile = OandaV20Portfolio('DEMO', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
     units = profile.trade_units('EURUSD', 30)
     print(units)
     print(units_to_lots(units))

@@ -18,7 +18,10 @@ class TestAccount(unittest.TestCase):
     currency = 'EUR_USD'
 
     def setUp(self):
-        self.account = Account(settings.ACCOUNT_ID)
+        self.account = Account(type='DEMO',
+                               account_id=settings.ACCOUNT_ID,
+                               access_token=settings.ACCESS_TOKEN,
+                               application_name=settings.APPLICATION_NAME)
 
     def test_instrument(self):
         # list_instruments

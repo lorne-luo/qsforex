@@ -1,3 +1,5 @@
+from base.models import AccountType
+
 UNIT_RATIO = 100000
 
 
@@ -119,3 +121,17 @@ class TransactionType(object):
     DELAYED_TRADE_CLOSURE = 'DELAYED_TRADE_CLOSURE'  # Delayed Trade Closure Transaction
     DAILY_FINANCING = 'DAILY_FINANCING'  # Daily Financing Transaction
     RESET_RESETTABLE_PL = 'RESET_RESETTABLE_PL'  # Reset Resettable PL Transaction
+
+
+ENVIRONMENTS = {
+    "streaming": {
+        AccountType.LIVE: "stream-fxtrade.oanda.com",
+        AccountType.DEMO: "stream-fxpractice.oanda.com",
+        AccountType.SANDBOX: "stream-sandbox.oanda.com"
+    },
+    "api": {
+        AccountType.LIVE: "api-fxtrade.oanda.com",
+        AccountType.DEMO: "api-fxpractice.oanda.com",
+        AccountType.SANDBOX: "api-sandbox.oanda.com"
+    }
+}
