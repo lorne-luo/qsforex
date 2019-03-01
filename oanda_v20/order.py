@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails, \
     LimitOrderTransaction, StopOrderTransaction
 
-from mt4.constants import OrderSide
+from mt4.constants import OrderSide, pip
 from oanda_v20.base import api, EntityBase
 from oanda_v20.common.logger import log_error
 from oanda_v20.common.prints import print_orders
@@ -73,7 +73,7 @@ class OrderMixin(EntityBase):
             instrument = trade.instrument
 
         if instrument:
-            pip_unit = self.get_pip_unit(instrument)
+            pip_unit = pip(instrument)
 
         if kwargs.get('lots'):
             units = lots_to_units(kwargs['lots'], kwargs.get('side') or OrderSide.BUY)

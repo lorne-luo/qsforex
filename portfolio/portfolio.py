@@ -16,6 +16,7 @@ from qsforex.portfolio.position import Position
 from qsforex.utils.file import create_folder
 from qsforex import settings
 
+from mt4.constants import pip
 from oanda_v20.account import Account
 from oanda_v20.base import SingletonAPIContext
 from oanda_v20.common.constants import OrderType
@@ -256,7 +257,7 @@ class OandaV20Portfolio(object):
     def trade_units(self, instrument, stop_loss_pips):
         """get max units for this instrument"""
         instrument = get_symbol(instrument)
-        pip_unit = self.account.get_pip_unit(instrument)
+        pip_unit = pip(instrument)
 
         risk = self.equity * self.risk_ratio
         value = risk / stop_loss_pips / pip_unit

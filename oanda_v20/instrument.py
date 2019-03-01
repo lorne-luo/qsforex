@@ -4,7 +4,7 @@ import pandas as pd
 from decimal import Decimal, ROUND_HALF_UP
 
 
-from mt4.constants import OrderSide
+from mt4.constants import OrderSide, pip
 from oanda_v20.base import api, EntityBase
 from oanda_v20.common.convertor import get_symbol, get_timeframe_granularity
 
@@ -33,40 +33,21 @@ class InstrumentMixin(EntityBase):
 
         data = {}
         for i in instruments:
-            if i.name in self.DEFAULT_CURRENCIES:
-                data[i.name] = {'name': i.name,
-                                'type': i.type,
-                                'displayName': i.displayName,
-                                'pipLocation': i.pipLocation,
-                                'pip': 10 ** i.pipLocation,
-                                'displayPrecision': i.displayPrecision,
-                                'marginRateDisplay': "{:.0f}:1".format(1.0 / float(i.marginRate)),
-                                'marginRate': i.marginRate, }
+            data[i.name] = {'name': i.name,
+                            'type': i.type,
+                            'displayName': i.displayName,
+                            'pipLocation': i.pipLocation,
+                            'pip': 10 ** i.pipLocation,
+                            'displayPrecision': i.displayPrecision,
+                            'marginRateDisplay': "{:.0f}:1".format(1.0 / float(i.marginRate)),
+                            'marginRate': i.marginRate, }
 
         self._instruments = data
         return self._instruments
 
-    def get_pip_unit(self, instrument):
-        """get pip unit for instrument"""
-        instrument = get_symbol(instrument)
-        try:
-            unit = self.instruments[instrument].get('pip')
-            return Decimal(str(unit))
-        except KeyError:
-            return None
-
-    def get_pips(self, value, instrument):
-        """calculate pip"""
-        instrument = get_symbol(instrument)
-        unit = self.get_pip_unit(instrument)
-        value = Decimal(str(value))
-        place_location = self.instruments[instrument]['displayPrecision'] + self.instruments[instrument]['pipLocation']
-        places = 10 ** (place_location * -1)
-        return (value / unit).quantize(Decimal(str(places)), rounding=ROUND_HALF_UP)
-
     def calculate_price(self, base_price, side, pip, instrument):
         instrument = get_symbol(instrument)
-        pip_unit = self.get_pip_unit(instrument)
+        pip_unit = pip(instrument)
         base_price = Decimal(str(base_price))
         pip = Decimal(str(pip))
 

@@ -80,6 +80,10 @@ class TimeFrameTicker(BaseHandler):
                 return now.hour < 20 or now.hour > 22
         return True
 
+    def is_nfp(self):
+        # is day of USA NFP
+        pass
+
     def process(self, event):
         now = datetime.utcnow()
         for timeframe in PERIOD_CHOICES:

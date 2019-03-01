@@ -6,7 +6,7 @@ from pandas import DataFrame
 from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopOrderTransaction
 
 import settings
-from mt4.constants import OrderSide, PERIOD_M5
+from mt4.constants import OrderSide, PERIOD_M5, pip
 from oanda_v20.account import Account
 from oanda_v20.common.convertor import units_to_lots
 from oanda_v20.common.prints import print_positions
@@ -30,9 +30,9 @@ class TestAccount(unittest.TestCase):
         print(instruments[self.currency])
 
         # pip unit
-        pip_unit = self.account.get_pip_unit(self.currency)
+        pip_unit = pip(self.currency)
         self.assertEqual(pip_unit, Decimal('0.0001'))
-        pips = self.account.get_pips(0.00315, self.currency)
+        pips = pip(self.currency,0.00315)
         self.assertEqual(pips, 31.5)
 
         # calculate_price

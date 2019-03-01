@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 import dateparser
 
+from mt4.constants import pip
 from oanda_v20.common.view import price_to_string, heartbeat_to_string
 from oanda_v20.common.convertor import get_symbol, lots_to_units
 import settings
@@ -18,7 +19,7 @@ class PriceMixin(object):
         time = dateparser.parse(price.time)
         bid = Decimal(str(price.bids[0].price))
         ask = Decimal(str(price.asks[0].price))
-        spread = self.get_pips(ask - bid, instrument)
+        spread = pip(instrument,ask - bid)
         self._prices[instrument] = {'time': time, 'bid': bid, 'ask': ask, 'spread': spread}
 
     # list
