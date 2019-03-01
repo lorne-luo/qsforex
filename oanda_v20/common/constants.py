@@ -1,4 +1,4 @@
-from base.models import AccountType
+from portfolio.base import AccountType
 
 UNIT_RATIO = 100000
 
