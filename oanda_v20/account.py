@@ -29,20 +29,20 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
     DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
-    def setup_api(self, domain, access_token):
+    def setup_api(self, domain, access_token, application_name):
         hostname = settings.OANDA_ENVIRONMENTS["api"][domain]
         stream_hostname = settings.OANDA_ENVIRONMENTS["streaming"][domain]
-        self.api = SingletonAPIContext(hostname=hostname, token=access_token)
-        self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token)
+        self.api = SingletonAPIContext(hostname=hostname, token=access_token, application=application_name)
+        self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token, application=application_name)
 
-    def __init__(self, domain, account_id, access_token, transaction_cache_depth=100):
+    def __init__(self, domain, account_id, access_token, application_name=None, transaction_cache_depth=100):
         """
         Create a new Account wrapper
 
         Args:
             account: a v20.account.Account fetched from the server
         """
-        self.setup_api(domain, access_token)
+        self.setup_api(domain, access_token, application_name)
 
         #
         # The collection of Trades open in the Account

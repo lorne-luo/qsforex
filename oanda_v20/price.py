@@ -3,22 +3,14 @@ from decimal import Decimal, ROUND_HALF_UP
 
 import dateparser
 
-from mt4.constants import OrderSide
-from oanda_v20.common.convertor import get_symbol
-
-from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
-from oanda_v20.base import api, EntityBase
-from oanda_v20.common.logger import log_error
-from oanda_v20.common.prints import print_orders
-from oanda_v20.common.view import print_entity, print_response_entity, price_to_string, heartbeat_to_string
+from oanda_v20.common.view import price_to_string, heartbeat_to_string
 from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
 import settings
 
 logger = logging.getLogger(__name__)
 
 
-class PriceMixin(EntityBase):
+class PriceMixin(object):
     _prices = {}
 
     def _process_price(self, price):

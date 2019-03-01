@@ -4,7 +4,6 @@ from decimal import Decimal, ROUND_HALF_UP
 from mt4.constants import OrderSide
 from oanda_v20.common.convertor import get_symbol
 
-from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
 from oanda_v20.base import api, EntityBase
 from oanda_v20.common.logger import log_error
 from oanda_v20.common.prints import print_trades

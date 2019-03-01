@@ -3,15 +3,10 @@ import dateparser
 import pandas as pd
 from decimal import Decimal, ROUND_HALF_UP
 
-from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails
 
 from mt4.constants import OrderSide
 from oanda_v20.base import api, EntityBase
-from oanda_v20.common.logger import log_error
-from oanda_v20.common.view import print_entity
-from oanda_v20.common.convertor import get_symbol, lots_to_units, get_timeframe_granularity
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce
-import settings
+from oanda_v20.common.convertor import get_symbol, get_timeframe_granularity
 
 logger = logging.getLogger(__name__)
 
