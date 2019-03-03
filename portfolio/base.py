@@ -1,5 +1,5 @@
 class AccountType(object):
-    LIVE = 'LIVE'
+    REAL = 'REAL'
     DEMO = 'DEMO'
     SANDBOX = 'SANDBOX'
 

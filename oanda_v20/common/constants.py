@@ -125,12 +125,12 @@ class TransactionType(object):
 
 ENVIRONMENTS = {
     "streaming": {
-        AccountType.LIVE: "stream-fxtrade.oanda.com",
+        AccountType.REAL: "stream-fxtrade.oanda.com",
         AccountType.DEMO: "stream-fxpractice.oanda.com",
         AccountType.SANDBOX: "stream-sandbox.oanda.com"
     },
     "api": {
-        AccountType.LIVE: "api-fxtrade.oanda.com",
+        AccountType.REAL: "api-fxtrade.oanda.com",
         AccountType.DEMO: "api-fxpractice.oanda.com",
         AccountType.SANDBOX: "api-sandbox.oanda.com"
     }
