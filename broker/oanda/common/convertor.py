@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from mt4.constants import OrderSide, PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_H1, PERIOD_H4, PERIOD_D1, \
     PERIOD_W1, PERIOD_MN1
-from oanda_v20.common.constants import UNIT_RATIO
+from broker.oanda.common.constants import UNIT_RATIO
 
 
 def get_symbol(symbol):

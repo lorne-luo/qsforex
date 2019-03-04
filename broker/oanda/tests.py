@@ -7,9 +7,9 @@ from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopO
 
 import settings
 from mt4.constants import OrderSide, PERIOD_M5, pip
-from oanda_v20.account import Account
-from oanda_v20.common.convertor import units_to_lots
-from oanda_v20.common.prints import print_positions
+from broker.oanda.account import Account
+from broker.oanda.common.convertor import units_to_lots
+from broker.oanda.common.prints import print_positions
 from portfolio.portfolio import OandaV20Portfolio
 
 

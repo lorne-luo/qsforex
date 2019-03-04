@@ -17,10 +17,10 @@ from qsforex.utils.file import create_folder
 from qsforex import settings
 
 from mt4.constants import pip
-from oanda_v20.account import Account
-from oanda_v20.base import SingletonAPIContext
-from oanda_v20.common.constants import OrderType
-from oanda_v20.common.convertor import lots_to_units, get_symbol, units_to_lots
+from broker.oanda.account import Account
+from broker.oanda.base import SingletonAPIContext
+from broker.oanda.common.constants import OrderType
+from broker.oanda.common.convertor import lots_to_units, get_symbol, units_to_lots
 from settings import OANDA_ENVIRONMENTS
 
 

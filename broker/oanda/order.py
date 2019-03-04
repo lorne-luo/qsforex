@@ -5,12 +5,12 @@ from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails
     LimitOrderTransaction, StopOrderTransaction
 
 from mt4.constants import OrderSide, pip
-from oanda_v20.base import api, EntityBase
-from oanda_v20.common.logger import log_error
-from oanda_v20.common.prints import print_orders
-from oanda_v20.common.view import print_entity, print_response_entity
-from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, \
+from broker.oanda.base import api, EntityBase
+from broker.oanda.common.logger import log_error
+from broker.oanda.common.prints import print_orders
+from broker.oanda.common.view import print_entity, print_response_entity
+from broker.oanda.common.convertor import get_symbol, lots_to_units
+from broker.oanda.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, \
     OrderTriggerCondition, OrderState
 import settings
 

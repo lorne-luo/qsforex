@@ -15,7 +15,7 @@ from qsforex.pricing.price import PriceHandler
 
 import settings
 from event.event import HeartBeatEvent, TickPriceEvent
-from oanda_v20.common.convertor import get_symbol
+from broker.oanda.common.convertor import get_symbol
 from runner.base import StreamRunnerBase
 from settings import OANDA_ENVIRONMENTS
 

@@ -3,20 +3,20 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
 
-import oanda_v20.common.view as common_view
+import broker.oanda.common.view as common_view
 from portfolio.base import AccountBase
 from mt4.constants import OrderSide
-from oanda_v20.base import EntityBase, SingletonAPIContext
-from oanda_v20.common.logger import log_error
-from oanda_v20.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill, ENVIRONMENTS
-from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.instrument import InstrumentMixin
-from oanda_v20.order import OrderMixin
-from oanda_v20.position import PositionMixin
-from oanda_v20.common.prints import print_positions_map, print_orders_map, print_trades_map
+from broker.oanda.base import EntityBase, SingletonAPIContext
+from broker.oanda.common.logger import log_error
+from broker.oanda.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill, ENVIRONMENTS
+from broker.oanda.common.convertor import get_symbol, lots_to_units
+from broker.oanda.instrument import InstrumentMixin
+from broker.oanda.order import OrderMixin
+from broker.oanda.position import PositionMixin
+from broker.oanda.common.prints import print_positions_map, print_orders_map, print_trades_map
 import settings
-from oanda_v20.price import PriceMixin
-from oanda_v20.trade import TradeMixin
+from broker.oanda.price import PriceMixin
+from broker.oanda.trade import TradeMixin
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ import oandapyV20
 from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
 
-from oanda_v20.common.convertor import get_symbol
+from broker.oanda.common.convertor import get_symbol
 
 
 class ExecutionHandler(object):

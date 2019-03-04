@@ -2,14 +2,14 @@ import logging
 from decimal import Decimal, ROUND_HALF_UP
 
 from mt4.constants import OrderSide
-from oanda_v20.common.convertor import get_symbol
+from broker.oanda.common.convertor import get_symbol
 
-from oanda_v20.base import api, EntityBase
-from oanda_v20.common.logger import log_error
-from oanda_v20.common.prints import print_trades
-from oanda_v20.common.view import print_entity, print_response_entity
-from oanda_v20.common.convertor import get_symbol, lots_to_units
-from oanda_v20.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
+from broker.oanda.base import api, EntityBase
+from broker.oanda.common.logger import log_error
+from broker.oanda.common.prints import print_trades
+from broker.oanda.common.view import print_entity, print_response_entity
+from broker.oanda.common.convertor import get_symbol, lots_to_units
+from broker.oanda.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, OrderTriggerCondition
 import settings
 
 logger = logging.getLogger(__name__)

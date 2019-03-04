@@ -5,8 +5,8 @@ from decimal import Decimal, ROUND_HALF_UP
 
 
 from mt4.constants import OrderSide, pip
-from oanda_v20.base import api, EntityBase
-from oanda_v20.common.convertor import get_symbol, get_timeframe_granularity
+from broker.oanda.base import api, EntityBase
+from broker.oanda.common.convertor import get_symbol, get_timeframe_granularity
 
 logger = logging.getLogger(__name__)
 

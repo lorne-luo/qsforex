@@ -4,8 +4,8 @@ from decimal import Decimal, ROUND_HALF_UP
 import dateparser
 
 from mt4.constants import pip
-from oanda_v20.common.view import price_to_string, heartbeat_to_string
-from oanda_v20.common.convertor import get_symbol, lots_to_units
+from broker.oanda.common.view import price_to_string, heartbeat_to_string
+from broker.oanda.common.convertor import get_symbol, lots_to_units
 import settings
 
 logger = logging.getLogger(__name__)
