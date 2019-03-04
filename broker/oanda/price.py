@@ -1,11 +1,12 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
+import pandas as pd
 
 import dateparser
 
 from mt4.constants import pip
 from broker.oanda.common.view import price_to_string, heartbeat_to_string
-from broker.oanda.common.convertor import get_symbol, lots_to_units
+from broker.oanda.common.convertor import get_symbol, lots_to_units, get_timeframe_granularity
 import settings
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,44 @@ class PriceMixin(object):
             return price['bid']
         elif type == 'ask':
             return price['ask']
+
+    def get_candle(self, instrument, granularity, count=50, fromTime=None, toTime=None, price_type='M', smooth=False):
+        instrument = get_symbol(instrument)
+        granularity = get_timeframe_granularity(granularity)
+        if isinstance(fromTime, str):
+            fromTime = dateparser.parse(fromTime).strftime('%Y-%m-%dT%H:%M:%S')
+        if isinstance(toTime, str):
+            fromTime = dateparser.parse(toTime).strftime('%Y-%m-%dT%H:%M:%S')
+
+        response = self.api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
+                                          toTime=toTime, price=price_type, smooth=smooth)
+
+        if response.status != 200:
+            logger.error('[GET_Candle]', response, response.body)
+            return []
+
+        candles = response.get("candles", 200)
+
+        price = 'mid'
+        if price_type == 'B':
+            price = 'bid'
+        elif price_type == 'A':
+            price = 'ask'
+
+        data = [[candle.time.split(".")[0],
+                 getattr(candle, price, None).o,
+                 getattr(candle, price, None).h,
+                 getattr(candle, price, None).l,
+                 getattr(candle, price, None).c,
+                 candle.volume]
+                for candle in candles]
+
+        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'open', 'volume'])
+        df['time'] = pd.to_datetime(df['time'])
+        df = df.set_index('time')
+        df.head()
+
+        return df
 
     def streaming(self, instruments=None, snapshot=True):
         instruments = instruments or self.default_pairs
