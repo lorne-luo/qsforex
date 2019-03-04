@@ -24,7 +24,7 @@ class PriceMixin(object):
 
     # list
     def list_prices(self, instruments=None, since=None, includeUnitsAvailable=True):
-        instruments = instruments or self.DEFAULT_CURRENCIES
+        instruments = instruments or self.default_pairs
         response = self.api.pricing.get(
             self.account_id,
             instruments=",".join(instruments),
@@ -57,7 +57,7 @@ class PriceMixin(object):
             return price['ask']
 
     def streaming(self, instruments=None, snapshot=True):
-        instruments = instruments or self.DEFAULT_CURRENCIES
+        instruments = instruments or self.default_pairs
         # print(",".join(instruments))
         # print(self.account_id)
 

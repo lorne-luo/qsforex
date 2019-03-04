@@ -4,7 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
 
 import broker.oanda.common.view as common_view
-from portfolio.base import AccountBase
+from broker.base import BrokerAccount
 from mt4.constants import OrderSide
 from broker.oanda.base import EntityBase, SingletonAPIContext
 from broker.oanda.common.logger import log_error
@@ -21,7 +21,7 @@ from broker.oanda.trade import TradeMixin
 logger = logging.getLogger(__name__)
 
 
-class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, AccountBase):
+class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, BrokerAccount):
     """
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
@@ -29,7 +29,7 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
     broker = 'Oanda'
 
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
-    DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+    default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
     def setup_api(self, type, access_token, application_name):
         self.type = type
@@ -46,6 +46,7 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
         Args:
             account: a v20.account.Account fetched from the server
         """
+
         self.account_id = account_id
         self.setup_api(type, access_token, application_name)
 
@@ -102,6 +103,8 @@ class Account(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin
 
         self.list_instruments()
         self.base_leverage = int(1 / self.instruments['EUR_USD']['marginRate'])
+
+        super(OANDA, self).__init__()
 
     def __str__(self):
         return '%s # %s' % (self.details.id, self.details.alias)

@@ -17,7 +17,7 @@ from qsforex.utils.file import create_folder
 from qsforex import settings
 
 from mt4.constants import pip
-from broker.oanda.account import Account
+from broker.oanda.account import OANDA
 from broker.oanda.base import SingletonAPIContext
 from broker.oanda.common.constants import OrderType
 from broker.oanda.common.convertor import lots_to_units, get_symbol, units_to_lots
@@ -214,7 +214,7 @@ class OandaV20Portfolio(object):
     ):
         self.queue = queue
         self.account_id = account_id
-        self.account = Account(type=type, account_id=account_id, access_token=access_token)
+        self.account = OANDA(type=type, account_id=account_id, access_token=access_token)
         self.leverage = leverage or int(1 / self.account.instruments['EUR_USD']['marginRate'])
 
         self.base_currency = base_currency or self.account.details.currency

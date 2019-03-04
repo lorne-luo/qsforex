@@ -110,7 +110,7 @@ class StreamingForexPrices(PriceHandler):
 
 
 class OandaV20StreamRunner(StreamRunnerBase):
-    DEFAULT_CURRENCIES = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+    default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
 
     def __init__(self, queue, pairs, domain, access_token, account_id, *args, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
