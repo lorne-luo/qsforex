@@ -45,17 +45,6 @@ class InstrumentMixin(EntityBase):
         self._instruments = data
         return self._instruments
 
-    def calculate_price(self, base_price, side, pip, instrument):
-        instrument = get_symbol(instrument)
-        pip_unit = pip(instrument)
-        base_price = Decimal(str(base_price))
-        pip = Decimal(str(pip))
-
-        if side == OrderSide.BUY:
-            return base_price + pip * pip_unit
-        elif side == OrderSide.SELL:
-            return base_price - pip * pip_unit
-
     def get_candle(self, instrument, granularity, count=50, fromTime=None, toTime=None, price_type='M', smooth=False):
         instrument = get_symbol(instrument)
         granularity = get_timeframe_granularity(granularity)

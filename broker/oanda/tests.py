@@ -6,7 +6,7 @@ from pandas import DataFrame
 from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopOrderTransaction
 
 import settings
-from mt4.constants import OrderSide, PERIOD_M5, pip
+from mt4.constants import OrderSide, PERIOD_M5, pip, calculate_price
 from broker.oanda.account import OANDA
 from broker.oanda.common.convertor import units_to_lots
 from broker.oanda.common.prints import print_positions
@@ -36,7 +36,7 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(pips, 31.5)
 
         # calculate_price
-        price = self.account.calculate_price(1.11325, OrderSide.BUY, 31.4, self.currency)
+        price = calculate_price(1.11325, OrderSide.BUY, 31.4, self.currency)
         self.assertEqual(price, Decimal('1.11639'))
 
         # get_candle
@@ -76,7 +76,7 @@ class TestAccount(unittest.TestCase):
         self.account.list_prices()
         self.assertTrue(len(self.account._prices))
         ask = self.account._prices.get(self.currency).get('ask')
-        tp_price = self.account.calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
+        tp_price = calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
 
         success, trades = self.account.list_trade()
         trade_exists = len(trades)
@@ -121,7 +121,7 @@ class TestAccount(unittest.TestCase):
         self.account.list_prices()
         self.assertTrue(len(self.account._prices))
         ask = self.account._prices.get(self.currency).get('ask')
-        limit_price = self.account.calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
+        limit_price = calculate_price(ask, OrderSide.BUY, 31.4, self.currency)
 
         success, transactions = self.account.limit_order(self.currency, OrderSide.SELL, price=limit_price, lots=0.1)
         self.assertTrue(success)

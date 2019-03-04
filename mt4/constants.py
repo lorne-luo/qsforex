@@ -189,6 +189,18 @@ def pip(symbol, price=None):
     return pip_unit
 
 
+def calculate_price(base_price, side, pip, instrument):
+    instrument = get_mt4_symbol(instrument)
+    pip_unit = pip(instrument)
+    base_price = Decimal(str(base_price))
+    pip = Decimal(str(pip))
+
+    if side == OrderSide.BUY:
+        return base_price + pip * pip_unit
+    elif side == OrderSide.SELL:
+        return base_price - pip * pip_unit
+
+
 def get_candle_time(time, timeframe):
     t = time.replace(second=0, microsecond=0)
 
