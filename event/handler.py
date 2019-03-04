@@ -4,6 +4,7 @@ from datetime import datetime
 
 from event.event import *
 from mt4.constants import PERIOD_CHOICES, get_candle_time
+from utils.market import is_market_open
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,6 @@ class TimeFrameTicker(BaseHandler):
     subscription = [HeartBeatEvent]
     candle_time = {}
     market_open = False
-    HOLIDAY = [(1, 1)]
 
     def __init__(self, queue=None):
         super(TimeFrameTicker, self).__init__(queue)
@@ -64,21 +64,6 @@ class TimeFrameTicker(BaseHandler):
         now = datetime.utcnow()
         for timeframe in PERIOD_CHOICES:
             self.candle_time[timeframe] = get_candle_time(now, timeframe)
-
-    def get_market_open(self, now):
-        # GBP/USD,20181207 20:59:58.156,1.27418,1.27426
-        # GBP/USD,20181209 22:02:52.967,1.27017,1.27138
-        if now.weekday() == 5:
-            return False
-        if now.weekday() == 4:
-            return now.hour < 20
-        if now.weekday() == 6:
-            return now.hour > 22
-
-        for date in self.HOLIDAY:
-            if (now.day, now.month) == date:
-                return now.hour < 20 or now.hour > 22
-        return True
 
     def is_nfp(self):
         # is day of USA NFP
@@ -93,7 +78,7 @@ class TimeFrameTicker(BaseHandler):
                 print(self.candle_time[timeframe], new)
                 self.candle_time[timeframe] = new
 
-        open = self.get_market_open(now)
+        open = is_market_open()
         if self.market_open != open:
             if open:
                 self.put(MarketOpenEvent())
