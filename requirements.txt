@@ -10,7 +10,7 @@ pytz==2018.9
 scikit-learn==0.20.2
 scipy==1.2.1
 seaborn==0.9.0
-six==1.9.0
+six==1.11.0
 urllib3==1.24.1
 v20==3.0.25.0
 oandapyV20==0.6.3
@@ -19,3 +19,6 @@ tabulate==0.8.2
 requests==2.20.0
 ujson==1.35
 dateparser==0.7.1
+fxcmpy==1.2.3
+socketIO-client
+jupyter
