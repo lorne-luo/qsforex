@@ -90,7 +90,7 @@ class PriceMixin(OANDABase, PriceBase):
                  candle.volume]
                 for candle in candles]
 
-        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'open', 'volume'])
+        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
         df['time'] = pd.to_datetime(df['time'])
         df = df.set_index('time')
         df.head()
