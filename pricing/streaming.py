@@ -16,7 +16,7 @@ from qsforex.pricing.price import PriceHandler
 import settings
 from event.event import HeartBeatEvent, TickPriceEvent
 from broker.oanda.common.convertor import get_symbol
-from runner.base import StreamRunnerBase
+from event.runner import StreamRunnerBase
 from settings import OANDA_ENVIRONMENTS
 
 logger = logging.getLogger(__name__)
