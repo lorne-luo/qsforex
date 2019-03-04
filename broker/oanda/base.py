@@ -41,7 +41,7 @@ stream_api = SingletonAPIContext(hostname=settings.STREAM_DOMAIN,
                                  token=settings.ACCESS_TOKEN)
 
 
-class EntityBase(object):
+class OANDABase(object):
     api = None
     stream_api = None
     account_id = None

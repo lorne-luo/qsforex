@@ -4,8 +4,9 @@ from decimal import Decimal, ROUND_HALF_UP
 from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails, \
     LimitOrderTransaction, StopOrderTransaction
 
+from broker.base import OrderBase
 from mt4.constants import OrderSide, pip
-from broker.oanda.base import api, EntityBase
+from broker.oanda.base import api, OANDABase
 from broker.oanda.common.logger import log_error
 from broker.oanda.common.prints import print_orders
 from broker.oanda.common.view import print_entity, print_response_entity
@@ -17,7 +18,7 @@ import settings
 logger = logging.getLogger(__name__)
 
 
-class OrderMixin(EntityBase):
+class OrderMixin(OANDABase, OrderBase):
 
     # order list
     def _process_orders(self, response):

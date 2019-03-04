@@ -1,14 +1,15 @@
 import logging
 from decimal import Decimal, ROUND_HALF_UP
 
-from broker.oanda.base import EntityBase
+from broker.base import PositionBase
+from broker.oanda.base import OANDABase
 from broker.oanda.common.logger import log_error
 from broker.oanda.common.convertor import get_symbol
 
 logger = logging.getLogger(__name__)
 
 
-class PositionMixin(EntityBase):
+class PositionMixin(OANDABase, PositionBase):
 
     def pull_position(self, instrument):
         """pull position by instrument"""
@@ -26,7 +27,6 @@ class PositionMixin(EntityBase):
 
         return True, position
 
-
     def list_all_positions(self):
         response = self.api.position.list(
             self.account_id,
@@ -43,7 +43,6 @@ class PositionMixin(EntityBase):
 
         return True, positions
 
-
     def list_open_positions(self):
         response = self.api.position.list_open(
             self.account_id,
@@ -58,7 +57,6 @@ class PositionMixin(EntityBase):
         for position in positions:
             self.positions[position.instrument] = position
         return True, positions
-
 
     def close_all_position(self):
         instruments = self.positions.keys()
@@ -97,4 +95,3 @@ class PositionMixin(EntityBase):
         print(relatedTransactionIDs.__dict__)
         print(lastTransactionID)
         return True, 'done'
-

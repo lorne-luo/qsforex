@@ -4,6 +4,8 @@ import pandas as pd
 
 import dateparser
 
+from broker.base import PriceBase
+from broker.oanda.base import OANDABase
 from mt4.constants import pip
 from broker.oanda.common.view import price_to_string, heartbeat_to_string
 from broker.oanda.common.convertor import get_symbol, lots_to_units, get_timeframe_granularity
@@ -12,7 +14,7 @@ import settings
 logger = logging.getLogger(__name__)
 
 
-class PriceMixin(object):
+class PriceMixin(OANDABase, PriceBase):
     _prices = {}
 
     def _process_price(self, price):
@@ -20,7 +22,7 @@ class PriceMixin(object):
         time = dateparser.parse(price.time)
         bid = Decimal(str(price.bids[0].price))
         ask = Decimal(str(price.asks[0].price))
-        spread = pip(instrument,ask - bid)
+        spread = pip(instrument, ask - bid)
         self._prices[instrument] = {'time': time, 'bid': bid, 'ask': ask, 'spread': spread}
 
     # list
@@ -66,7 +68,7 @@ class PriceMixin(object):
             fromTime = dateparser.parse(toTime).strftime('%Y-%m-%dT%H:%M:%S')
 
         response = self.api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
-                                          toTime=toTime, price=price_type, smooth=smooth)
+                                               toTime=toTime, price=price_type, smooth=smooth)
 
         if response.status != 200:
             logger.error('[GET_Candle]', response, response.body)
