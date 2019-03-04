@@ -17,6 +17,7 @@ from broker.oanda.common.prints import print_positions_map, print_orders_map, pr
 import settings
 from broker.oanda.price import PriceMixin
 from broker.oanda.trade import TradeMixin
+from utils.singleton import SingletonDecorator
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
         """
 
         self.account_id = account_id
+        self.access_token = access_token
         self.setup_api(type, access_token, application_name)
 
         #
@@ -294,3 +296,6 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
 
             return Decimal(level).quantize(Decimal('0.01'))
         return 0
+
+
+SingletonOANDAAccount = SingletonDecorator(OANDA)

@@ -7,7 +7,7 @@ from v20.transaction import LimitOrderTransaction, OrderCancelTransaction, StopO
 
 import settings
 from mt4.constants import OrderSide, PERIOD_M5, pip, calculate_price
-from broker.oanda.account import OANDA
+from broker.oanda.account import SingletonOANDAAccount
 from broker.oanda.common.convertor import units_to_lots
 from broker.oanda.common.prints import print_positions
 from portfolio.portfolio import OandaV20Portfolio
@@ -18,7 +18,7 @@ class TestAccount(unittest.TestCase):
     currency = 'EUR_USD'
 
     def setUp(self):
-        self.account = OANDA(type='DEMO',
+        self.account = SingletonOANDAAccount(type='DEMO',
                                account_id=settings.ACCOUNT_ID,
                                access_token=settings.ACCESS_TOKEN,
                                application_name=settings.APPLICATION_NAME)
