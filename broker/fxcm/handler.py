@@ -1,3 +1,10 @@
+import json
+
+import dateparser
+
+from event.handler import QueueBase
+
+
 def show(msg):
     '''
     Sample price handler. If on_price_update is registered for a symbol,
@@ -22,3 +29,14 @@ def show(msg):
         print(t.symbols[symbol])
     except Exception as e:
         trader.logger.error("Can't handle price update: " + str(e))
+
+
+
+def raise_event(msg):
+    # {'Updated': 1551660350353, 'Rates': [1.13683, 1.13696, 1.13838, 1.13671], 'Symbol': 'EUR/USD'}
+    data=json.loads(msg)
+    dateparser
+
+
+class MessageHandler(QueueBase):
+    pass
