@@ -59,7 +59,7 @@ class PriceMixin(OANDABase, PriceBase):
         elif type == 'ask':
             return price['ask']
 
-    def get_candle(self, instrument, granularity, count=50, fromTime=None, toTime=None, price_type='M', smooth=False):
+    def get_candle(self, instrument, granularity, count=120, fromTime=None, toTime=None, price_type='M', smooth=False):
         instrument = get_symbol(instrument)
         granularity = get_timeframe_granularity(granularity)
         if isinstance(fromTime, str):
