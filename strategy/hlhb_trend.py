@@ -57,5 +57,5 @@ class HLHBTrend(StrategyBase):
         side = check_cross(ema5, ema10)
         if side:
             event = SignalEvent(self.name, self.version, self.magic_number,
-                                symbol, OrderType.MARKET, side, datetime.utcnow())
+                                symbol, OrderType.MARKET, side)
             self.put(event)

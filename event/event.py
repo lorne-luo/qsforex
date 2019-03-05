@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class EventType(object):
     STARTUP = 'STARTUP'
     SHUTDOWN = 'SHUTDOWN'
@@ -14,6 +17,8 @@ class EventType(object):
 
 class Event(object):
     type = None
+    def __init__(self):
+        self.time=datetime.utcnow()
 
 
 class HeartBeatEvent(Event):
@@ -25,7 +30,7 @@ class TimeFrameEvent(Event):
 
     def __init__(self, timeframe):
         self.timeframe = timeframe
-
+        super(TimeFrameEvent, self).__init__()
 
 class MarketOpenEvent(Event):
     type = EventType.MARKET_OPEN
@@ -45,6 +50,7 @@ class TickEvent(Event):
         self.time = time
         self.bid = bid
         self.ask = ask
+        super(TickEvent, self).__init__()
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Time: %s, Bid: %s, Ask: %s" % (
@@ -61,6 +67,7 @@ class TickPriceEvent(Event):
         self.time = time
         self.bid = bid
         self.ask = ask
+        super(TickPriceEvent, self).__init__()
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Time: %s, Bid: %s, Ask: %s" % (
@@ -72,11 +79,14 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, instrument, order_type, side, time):
+    def __init__(self, strategy_name, version, magic_number, instrument, order_type, side):
+        self.strategy = strategy_name
+        self.version = version
+        self.magic_number = magic_number
         self.instrument = instrument
         self.order_type = order_type
         self.side = side
-        self.time = time  # Time of the last tick that generated the signal
+        super(SignalEvent, self).__init__()
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Order Type: %s, Side: %s" % (
@@ -101,6 +111,7 @@ class OrderEvent(Event):
         self.stopLoss = stopLoss
         self.takeProfit = takeProfit
         self.trailingStop = trailingStop
+        super(OrderEvent, self).__init__()
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Units: %s, Order Type: %s, Side: %s" % (
