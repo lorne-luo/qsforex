@@ -8,7 +8,7 @@ import fxcmpy
 import pandas as pd
 
 from broker.base import AccountType
-from broker.fxcm.constants import get_fxcm_symbol
+from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS
 from event.event import TickPriceEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
@@ -39,26 +39,42 @@ class FXCMStreamRunner(StreamRunnerBase):
         print('Pairs:', pair_list)
         print('\n')
 
-        if self.pairs:
-            for pair in self.pairs:
-                self.subscribe(pair)
-        else:
+        self.subscribe_pair()
+
+    def subscribe_pair(self):
+        for symbol in ALL_SYMBOLS:
+            if symbol not in self.pairs:
+                self.connection.unsubscribe_instrument(symbol)
+
+        if not self.pairs:
             logger.info('No valid FXCM symbol exists.')
+            return
+        for pair in self.pairs:
+            self.connection.subscribe_market_data(pair, (self.tick_data,))
+            self.connection.subscribe_instrument(pair)
 
-    def subscribe(self, pair):
-        print('FXCM subscribe %s' % pair)
-        self.connection.subscribe_market_data(pair, (self.tick_data,))
+    def subscribe_data(self):
+        # all_models['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
+        models = ['Account', 'Order', 'OpenPosition', 'Summary']
+        for model in models:
+            self.connection.subscribe_data_model(model, (self.model_event,))
 
-        #['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
-        #self.connection.subscribe_data_model()
-        #self.connection.subscribe_instrument
-
-    def unsubscribe(self, pair):
+    def unsubscribe_pair(self, pair):
         self.connection.unsubscribe_market_data(pair)
+        self.connection.unsubscribe_instrument(pair)
 
     def unsubscribe_all(self):
         for pair in self.pairs:
             self.connection.unsubscribe_market_data(pair)
+            self.connection.unsubscribe_instrument(pair)
+
+        # ['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
+        for model in self.connection.models:
+            self.connection.unsubscribe_data_model(model)
+
+    def model_event(self, data):
+        # todo send event
+        print(data)
 
     def tick_data(self, data, dataframe):
         instrument = get_mt4_symbol(data['Symbol'])
@@ -86,10 +102,13 @@ class FXCMStreamRunner(StreamRunnerBase):
 if __name__ == '__main__':
     import queue
     from event.handler import DebugHandler
+
     # from broker.fxcm.streaming import *
     q = queue.Queue()
     debug = DebugHandler(q)
     YOURTOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
 
-    r = FXCMStreamRunner(q, ['EUR/USD', 'GBP/USD'], YOURTOKEN, AccountType.DEMO, debug)
+    r = FXCMStreamRunner(q, ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD',
+                             'USOil', 'USD/CNH'],
+                         YOURTOKEN, AccountType.DEMO, debug)
     r.run()
