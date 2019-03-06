@@ -3,7 +3,6 @@ import queue
 import time
 
 import settings
-from event.event import Event
 from event.handler import QueueBase, HeartBeatEvent, BaseHandler
 
 logger = logging.getLogger(__name__)
@@ -34,6 +33,9 @@ class Runner(QueueBase):
     def print(self):
         print(self.handlers)
 
+    def stop(self):
+        del self.queue
+
 
 class HeartbeatRunner(Runner):
     def __init__(self, queue, heartbeat=5, *args, **kwargs):
@@ -63,6 +65,8 @@ class HeartbeatRunner(Runner):
 
 
 class StreamRunnerBase(Runner):
+    broker = ''
+
     def __init__(self, queue, pairs, *args, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
         self.register(*args)

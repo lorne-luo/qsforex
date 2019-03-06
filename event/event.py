@@ -17,8 +17,9 @@ class EventType(object):
 
 class Event(object):
     type = None
+
     def __init__(self):
-        self.time=datetime.utcnow()
+        self.time = datetime.utcnow()
 
 
 class HeartBeatEvent(Event):
@@ -31,6 +32,7 @@ class TimeFrameEvent(Event):
     def __init__(self, timeframe):
         self.timeframe = timeframe
         super(TimeFrameEvent, self).__init__()
+
 
 class MarketOpenEvent(Event):
     type = EventType.MARKET_OPEN
@@ -62,7 +64,8 @@ class TickEvent(Event):
 class TickPriceEvent(Event):
     type = EventType.TICK_PRICE
 
-    def __init__(self, instrument, time, bid, ask):
+    def __init__(self, broker, instrument, time, bid, ask):
+        self.broker = broker
         self.instrument = instrument
         self.time = time
         self.bid = bid

@@ -111,6 +111,7 @@ class StreamingForexPrices(PriceHandler):
 
 class OandaV20StreamRunner(StreamRunnerBase):
     default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+    broker = 'OANDA'
 
     def __init__(self, queue, pairs, domain, access_token, account_id, *args, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
@@ -151,7 +152,7 @@ class OandaV20StreamRunner(StreamRunnerBase):
                 time = dateparser.parse(msg.time)
                 bid = Decimal(str(msg.bids[0].price))
                 ask = Decimal(str(msg.asks[0].price))
-                self.put(TickPriceEvent(instrument, time, bid, ask))
+                self.put(TickPriceEvent(self.broker, instrument, time, bid, ask))
             else:
                 print('Unknow type:', msg_type, msg.__dict__)
 
