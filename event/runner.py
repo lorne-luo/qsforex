@@ -84,7 +84,7 @@ if __name__ == '__main__':
     from event.handler import *
     import queue
 
-    q = queue.Queue()
+    q = queue.Queue(maxsize=2000)
     d = DebugHandler(q)
     t = TimeFrameTicker(q)
     r = HeartbeatRunner(q, 5, d, t)

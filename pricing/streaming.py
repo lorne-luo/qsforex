@@ -178,7 +178,7 @@ if __name__ == '__main__':
     from event.handler import *
     import queue, settings
 
-    q = queue.Queue()
+    q = queue.Queue(maxsize=2000)
     d = DebugHandler(q)
     r = OandaV20StreamRunner(q, ['EUR_USD', 'GBP_USD'], 'practice', settings.ACCESS_TOKEN, settings.ACCOUNT_ID, d)
     r.run()

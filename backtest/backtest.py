@@ -24,7 +24,7 @@ class Backtest(object):
         Initialises the backtest.
         """
         self.pairs = pairs
-        self.events = queue.Queue()
+        self.events = queue.Queue(maxsize=2000)
         self.csv_dir = settings.CSV_DATA_DIR
         self.startday = startday
         self.endday = endday

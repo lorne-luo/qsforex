@@ -51,7 +51,7 @@ if __name__ == "__main__":
     getcontext().prec = 2
 
     heartbeat = 0.0  # Time in seconds between polling
-    events = queue.Queue()
+    events = queue.Queue(maxsize=2000)
     equity = settings.EQUITY
 
     # Pairs to include in streaming data set
