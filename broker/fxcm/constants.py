@@ -3,6 +3,25 @@ class FXCMAccountType(object):
     DEMO = 'demo'
 
 
+FXCM_CONFIG = {
+    "environments": {
+        "demo": {
+            "trading": "https://api-demo.fxcm.com",
+            "port": 443
+        },
+        "real": {
+            "trading": "https://api.fxcm.com",
+            "port": 443
+        }
+    },
+    "logpath": "./logfile.txt",
+    "_debugLevels": "Levels are (from most to least logging) DEBUG, INFO, WARNING, ERROR, CRITICAL",
+    "debugLevel": "ERROR",
+    "subscription_lists": "#Determines default subscription list of item updates to listen to",
+    "subscription_list": ["Offer", "Account", "Order", "OpenPosition", "ClosedPosition", "LeverageProfile", "Summary",
+                          "Properties"]
+}
+
 ALL_SYMBOLS = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'EUR/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'EUR/GBP',
                'EUR/JPY', 'GBP/JPY', 'CHF/JPY', 'GBP/CHF', 'EUR/AUD', 'EUR/CAD', 'AUD/CAD', 'AUD/JPY', 'CAD/JPY',
                'NZD/JPY', 'GBP/CAD', 'GBP/NZD', 'GBP/AUD', 'AUD/NZD', 'USD/SEK', 'EUR/SEK', 'EUR/NOK', 'USD/NOK',
@@ -22,5 +41,3 @@ def get_fxcm_symbol(symbol):
         return symbol
     else:
         raise Exception('Invalid symbol for FXCM')
-
-

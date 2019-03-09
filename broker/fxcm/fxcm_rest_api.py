@@ -9,7 +9,7 @@ from dateutil.parser import parse
 from datetime import datetime
 import time
 import types
-from .config import FXCM_CONFIG
+from .constants import FXCM_CONFIG
 import fxcmpy
 
 
