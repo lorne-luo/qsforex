@@ -67,7 +67,7 @@ class TradeMixin(OANDABase, TradeBase):
             print_trades([trade])
         return trade
 
-    def close(self, trade_id, lots='ALL'):
+    def close(self, trade_id, lots):
         # units : (string, default=ALL)
         # Indication of how much of the Trade to close. Either the string “ALL”
         # (indicating that all of the Trade should be closed), or a DecimalNumber
@@ -75,6 +75,7 @@ class TradeMixin(OANDABase, TradeBase):
         # TradeClose MarketOrder. The units specified must always be positive, and
         # the magnitude of the value cannot exceed the magnitude of the Trade’s
         # open units.
+        lots=lots or 'ALL'
         if lots != 'ALL':
             units = str(lots_to_units(lots, OrderSide.BUY))
         else:

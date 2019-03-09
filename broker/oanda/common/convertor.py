@@ -15,7 +15,7 @@ def get_symbol(symbol):
     return symbol.upper()
 
 
-def lots_to_units(lot, side):
+def lots_to_units(lot, side=OrderSide.BUY):
     try:
         lot = Decimal(str(lot))
     except:

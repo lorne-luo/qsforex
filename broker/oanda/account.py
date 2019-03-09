@@ -27,7 +27,7 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
     An Account object is a wrapper for the Account entities fetched from the
     v20 REST API. It is used for caching and updating Account state.
     """
-    broker = 'Oanda'
+    broker = 'OANDA'
 
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
     default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
@@ -40,17 +40,17 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
         self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token,
                                               application=application_name)
 
-    def __init__(self, type, account_id, access_token, application_name=None, transaction_cache_depth=100):
+    def __init__(self, type, account_id, access_token, application_name=None, transaction_cache_depth=100,
+                 *args, **kwargs):
         """
         Create a new Account wrapper
-
         Args:
             account: a v20.account.Account fetched from the server
         """
-
         self.account_id = account_id
         self.access_token = access_token
         self.setup_api(type, access_token, application_name)
+        super(OANDA, self).__init__(*args, **kwargs)
 
         #
         # The collection of Trades open in the Account
@@ -105,8 +105,6 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
 
         self.list_instruments()
         self.base_leverage = int(1 / self.instruments['EUR_USD']['marginRate'])
-
-        super(OANDA, self).__init__()
 
     def __str__(self):
         return '%s # %s' % (self.details.id, self.details.alias)

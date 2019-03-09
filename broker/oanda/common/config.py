@@ -4,7 +4,7 @@ import os
 import sys
 import v20
 
-from common import input
+from broker.oanda.common import input
 
 
 #
