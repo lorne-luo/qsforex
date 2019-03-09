@@ -8,7 +8,7 @@ import fxcmpy
 import pandas as pd
 
 from broker.base import AccountType
-from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS
+from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, SingletonFXCMAPI, FXCM_CONFIG
 from event.event import TickPriceEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
@@ -19,15 +19,16 @@ logger = logging.getLogger(__name__)
 class FXCMStreamRunner(StreamRunnerBase):
     connection = None
     broker = 'FXCM'
+    MAX_PRICES = 2000
 
     def __init__(self, queue, pairs, access_token, account_type=None, *args, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.connection = fxcmpy.fxcmpy(access_token=access_token,
+        self.connection = SingletonFXCMAPI(access_token=access_token,
                                         server=server,
-                                        log_level=kwargs.get('log_level') or 'warn',
-                                        log_file=kwargs.get('log_file') or '/tmp/fxcm.log')
-        self.connection.set_max_prices(2000)
+                                        log_level=FXCM_CONFIG.get('debugLevel','ERROR'),
+                                        log_file=FXCM_CONFIG.get('logpath'))
+        self.connection.set_max_prices(self.MAX_PRICES)
         self.register(*args)
 
     def run(self):
@@ -97,6 +98,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     def stop(self):
         super(FXCMStreamRunner, self).stop()
         self.unsubscribe_all()
+        self.connection.stop()
 
 
 if __name__ == '__main__':

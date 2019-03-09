@@ -1,39 +1,27 @@
-from collections import namedtuple
-import requests
-from socketIO_client import SocketIO
-import logging
-import json
-import uuid
-import threading
-from dateutil.parser import parse
-from datetime import datetime
-import time
-import types
+import fxcmpy
 
-from broker.base import BrokerAccount
-from utils.singleton import SingletonDecorator
-from utils.time import timestamp_to_str
-from .config import FXCM_CONFIG
+from broker.base import BrokerAccount, AccountType
+from broker.fxcm.constants import SingletonFXCMAPI, FXCM_CONFIG
+from broker.fxcm.instrument import InstrumentMixin
+from broker.fxcm.order import OrderMixin
+from broker.fxcm.position import PositionMixin
+from broker.fxcm.price import PriceMixin
+from broker.fxcm.trade import TradeMixin
 
 
-
-class FXCM(BrokerAccount):
+class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, BrokerAccount):
     broker = 'FXCM'
-    name = ''
+    MAX_PRICES = 2000
+    pairs = BrokerAccount.default_pairs
 
-    def __init__(self, bid=None, ask=None, high=None, low=None, updated=None,
-                 symbol_info=None, parent=None):
-        self.bid = bid
-        self.ask = ask
-        self.high = high
-        self.low = low
-        self.updated = updated
-        self.output_fmt = "%r"
-        self.parent = parent
-        if symbol_info is not None:
-            self.symbol_info = symbol_info
-            self.offer_id = symbol_info['offerId']
-            self.symbol = symbol_info['currency']
-            precision = symbol_info['ratePrecision'] / 10.0
-            self.output_fmt = "%s%0.1ff" % ("%", precision)
-        super(FXCM, self).__init__()
+    def __init__(self, type, account_id, access_token, *args, **kwargs):
+        self.type = 'real' if type == AccountType.REAL else 'demo'
+        self.account_id = account_id
+        self.access_token = access_token
+        super(FXCM, self).__init__(*args, **kwargs)
+        server = 'real' if type == AccountType.REAL else 'demo'
+        self.fxcmpy = SingletonFXCMAPI(access_token=access_token,
+                                       server=server,
+                                       log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
+                                       log_file=FXCM_CONFIG.get('logpath'))
+        self.fxcmpy.set_max_prices(self.MAX_PRICES)

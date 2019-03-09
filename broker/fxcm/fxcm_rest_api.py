@@ -959,7 +959,7 @@ class Trader(object):
             'Content-Type': 'application/x-www-form-urlencoded',
             'User-Agent': 'request'
         }
-        self.debug_level = self.CONFIG.get("DEBUGLEVEL", "ERROR")
+        self.debug_level = self.CONFIG.get("debugLevel", "ERROR")
         self.LOGLEVELS = {"ERROR": logging.ERROR,
                           "DEBUG": logging.DEBUG,
                           "INFO": logging.INFO,

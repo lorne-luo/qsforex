@@ -1,3 +1,10 @@
+from fxcmpy import fxcmpy
+
+from mt4.constants import PERIOD_H1, PERIOD_M1, PERIOD_M5, PERIOD_M15, PERIOD_M30, PERIOD_D1, PERIOD_H4, PERIOD_W1, \
+    PERIOD_MN1
+from utils.singleton import SingletonDecorator
+
+
 class FXCMAccountType(object):
     REAL = 'prod'
     DEMO = 'demo'
@@ -14,7 +21,7 @@ FXCM_CONFIG = {
             "port": 443
         }
     },
-    "logpath": "./logfile.txt",
+    "logpath": "/tmp/fxcm.log",
     "_debugLevels": "Levels are (from most to least logging) DEBUG, INFO, WARNING, ERROR, CRITICAL",
     "debugLevel": "ERROR",
     "subscription_lists": "#Determines default subscription list of item updates to listen to",
@@ -41,3 +48,16 @@ def get_fxcm_symbol(symbol):
         return symbol
     else:
         raise Exception('Invalid symbol for FXCM')
+
+
+def get_fxcm_timeframe(timeframe):
+    if timeframe in ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8',
+                     'D1', 'W1', 'M1']:
+        return timeframe
+    timeframe_dict = {PERIOD_M1: 'm1', PERIOD_M5: 'm5', PERIOD_M15: 'm15', PERIOD_M30: 'm30', PERIOD_H1: 'H1',
+                      PERIOD_H4: 'H4', PERIOD_D1: 'D1',
+                      PERIOD_W1: 'W1', PERIOD_MN1: 'M1'}
+    return timeframe_dict.get(timeframe)
+
+
+SingletonFXCMAPI = SingletonDecorator(fxcmpy)
