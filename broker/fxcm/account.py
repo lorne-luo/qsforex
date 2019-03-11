@@ -25,3 +25,19 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
                                        log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
                                        log_file=FXCM_CONFIG.get('logpath'))
         self.fxcmpy.set_max_prices(self.MAX_PRICES)
+        self.fxcmpy.set_default_account(self.account_id)
+
+    @property
+    def summary(self):
+        result={}
+        for k,v in self.fxcmpy.get_accounts().T.to_dict().items():
+            result[v['accountId']]=v
+        return result
+
+    def dump(self):
+        print(self.summary)
+
+if __name__ == '__main__':
+    ACCOUNT_ID = 3261139
+    ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
+    fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)

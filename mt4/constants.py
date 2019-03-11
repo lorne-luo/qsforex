@@ -178,7 +178,7 @@ def get_mt4_symbol(symbol):
     return symbol.replace(' ', '').replace('_', '').replace('-', '').replace('/', '')
 
 
-def pip(symbol, price=None):
+def pip(symbol, price=None, abs=False):
     symbol = get_mt4_symbol(symbol)
     if symbol not in PIP_DICT:
         raise Exception('%s not exists in PIP_DICT' % symbol)
@@ -186,6 +186,8 @@ def pip(symbol, price=None):
     pip_unit = PIP_DICT[symbol]
     if price:
         return (price / pip_unit).quantize(Decimal("0.1"))
+    if abs and pip_unit < 0:
+        return pip_unit * -1
     return pip_unit
 
 

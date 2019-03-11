@@ -12,11 +12,11 @@ class PositionMixin(PositionBase):
 
     @property
     def open_positions(self):
-        return self.fxcmpy.open_pos
+        return self.fxcmpy.get_open_positions()
 
     @property
     def closed_positions(self):
-        return self.fxcmpy.closed_pos
+        return self.fxcmpy.get_closed_positions()
 
     def pull_position(self, instrument):
         return
