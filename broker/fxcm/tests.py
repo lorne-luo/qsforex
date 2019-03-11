@@ -1,5 +1,3 @@
-import requests
-
 import json
 from broker.fxcm import fxcm_rest_api
 from broker.fxcm.constants import FXCMAccountType

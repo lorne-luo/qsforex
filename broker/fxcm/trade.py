@@ -1,16 +1,8 @@
 import logging
 
 from broker.base import TradeBase
-from mt4.constants import OrderSide
-
-from broker.oanda.base import api, OANDABase
-from broker.oanda.common.logger import log_error
-from broker.oanda.common.prints import print_trades
-from broker.oanda.common.view import print_entity, print_response_entity
-from broker.oanda.common.convertor import get_symbol, lots_to_units
-from broker.oanda.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, \
-    OrderTriggerCondition
-import settings
+from broker.oanda.base import OANDABase
+from broker.oanda.common.convertor import lots_to_units
 
 logger = logging.getLogger(__name__)
 

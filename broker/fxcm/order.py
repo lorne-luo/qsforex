@@ -1,15 +1,10 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-
-from v20.transaction import StopLossDetails, ClientExtensions, TakeProfitDetails, TrailingStopLossDetails, \
-    LimitOrderTransaction, StopOrderTransaction
 
 from broker.base import OrderBase
 from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import TimeInForce, OrderPositionFill, OrderTriggerCondition
 from broker.oanda.common.convertor import lots_to_units
 from mt4.constants import OrderSide, pip
-import settings
 
 logger = logging.getLogger(__name__)
 
