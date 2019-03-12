@@ -22,7 +22,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         server = 'real' if type == AccountType.REAL else 'demo'
         self.fxcmpy = SingletonFXCMAPI(access_token=access_token,
                                        server=server,
-                                       log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
+                                       log_level=FXCM_CONFIG.get('debugLevel', 'error'),
                                        log_file=FXCM_CONFIG.get('logpath'))
         self.fxcmpy.set_max_prices(self.MAX_PRICES)
         self.fxcmpy.set_default_account(self.account_id)

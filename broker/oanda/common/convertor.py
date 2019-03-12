@@ -7,8 +7,7 @@ from broker.oanda.common.constants import UNIT_RATIO
 
 def get_symbol(symbol):
     '''MT4 symbol to Oanda V20 symbol name'''
-    if '/' in symbol:
-        symbol = symbol.replace("/", "_")
+    symbol = symbol.replace("/", "_").upper()
 
     if '_' not in symbol:
         return symbol[:-3] + '_' + symbol[-3:]

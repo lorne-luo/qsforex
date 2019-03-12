@@ -31,6 +31,11 @@ BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
 DEBUG = os.environ.get('DEBUG', False)
 
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379
+DB_CHANNEL = 15
+
+
 try:
     from local import *
 except ImportError:

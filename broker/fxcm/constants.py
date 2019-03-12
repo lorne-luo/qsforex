@@ -23,7 +23,7 @@ FXCM_CONFIG = {
     },
     "logpath": "/tmp/fxcm.log",
     "_debugLevels": "Levels are (from most to least logging) DEBUG, INFO, WARNING, ERROR, CRITICAL",
-    "debugLevel": "ERROR",
+    "debugLevel": "info",
     "subscription_lists": "#Determines default subscription list of item updates to listen to",
     "subscription_list": ["Offer", "Account", "Order", "OpenPosition", "ClosedPosition", "LeverageProfile", "Summary",
                           "Properties"]
@@ -40,7 +40,7 @@ ALL_SYMBOLS = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'EUR/CHF', 'AUD/USD',
 
 
 def get_fxcm_symbol(symbol):
-    symbol = symbol.replace('_', '/')
+    symbol = symbol.replace('_', '/').upper()
     if len(symbol) == 6:
         symbol = '%s/%s' % (symbol[:3], symbol[3:])
 

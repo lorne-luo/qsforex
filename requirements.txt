@@ -23,3 +23,4 @@ dateparser==0.7.1
 fxcmpy==1.2.3
 socketIO-client
 jupyter
+redis==3.2.0
