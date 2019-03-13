@@ -46,6 +46,15 @@ class DebugHandler(BaseHandler):
         print('[%s] %s' % (event.type, event.__dict__))
 
 
+class EventLoggerHandler(DebugHandler):
+    def __init__(self, queue, events=None, *args, **kwargs):
+        super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
+        self.logger = logging.getLogger('EventLog')
+
+    def process(self, event):
+        self.logger.info('[%s] %s' % (event.type, event.__dict__))
+
+
 class TickHandler(BaseHandler):
     def process(self, event):
         pass
