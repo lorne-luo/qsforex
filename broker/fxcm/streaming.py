@@ -9,7 +9,7 @@ import pandas as pd
 
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, SingletonFXCMAPI, FXCM_CONFIG
-from event.event import TickPriceEvent
+from event.event import TickPriceEvent, TimeFrameEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
 
@@ -19,17 +19,18 @@ logger = logging.getLogger(__name__)
 class FXCMStreamRunner(StreamRunnerBase):
     connection = None
     broker = 'FXCM'
-    MAX_PRICES = 2000
+    MAX_PRICES = 4000
 
-    def __init__(self, queue, pairs, access_token, account_type=None, *args, **kwargs):
+    def __init__(self, queue, pairs, access_token, handlers, account_type=AccountType.DEMO, *args, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
         self.connection = SingletonFXCMAPI(access_token=access_token,
-                                        server=server,
-                                        log_level=FXCM_CONFIG.get('debugLevel','ERROR'),
-                                        log_file=FXCM_CONFIG.get('logpath'))
+                                           server=server,
+                                           log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
+                                           log_file=FXCM_CONFIG.get('logpath'))
         self.connection.set_max_prices(self.MAX_PRICES)
-        self.register(*args)
+        handlers = handlers or []
+        self.register(*handlers)
 
     def run(self):
         print('%s statup.' % self.__class__.__name__)
@@ -98,19 +99,19 @@ class FXCMStreamRunner(StreamRunnerBase):
     def stop(self):
         super(FXCMStreamRunner, self).stop()
         self.unsubscribe_all()
-        self.connection.stop()
+        self.connection.close()
 
 
 if __name__ == '__main__':
     import queue
-    from event.handler import DebugHandler
+    from event.handler import DebugHandler, TimeFrameTicker
 
     # from broker.fxcm.streaming import *
     q = queue.Queue()
-    debug = DebugHandler(q)
+    debug = DebugHandler(q, [TimeFrameEvent])
+    tft = TimeFrameTicker(q, 0)
     YOURTOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
-
-    r = FXCMStreamRunner(q, ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD',
-                             'USOil', 'USD/CNH'],
-                         YOURTOKEN, AccountType.DEMO, debug)
+    pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD',
+             'USOil', 'USD/CNH']
+    r = FXCMStreamRunner(q, pairs, YOURTOKEN, [debug, tft])
     r.run()

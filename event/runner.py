@@ -69,7 +69,8 @@ class StreamRunnerBase(Runner):
 
     def __init__(self, queue, pairs, *args, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
-        self.register(*args)
+        if args:
+            self.register(*args)
         self.pairs = pairs
         self.prices = self._set_up_prices_dict()
 
