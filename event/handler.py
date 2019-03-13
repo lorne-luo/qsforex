@@ -61,7 +61,7 @@ class TickHandler(BaseHandler):
 
 
 class HeartBeatPrintHandler(BaseHandler):
-    subscription = [HeartBeatEvent]
+    subscription = [HeartBeatEvent.type]
 
     def process(self, event):
         if self.DEBUG:
@@ -69,7 +69,7 @@ class HeartBeatPrintHandler(BaseHandler):
 
 
 class TimeFrameTicker(BaseHandler):
-    subscription = [HeartBeatEvent, TickPriceEvent]
+    subscription = [HeartBeatEvent.type, TickPriceEvent.type]
     candle_time = {}
     market_open = False
     timezone = 0

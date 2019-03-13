@@ -2,14 +2,11 @@ import logging
 from decimal import Decimal
 from queue import Empty, Queue
 import dateparser
-import v20
 
 from broker.base import AccountType
 from broker.oanda.account import SingletonOANDAAccount
-from event.event import HeartBeatEvent, TickPriceEvent
 from event.runner import StreamRunnerBase
 from broker.oanda.common.convertor import get_symbol
-import settings
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +64,15 @@ class OandaV20StreamRunner(StreamRunnerBase):
                 if event:
                     logger.debug("Received new %s event: %s", (event.type, event.__dict__))
                     self.process_event(event)
+
+            if not self.running:
+                self.stop()
+
+    def stop(self):
+        del self.account.api
+        del self.account.stream_api
+        del self.account
+        super(OandaV20StreamRunner, self).stop()
 
 
 if __name__ == '__main__':

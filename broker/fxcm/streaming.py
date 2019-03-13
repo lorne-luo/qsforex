@@ -97,9 +97,10 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.process_event(event)
 
     def stop(self):
-        super(FXCMStreamRunner, self).stop()
         self.unsubscribe_all()
         self.account.close()
+        super(FXCMStreamRunner, self).stop()
+
 
 
 if __name__ == '__main__':

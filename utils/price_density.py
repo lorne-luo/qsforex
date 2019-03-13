@@ -84,7 +84,7 @@ def update_density(symbol, account=None):
     fxcm = account or SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     if last_time:
         df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=last_time, end=now,
-                                 columns=['askhigh', 'bidlow', 'tickqty'])
+                                     columns=['askhigh', 'bidlow', 'tickqty'])
     else:
         df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
                                      columns=['askhigh', 'bidlow', 'tickqty'])
@@ -164,7 +164,7 @@ def draw_rencent(symbol, days=None):
 
 
 class PriceDensityHandler(BaseHandler):
-    subscription = [TimeFrameEvent]
+    subscription = [TimeFrameEvent.type]
     pairs = []
 
     def __init__(self, queue=None, pairs=None):
@@ -180,3 +180,8 @@ class PriceDensityHandler(BaseHandler):
                 update_density(symbol)
             except Exception as ex:
                 logger.error('update_density error, symbol=%s, %s' % (symbol, ex))
+
+
+if __name__ == '__main__':
+    #from utils.price_density import *
+    update_density('EURUSD')

@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Runner(QueueBase):
     handlers = []
+    running = True
 
     def run(self):
         raise NotImplementedError
@@ -25,16 +26,16 @@ class Runner(QueueBase):
             if '*' in handler.subscription:
                 handler.process(event)
                 continue
-            for event_type in handler.subscription:
-                if isinstance(event, event_type):
-                    handler.process(event)
-                    break
+            if event.type in handler.subscription:
+                handler.process(event)
 
     def print(self):
         print(self.handlers)
 
     def stop(self):
         del self.queue
+        self.running = False
+        exit(0)
 
 
 class HeartbeatRunner(Runner):
