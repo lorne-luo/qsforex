@@ -185,6 +185,7 @@ def pip(symbol, price=None, abs=False):
 
     pip_unit = PIP_DICT[symbol]
     if price:
+        price = Decimal(str(price))
         return (price / pip_unit).quantize(Decimal("0.1"))
     if abs and pip_unit < 0:
         return pip_unit * -1

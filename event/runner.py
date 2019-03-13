@@ -24,7 +24,7 @@ class Runner(QueueBase):
         for handler in self.handlers:
             if '*' in handler.subscription:
                 handler.process(event)
-                break
+                continue
             for event_type in handler.subscription:
                 if isinstance(event, event_type):
                     handler.process(event)
