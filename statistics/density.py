@@ -1,7 +1,8 @@
 import json
-from collections import OrderedDict
+import numpy as np
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_EVEN
+import matplotlib.pyplot as plt
 
 from dateutil.relativedelta import relativedelta
 
@@ -14,7 +15,7 @@ ACCOUNT_ID = 3261139
 ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
 fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
 
-first = datetime(2004, 4, 18, 18, 1)
+first = datetime(2018, 1, 18, 18, 1)
 symbol = 'EURUSD'
 pip_unit = PIP_DICT[symbol]
 end = datetime.now()
@@ -29,7 +30,7 @@ def process_df(df):
         if not volume:
             continue
         distance = pip(symbol, high - low, True)
-        avg_vol = (volume / distance).quantize(pip_unit)
+        avg_vol = (10 / distance).quantize(pip_unit)
 
         for i in range(int(distance) + 1):
             target = low + i * pip_unit
@@ -51,13 +52,27 @@ while end > first:
 for k, v in result.items():
     result[k] = str(v)
 
-output=''
+output = ''
 keylist = result.keys()
-keys=sorted(keylist)
+keys = sorted(keylist)
 for k in keys:
-    output+='    "%s": %s,\n'%(k,result[k])
+    output += '    %s: %s,\n' % (k, result[k])
 
-with open('eurusd_density_weight.json', 'w+') as f:
+with open('eurusd_density_std.json', 'w+') as f:
     f.write('''{
 %s
-}'''%output)
+}''' % output)
+
+
+json_data = open('eurusd_density_weight.json').read()
+data = eval(json_data)
+current_price = 1.1285
+fig = plt.figure()
+ax = plt.axes()
+items = data.items()
+y = [v for k, v in items if pip('EURUSD', k - current_price, True) < 120]
+x = [k for k, v in items if pip('EURUSD', k - current_price, True) < 120]
+ax.plot(x, y)
+plt.axvline(x=current_price,color='r')
+plt.xticks(np.arange(min(x), max(x), 0.001), rotation=90)
+fig.show()
