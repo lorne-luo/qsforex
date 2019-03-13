@@ -1,7 +1,7 @@
-import fxcmpy
+from fxcmpy import fxcmpy
 
 from broker.base import BrokerAccount, AccountType
-from broker.fxcm.constants import SingletonFXCMAPI, FXCM_CONFIG
+from broker.fxcm.constants import FXCM_CONFIG
 from broker.fxcm.instrument import InstrumentMixin
 from broker.fxcm.order import OrderMixin
 from broker.fxcm.position import PositionMixin
@@ -22,12 +22,14 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         self.access_token = access_token
         super(FXCM, self).__init__(*args, **kwargs)
         server = 'real' if type == AccountType.REAL else 'demo'
-        self.fxcmpy = SingletonFXCMAPI(access_token=access_token,
-                                       server=server,
-                                       log_level=FXCM_CONFIG.get('debugLevel', 'error'),
-                                       log_file=FXCM_CONFIG.get('logpath'))
+        self.fxcmpy = fxcmpy(access_token=access_token,
+                             server=server,
+                             log_level=FXCM_CONFIG.get('debugLevel', 'error'),
+                             log_file=FXCM_CONFIG.get('logpath'))
         self.fxcmpy.set_max_prices(self.max_prices)
-        self.fxcmpy.set_default_account(self.account_id)
+
+        if self.account_id != self.fxcmpy.default_account:
+            self.fxcmpy.set_default_account(self.account_id)
 
     @property
     def summary(self):

@@ -1,7 +1,7 @@
 class SingletonDecorator:
     def __init__(self, klass):
         self.klass = klass
-        self.instance = {}
+        self.instances = {}
 
     def __call__(self, *args, **kwargs):
         kw = ['%s=%s' % (k, kwargs[k]) for k in sorted(kwargs.keys())]
@@ -9,6 +9,6 @@ class SingletonDecorator:
         key = ','.join(ag + kw)
         key = '%s.%s:%s' % (self.klass.__module__, self.klass.__name__, key)
 
-        if self.instance.get(key, None) == None:
-            self.instance[key] = self.klass(*args, **kwargs)
-        return self.instance[key]
+        if key not in self.instances:
+            self.instances[key] = self.klass(*args, **kwargs)
+        return self.instances[key]

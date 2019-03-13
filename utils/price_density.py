@@ -7,7 +7,7 @@ from decimal import Decimal, ROUND_HALF_EVEN
 import matplotlib.pyplot as plt
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
-from mt4.constants import PERIOD_D1
+from mt4.constants import PERIOD_D1, PERIOD_M5, PERIOD_M1
 from broker.base import AccountType
 from broker.fxcm.account import FXCM, SingletonFXCMAccount
 from broker.fxcm.constants import get_fxcm_symbol
@@ -172,15 +172,18 @@ class PriceDensityHandler(BaseHandler):
         self.pairs = pairs
 
     def process(self, event):
-        if event.timeframe != PERIOD_D1:
+        if event.timeframe != PERIOD_M1:
             return
 
         for symbol in self.pairs:
             try:
                 update_density(symbol)
+                print('update_density succeed')
             except Exception as ex:
                 logger.error('update_density error, symbol=%s, %s' % (symbol, ex))
-
+                print('update_density error: %s'%ex)
+                import traceback
+                traceback.print_stack()
 
 if __name__ == '__main__':
     #from utils.price_density import *
