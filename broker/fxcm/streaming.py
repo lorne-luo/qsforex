@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 class FXCMStreamRunner(StreamRunnerBase):
-    connection = None
+    account = None
     broker = 'FXCM'
     max_prices = 4000
 
     def __init__(self, queue, pairs, access_token, handlers, account_type=AccountType.DEMO, *args, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.connection = SingletonFXCMAPI(access_token=access_token,
-                                           server=server,
-                                           log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
-                                           log_file=FXCM_CONFIG.get('logpath'))
-        self.connection.set_max_prices(self.max_prices)
+        self.account = SingletonFXCMAPI(access_token=access_token,
+                                        server=server,
+                                        log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
+                                        log_file=FXCM_CONFIG.get('logpath'))
+        self.account.set_max_prices(self.max_prices)
         handlers = handlers or []
         self.register(*handlers)
 
@@ -46,33 +46,33 @@ class FXCMStreamRunner(StreamRunnerBase):
     def subscribe_pair(self):
         for symbol in ALL_SYMBOLS:
             if symbol not in self.pairs:
-                self.connection.unsubscribe_instrument(symbol)
+                self.account.unsubscribe_instrument(symbol)
 
         if not self.pairs:
             logger.info('No valid FXCM symbol exists.')
             return
         for pair in self.pairs:
-            self.connection.subscribe_market_data(pair, (self.tick_data,))
-            self.connection.subscribe_instrument(pair)
+            self.account.subscribe_market_data(pair, (self.tick_data,))
+            self.account.subscribe_instrument(pair)
 
     def subscribe_data(self):
         # all_models['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
         models = ['Account', 'Order', 'OpenPosition', 'Summary']
         for model in models:
-            self.connection.subscribe_data_model(model, (self.model_event,))
+            self.account.subscribe_data_model(model, (self.model_event,))
 
     def unsubscribe_pair(self, pair):
-        self.connection.unsubscribe_market_data(pair)
-        self.connection.unsubscribe_instrument(pair)
+        self.account.unsubscribe_market_data(pair)
+        self.account.unsubscribe_instrument(pair)
 
     def unsubscribe_all(self):
         for pair in self.pairs:
-            self.connection.unsubscribe_market_data(pair)
-            self.connection.unsubscribe_instrument(pair)
+            self.account.unsubscribe_market_data(pair)
+            self.account.unsubscribe_instrument(pair)
 
         # ['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
-        for model in self.connection.models:
-            self.connection.unsubscribe_data_model(model)
+        for model in self.account.models:
+            self.account.unsubscribe_data_model(model)
 
     def model_event(self, data):
         # todo send event
@@ -99,7 +99,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     def stop(self):
         super(FXCMStreamRunner, self).stop()
         self.unsubscribe_all()
-        self.connection.close()
+        self.account.close()
 
 
 if __name__ == '__main__':

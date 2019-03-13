@@ -66,6 +66,7 @@ class HeartbeatRunner(Runner):
 
 class StreamRunnerBase(Runner):
     broker = ''
+    account = None
 
     def __init__(self, queue, pairs, *args, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
