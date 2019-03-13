@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class FXCMStreamRunner(StreamRunnerBase):
     connection = None
     broker = 'FXCM'
-    MAX_PRICES = 4000
+    max_prices = 4000
 
     def __init__(self, queue, pairs, access_token, handlers, account_type=AccountType.DEMO, *args, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
@@ -28,7 +28,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                                            server=server,
                                            log_level=FXCM_CONFIG.get('debugLevel', 'ERROR'),
                                            log_file=FXCM_CONFIG.get('logpath'))
-        self.connection.set_max_prices(self.MAX_PRICES)
+        self.connection.set_max_prices(self.max_prices)
         handlers = handlers or []
         self.register(*handlers)
 
