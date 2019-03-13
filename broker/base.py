@@ -221,7 +221,7 @@ class TradeBase(object):
     def get_trade(self, trade_id):
         raise NotImplementedError
 
-    def close(self, trade_id, lots):
+    def close_trade(self, trade_id, lots):
         raise NotImplementedError
 
 

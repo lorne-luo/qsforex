@@ -21,7 +21,7 @@ class TradeMixin(OANDABase, TradeBase):
     def get_trade(self, trade_id):
         return self.fxcmpy.get_order(trade_id)
 
-    def close(self, trade_id, lots):
+    def close_trade(self, trade_id, lots):
         amount = lots_to_units(lots)
         return self.fxcmpy.close_trade(trade_id, amount, order_type='AtMarket',
                                        time_in_force='IOC', rate=None, at_market=None)

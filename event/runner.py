@@ -1,5 +1,6 @@
 import logging
 import queue
+import sys
 import time
 
 import settings
@@ -35,7 +36,7 @@ class Runner(QueueBase):
     def stop(self):
         del self.queue
         self.running = False
-        exit(0)
+        sys.exit(0)
 
 
 class HeartbeatRunner(Runner):
