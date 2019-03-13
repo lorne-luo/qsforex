@@ -14,6 +14,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
     broker = 'FXCM'
     max_prices = 2000
     pairs = BrokerAccount.default_pairs
+    MAX_CANDLES = 10000
 
     def __init__(self, type, account_id, access_token, *args, **kwargs):
         self.type = 'real' if type == AccountType.REAL else 'demo'
@@ -30,16 +31,16 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
     @property
     def summary(self):
-        result={}
-        for k,v in self.fxcmpy.get_accounts().T.to_dict().items():
-            result[v['accountId']]=v
+        result = {}
+        for k, v in self.fxcmpy.get_accounts().T.to_dict().items():
+            result[v['accountId']] = v
         return result
 
     def dump(self):
         print(self.summary)
 
-SingletonFXCMAccount = SingletonDecorator(FXCM)
 
+SingletonFXCMAccount = SingletonDecorator(FXCM)
 
 if __name__ == '__main__':
     ACCOUNT_ID = 3261139

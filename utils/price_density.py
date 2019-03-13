@@ -1,19 +1,25 @@
 import json
+import logging
+
 import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_EVEN
 import matplotlib.pyplot as plt
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
-
+from mt4.constants import PERIOD_D1
 from broker.base import AccountType
-from broker.fxcm.account import FXCM
+from broker.fxcm.account import FXCM, SingletonFXCMAccount
 from broker.fxcm.constants import get_fxcm_symbol
+from event.event import TimeFrameEvent
+from event.handler import BaseHandler
 from mt4.constants import PIP_DICT, pip, get_mt4_symbol
 from utils.redis import redis
 
 ACCOUNT_ID = 3261139
 ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
+
+logger = logging.getLogger(__name__)
 
 
 def _process_df(df, result, symbol):
@@ -49,14 +55,14 @@ def _save_redis(symbol, result):
 
 def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
     symbol = get_mt4_symbol(symbol)
-    fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
     end = datetime.utcnow()
     result = {}
 
     count = 0
     while end > start:
-        df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=10000, end=end,
+        df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=end,
                                      columns=['askhigh', 'bidlow', 'tickqty'])
         _process_df(df, result, symbol)
         count += 1
@@ -67,15 +73,21 @@ def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
     redis.set(symbol + "_last_time", str(now))
 
 
-def update_density(symbol):
+def update_density(symbol, account=None):
     symbol = get_mt4_symbol(symbol)
-    last_time = parse(redis.get(symbol + "_last_time"))
+    last_time = redis.get(symbol + "_last_time")
+    last_time = parse(last_time) if last_time else None
     now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
-    data = json.loads(redis.get(symbol))
+    data = redis.get(symbol)
+    data = json.loads(data) if data else {}
 
-    fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
-    df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=last_time, end=now,
+    fxcm = account or SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    if last_time:
+        df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=last_time, end=now,
                                  columns=['askhigh', 'bidlow', 'tickqty'])
+    else:
+        df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
+                                     columns=['askhigh', 'bidlow', 'tickqty'])
     _process_df(df, data, symbol)
 
     print('Data length = %s' % len(df))
@@ -115,8 +127,8 @@ def draw_rencent(symbol, days=None):
     symbol = get_mt4_symbol(symbol)
     now = datetime.utcnow()
 
-    fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
-    df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=10000, end=now,
+    fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
                                  columns=['askclose', 'askhigh', 'bidlow', 'tickqty'])
     price = df.iloc[-1].askclose
     if days:
@@ -125,7 +137,7 @@ def draw_rencent(symbol, days=None):
         print(end)
         while end - start > timedelta(minutes=1):
             if (end - start).days > 6:
-                df2 = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=10000, end=end,
+                df2 = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=end,
                                               columns=['askclose', 'askhigh', 'bidlow', 'tickqty'])
             else:
                 df2 = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=start, end=end,
@@ -149,3 +161,22 @@ def draw_rencent(symbol, days=None):
 
     filename = '%s_%s' % (symbol, now.strftime('%Y-%m-%d %H:%M'))
     _draw(sorted_result, symbol, price, filename)
+
+
+class PriceDensityHandler(BaseHandler):
+    subscription = [TimeFrameEvent]
+    pairs = []
+
+    def __init__(self, queue=None, pairs=None):
+        super(PriceDensityHandler, self).__init__(queue)
+        self.pairs = pairs
+
+    def process(self, event):
+        if event.timeframe != PERIOD_D1:
+            return
+
+        for symbol in self.pairs:
+            try:
+                update_density(symbol)
+            except Exception as ex:
+                logger.error('update_density error, symbol=%s, %s' % (symbol, ex))
