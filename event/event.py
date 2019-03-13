@@ -29,9 +29,13 @@ class HeartBeatEvent(Event):
 class TimeFrameEvent(Event):
     type = EventType.TIMEFRAME
 
-    def __init__(self, timeframe):
-        self.timeframe = timeframe
+    def __init__(self, timeframe,current,previous,timezone,time):
         super(TimeFrameEvent, self).__init__()
+        self.timeframe = timeframe
+        self.current = current
+        self.previous = previous
+        self.timezone = timezone
+        self.time = time
 
 
 class MarketOpenEvent(Event):
