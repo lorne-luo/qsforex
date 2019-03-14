@@ -86,13 +86,14 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, strategy_name, version, magic_number, instrument, order_type, side):
+    def __init__(self, strategy_name, version, magic_number, instrument, order_type, side,strength):
         self.strategy = strategy_name
         self.version = version
         self.magic_number = magic_number
         self.instrument = instrument
         self.order_type = order_type
         self.side = side
+        self.strength = strength
         super(SignalEvent, self).__init__()
 
     def __str__(self):

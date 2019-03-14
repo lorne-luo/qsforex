@@ -45,6 +45,8 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 SingletonFXCMAccount = SingletonDecorator(FXCM)
 
 if __name__ == '__main__':
+#    from broker.fxcm.account import *
+
     ACCOUNT_ID = 3261139
     ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
     fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
