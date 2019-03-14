@@ -24,3 +24,5 @@ fxcmpy==1.2.3
 socketIO-client
 jupyter
 redis==3.2.0
+bt==0.2.7
+pyllist==0.3
