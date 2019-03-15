@@ -1,0 +1,18 @@
+#!/bin/bash
+
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    if [ "master" == "$branch" ]; then
+        mkdir -p /opt/qsforex
+        cd /opt/qsforex
+        sudo git --git-dir=/home/git/qsforex.git --work-tree=/opt/qsforex checkout -f master >/dev/null
+
+        PIP = ${HOME}/venv/qsforex/bin/pip
+        sudo ${PIP} install -r requirements.pip || exit 1
+        sudo chown luotao ${HOME}/venv/qsforex -R
+        sudo chown luotao /opt/qsforex -R
+
+        sudo supervisorctl restart qsforex
+    fi
+done
