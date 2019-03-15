@@ -7,17 +7,18 @@ from decimal import Decimal, ROUND_HALF_EVEN
 import matplotlib.pyplot as plt
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
-from mt4.constants import PERIOD_D1, PERIOD_M5, PERIOD_M1
+from mt4.constants import PERIOD_D1, PERIOD_M5, PERIOD_M1, PERIOD_H4
 from broker.base import AccountType
 from broker.fxcm.account import FXCM, SingletonFXCMAccount
 from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TimeFrameEvent
 from event.handler import BaseHandler
 from mt4.constants import PIP_DICT, pip, get_mt4_symbol
-from utils.redis import redis
+from utils.redis import price_redis
 
 ACCOUNT_ID = 3261139
 ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
+TIME_SUFFIX = '_LAST_TIME'
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def _save_redis(symbol, result):
     %s
     }''' % output
     data = eval(output)
-    redis.set(symbol, json.dumps(data))
+    price_redis.set(symbol, json.dumps(data))
 
 
 def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
@@ -70,15 +71,15 @@ def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
         end = df.iloc[0].name.to_pydatetime() - relativedelta(seconds=30)
 
     _save_redis(symbol, result)
-    redis.set(symbol + "_last_time", str(now))
+    price_redis.set(symbol + TIME_SUFFIX, str(now))
 
 
 def update_density(symbol, account=None):
     symbol = get_mt4_symbol(symbol)
-    last_time = redis.get(symbol + "_last_time")
+    last_time = price_redis.get(symbol + TIME_SUFFIX)
     last_time = parse(last_time) if last_time else None
-    now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
-    data = redis.get(symbol)
+    now = datetime.utcnow()
+    data = price_redis.get(symbol)
     data = json.loads(data) if data else {}
 
     fxcm = account or SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
@@ -92,7 +93,9 @@ def update_density(symbol, account=None):
 
     print('Data length = %s' % len(df))
     _save_redis(symbol, data)
-    redis.set(symbol + "_last_time", str(now))
+    now = df.iloc[-1].name.to_pydatetime() + relativedelta(seconds=30)
+    price_redis.set(symbol + TIME_SUFFIX, str(now))
+    return now
 
 
 def _draw(data, symbol, price, filename=None):
@@ -114,7 +117,7 @@ def _draw(data, symbol, price, filename=None):
 def draw_history(symbol, price):
     price = float(price)
     symbol = get_mt4_symbol(symbol)
-    data = redis.get(symbol)
+    data = price_redis.get(symbol)
     if not data:
         print('No data for %s' % symbol)
         return
@@ -172,20 +175,18 @@ class PriceDensityHandler(BaseHandler):
         self.pairs = pairs
 
     def process(self, event):
-        if event.timeframe != PERIOD_M1:
+        if event.timeframe != PERIOD_D1:
             return
 
         for symbol in self.pairs:
             try:
-                update_density(symbol)
-                print('update_density succeed')
+                last_time = update_density(symbol)
+                logger.info('%s density updated to %s.' % (symbol, last_time.strftime('%Y-%m-%d %H:%M')))
             except Exception as ex:
                 logger.error('update_density error, symbol=%s, %s' % (symbol, ex))
-                print('update_density error: %s'%ex)
-                import traceback
-                traceback.print_stack()
+
 
 if __name__ == '__main__':
-    #from utils.price_density import *
+    # from utils.price_density import *
     update_density('EURUSD')
     draw_rencent('EURUSD')
