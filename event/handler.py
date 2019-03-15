@@ -4,9 +4,11 @@ from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 
+import settings
 from event.event import *
 from mt4.constants import PERIOD_CHOICES, get_candle_time
 from utils.market import is_market_open
+from utils.redis import system_redis
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +57,15 @@ class EventLoggerHandler(DebugHandler):
         self.logger.info('[%s] %s' % (event.type, event.__dict__))
 
 
-class TickHandler(BaseHandler):
+class TickPriceHandler(BaseHandler):
+    subscription = [TickPriceEvent.type]
+
     def process(self, event):
-        pass
+        key = "LAST_TICK_TIME"
+        if settings.DEBUG:
+            print(event.__dict__)
+        else:
+            system_redis.set(key, event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
 
 
 class HeartBeatPrintHandler(BaseHandler):
