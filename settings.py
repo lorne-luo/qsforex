@@ -4,6 +4,8 @@ from environs import Env
 
 env = Env()
 
+env.read_env('.env')
+
 OANDA_ENVIRONMENTS = {
     "streaming": {
         "real": "stream-fxtrade.oanda.com",
