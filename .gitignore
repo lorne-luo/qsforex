@@ -33,3 +33,4 @@ data/
 local.py
 env/
 venv/
+.env
