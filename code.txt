@@ -14,6 +14,11 @@ python -m unittest broker/oanda/tests.py TestAccount.test_pending_order
 python -m unittest broker/oanda.tests.TestAccount.test_pending_order
 
 
+entry accuracy= 1 - min / (max-min)
+exit accuracy= 1 - profit missed / (max-min)
+risk:reward= 1: max/-min or 1:max
+drawdown
+
 ac.trades['99'].__dict__
 Out[12]:
 {'id': '99',

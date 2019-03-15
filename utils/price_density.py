@@ -188,3 +188,4 @@ class PriceDensityHandler(BaseHandler):
 if __name__ == '__main__':
     #from utils.price_density import *
     update_density('EURUSD')
+    draw_rencent('EURUSD')

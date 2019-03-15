@@ -93,7 +93,7 @@ class Backtest(object):
 
 if __name__ == "__main__":
     # Set up logging
-    logging.basicConfig(filename='backtest.log', level=logging.INFO, filemode='w')
+    logging.basicConfig(filename='backtest.log', level=logging.INFO, filemode='w+')
     logger = logging.getLogger('RestMeanReversion.backtest.log')
 
     fxcm_token = "8a1e87908a70362782ea9744e2c9c82689bde3ac"

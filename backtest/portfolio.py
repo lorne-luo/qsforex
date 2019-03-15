@@ -184,7 +184,7 @@ class Portfolio(object):
                 if pair in self.positions:
                     out_line += "Position: %0.2f" % self.positions[pair].profit_base
                 else:
-                    out_line += ",0.00"
+                    out_line += "0.00"
             out_line += "\n"
             self.logger.info(out_line[:-2])
 
