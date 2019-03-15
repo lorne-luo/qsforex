@@ -9,7 +9,7 @@ do
         sudo git --git-dir=/home/git/qsforex.git --work-tree=/opt/qsforex checkout -f master >/dev/null
 
         PIP = /home/luotao/venv/qsforex/bin/pip
-        sudo ${PIP} install -r requirements.pip || exit 1
+        sudo ${PIP} install -r requirements.txt || exit 1
         sudo chown luotao ${HOME}/venv/qsforex -R
         sudo chown luotao /opt/qsforex -R
 
