@@ -21,10 +21,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     def __init__(self, queue, *, pairs, access_token, handlers, account_type=AccountType.DEMO, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.account = fxcmpy(access_token=access_token,
-                              server=server,
-                              log_level=FXCM_CONFIG.get('debugLevel', 'error'),
-                              log_file=FXCM_CONFIG.get('logpath'))
+        self.account = fxcmpy(access_token=access_token, server=server)
         self.account.set_max_prices(self.max_prices)
         handlers = handlers or []
         self.register(*handlers)
@@ -35,15 +32,14 @@ class FXCMStreamRunner(StreamRunnerBase):
 
         self.pairs = [get_fxcm_symbol(pair) for pair in self.pairs]
         pair_list = ",".join(self.pairs)
-        logger.info('Pairs: %s' % pair_list)
-        logger.info('\n')
+        logger.info('Pairs: %s\n' % pair_list)
 
         self.subscribe_pair()
 
     def subscribe_pair(self):
-        for symbol in ALL_SYMBOLS:
-            if symbol not in self.pairs:
-                self.account.unsubscribe_instrument(symbol)
+        # for symbol in ALL_SYMBOLS:
+        #     if symbol not in self.pairs:
+        #         self.account.unsubscribe_instrument(symbol)
 
         if not self.pairs:
             logger.info('No valid FXCM symbol exists.')
@@ -94,7 +90,6 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.handle_event(event)
 
     def stop(self):
-        self.unsubscribe_all()
         self.account.close()
         super(FXCMStreamRunner, self).stop()
 

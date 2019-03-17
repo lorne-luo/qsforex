@@ -128,6 +128,6 @@ class EventLoggerHandler(BaseHandler):
     def process(self, event):
         if event.type == TimeFrameEvent.type:
             if event.timeframe == PERIOD_H1:
-                logger.info('H1 timeframe tick: %s' % event.current_time.strftime('%Y-%m-%d %H:%M:%S'))
+                logger.info('H1 timeframe tick = %s' % event.current_time.strftime('%Y-%m-%d %H:%M:%S'))
         elif event.type == MarketEvent.type:
-            logger.info('Market status changed: %s' % event.action)
+            logger.info('Market status changed to %s' % event.action)

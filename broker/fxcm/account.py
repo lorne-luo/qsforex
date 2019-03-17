@@ -22,10 +22,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         self.access_token = access_token
         super(FXCM, self).__init__(*args, **kwargs)
         server = 'real' if type == AccountType.REAL else 'demo'
-        self.fxcmpy = fxcmpy(access_token=access_token,
-                             server=server,
-                             log_level=FXCM_CONFIG.get('debugLevel', 'error'),
-                             log_file=FXCM_CONFIG.get('logpath'))
+        self.fxcmpy = fxcmpy(access_token=access_token, server=server)
         self.fxcmpy.set_max_prices(self.max_prices)
 
         if self.account_id != self.fxcmpy.default_account:
@@ -45,7 +42,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 SingletonFXCMAccount = SingletonDecorator(FXCM)
 
 if __name__ == '__main__':
-#    from broker.fxcm.account import *
+    #    from broker.fxcm.account import *
 
     ACCOUNT_ID = 3261139
     ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
