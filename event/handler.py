@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 
 import settings
 from event.event import *
-from mt4.constants import PERIOD_CHOICES, get_candle_time
+from mt4.constants import PERIOD_CHOICES, get_candle_time, PERIOD_H1
 from utils.market import is_market_open
 from utils.redis import system_redis
 
@@ -48,13 +48,13 @@ class DebugHandler(BaseHandler):
         print('[%s] %s' % (event.type, event.__dict__))
 
 
-class EventLoggerHandler(DebugHandler):
-    def __init__(self, queue, events=None, *args, **kwargs):
-        super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
-        self.logger = logging.getLogger('EventLog')
-
-    def process(self, event):
-        self.logger.info('[%s] %s' % (event.type, event.__dict__))
+# class EventLoggerHandler(DebugHandler):
+#     def __init__(self, queue, events=None, *args, **kwargs):
+#         super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
+#         self.logger = logging.getLogger('EventLog')
+#
+#     def process(self, event):
+#         self.logger.info('[%s] %s' % (event.type, event.__dict__))
 
 
 class TickPriceHandler(BaseHandler):
@@ -113,10 +113,21 @@ class TimeFrameTicker(BaseHandler):
         open = is_market_open()
         self.set_market_open(open)
 
-    def set_market_open(self, open):
-        if self.market_open != open:
-            if open:
-                self.put(MarketOpenEvent())
+    def set_market_open(self, current_status):
+        if self.market_open != current_status:
+            if current_status:
+                self.put(MarketEvent(MarketAction.OPEN))
             else:
-                self.put(MarketCloseEvent())
-            self.market_open = open
+                self.put(MarketEvent(MarketAction.CLOSE))
+            self.market_open = current_status
+
+
+class EventLoggerHandler(BaseHandler):
+    subscription = [TimeFrameEvent.type, MarketEvent.type]
+
+    def process(self, event):
+        if event.type == TimeFrameEvent.type:
+            if event.timeframe == PERIOD_H1:
+                logger.info('H1 timeframe tick: %s' % event.current_time.strftime('%Y-%m-%d %H:%M:%S'))
+        elif event.type == MarketEvent.type:
+            logger.info('Market status changed: %s' % event.action)

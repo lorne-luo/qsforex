@@ -6,6 +6,11 @@ class SignalAction(object):
     CLOSE = 'CLOSE'
 
 
+class MarketAction(object):
+    OPEN = 'OPEN'
+    CLOSE = 'CLOSE'
+
+
 class EventType(object):
     STARTUP = 'STARTUP'
     SHUTDOWN = 'SHUTDOWN'
@@ -34,23 +39,22 @@ class HeartBeatEvent(Event):
 class TimeFrameEvent(Event):
     type = EventType.TIMEFRAME
 
-    def __init__(self, timeframe, current, previous, timezone, time):
+    def __init__(self, timeframe, current_time, previous, timezone, time):
         super(TimeFrameEvent, self).__init__()
         self.timeframe = timeframe
-        self.current = current
+        self.current_time = current_time
         self.previous = previous
         self.timezone = timezone
         self.time = time
 
 
-class MarketOpenEvent(Event):
+class MarketEvent(Event):
     type = EventType.MARKET_OPEN
     open = True
 
-
-class MarketCloseEvent(Event):
-    type = EventType.MARKET_CLOSE
-    open = False
+    def __init__(self, action):
+        super(MarketEvent, self).__init__()
+        self.action = action
 
 
 class TickEvent(Event):
