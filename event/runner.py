@@ -22,13 +22,11 @@ class Runner(QueueBase):
                 handler.set_queue(self.queue)
                 self.handlers.append(handler)
 
-    def process_event(self, event):
-        for handler in self.handlers:
-            if '*' in handler.subscription:
-                handler.process(event)
-                continue
-            if event.type in handler.subscription:
-                handler.process(event)
+    def process_event(self, handler, event):
+        try:
+            handler.process(event)
+        except Exception as ex:
+            logger.error('%s: %s' % (handler.__class__, ex))
 
     def print(self):
         print(self.handlers)
@@ -63,7 +61,12 @@ class HeartbeatRunner(Runner):
                     else:
                         logger.debug("Received new %s event: %s", (event.type, event.__dict__))
 
-                    self.process_event(event)
+                    for handler in self.handlers:
+                        if '*' in handler.subscription:
+                            self.process_event(handler, event)
+                            continue
+                        elif event.type in handler.subscription:
+                            self.process_event(handler, event)
 
 
 class StreamRunnerBase(Runner):
