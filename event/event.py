@@ -1,6 +1,11 @@
 from datetime import datetime
 
 
+class SignalAction(object):
+    OPEN = 'OPEN'
+    CLOSE = 'CLOSE'
+
+
 class EventType(object):
     STARTUP = 'STARTUP'
     SHUTDOWN = 'SHUTDOWN'
@@ -29,7 +34,7 @@ class HeartBeatEvent(Event):
 class TimeFrameEvent(Event):
     type = EventType.TIMEFRAME
 
-    def __init__(self, timeframe,current,previous,timezone,time):
+    def __init__(self, timeframe, current, previous, timezone, time):
         super(TimeFrameEvent, self).__init__()
         self.timeframe = timeframe
         self.current = current
@@ -86,7 +91,8 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, strategy_name, version, magic_number, instrument, order_type, side,strength):
+    def __init__(self, action, strategy_name, version, magic_number, instrument, order_type, side, strength=None):
+        self.action = action
         self.strategy = strategy_name
         self.version = version
         self.magic_number = magic_number

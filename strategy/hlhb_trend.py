@@ -1,13 +1,11 @@
-from datetime import datetime
+import talib as ta
 
 from broker.oanda.common.constants import OrderType
-from event.event import SignalEvent
+from event.event import SignalEvent, SignalAction
 from mt4.constants import PERIOD_H1
 from strategy.base import StrategyBase
 from strategy.helper import check_cross
 from utils.market import is_market_open
-import talib as ta
-from talib import MA_Type
 
 
 class HLHBTrend(StrategyBase):
@@ -56,6 +54,6 @@ class HLHBTrend(StrategyBase):
         # upper, middle, lower = ta.BBANDS(h1_candles['close'], matype=MA_Type.T3)
         side = check_cross(ema5, ema10)
         if side:
-            event = SignalEvent(self.name, self.version, self.magic_number,
+            event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
                                 symbol, OrderType.MARKET, side)
             self.put(event)
