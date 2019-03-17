@@ -91,7 +91,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         else:
             if event:
                 logger.debug("Received new %s event: %s", (event.type, event.__dict__))
-                self.process_event(event)
+                self.handle_event(event)
 
     def stop(self):
         self.unsubscribe_all()
