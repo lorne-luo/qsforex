@@ -13,6 +13,6 @@ tick_price_handler = TickPriceHandler(queue)
 timeframe_ticker = TimeFrameTicker(queue, 0)
 price_density = PriceDensityHandler(queue, pairs)
 
-runner = FXCMStreamRunner(queue=queue, pairs=pairs, access_token=YOURTOKEN,
+runner = FXCMStreamRunner(queue, pairs=pairs, access_token=YOURTOKEN,
                           handlers=[tick_price_handler, timeframe_ticker, price_density])
 runner.run()

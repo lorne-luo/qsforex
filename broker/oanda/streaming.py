@@ -10,11 +10,12 @@ from broker.oanda.common.convertor import get_symbol
 
 logger = logging.getLogger(__name__)
 
+
 class OandaV20StreamRunner(StreamRunnerBase):
     default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
     broker = 'OANDA'
 
-    def __init__(self, queue, pairs, access_token, account_id, handlers, account_type=AccountType.DEMO,*args, **kwargs):
+    def __init__(self, queue, *, pairs, access_token, account_id, handlers, account_type=AccountType.DEMO, **kwargs):
         super(StreamRunnerBase, self).__init__(queue)
         self.pairs = pairs
         self.prices = self._set_up_prices_dict()
@@ -22,10 +23,10 @@ class OandaV20StreamRunner(StreamRunnerBase):
         self.account_id = account_id
         handlers = handlers or []
         self.register(*handlers)
-        self.account=SingletonOANDAAccount(type=account_type,
-                               account_id=account_id,
-                               access_token=access_token,
-                               application_name=settings.APPLICATION_NAME)
+        self.account = SingletonOANDAAccount(type=account_type,
+                                             account_id=account_id,
+                                             access_token=access_token,
+                                             application_name=settings.APPLICATION_NAME)
 
     def run(self):
         print('%s statup.' % self.__class__.__name__)
@@ -82,9 +83,10 @@ if __name__ == '__main__':
 
     queue = Queue(maxsize=2000)
     debug = DebugHandler(queue)
-    runner = OandaV20StreamRunner(queue, ['EUR_USD', 'GBP_USD'],
-                                  settings.ACCESS_TOKEN,
-                                  settings.ACCOUNT_ID,
-                                  [debug],
-                                  AccountType.DEMO)
+    runner = OandaV20StreamRunner(queue,
+                                  pairs=['EUR_USD', 'GBP_USD'],
+                                  access_token=settings.ACCESS_TOKEN,
+                                  account_id=settings.ACCOUNT_ID,
+                                  handlers=[debug],
+                                  account_type=AccountType.DEMO)
     runner.run()

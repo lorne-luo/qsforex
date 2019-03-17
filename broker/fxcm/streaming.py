@@ -18,7 +18,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     broker = 'FXCM'
     max_prices = 4000
 
-    def __init__(self, queue, pairs, access_token, handlers, account_type=AccountType.DEMO, *args, **kwargs):
+    def __init__(self, queue, *, pairs, access_token, handlers, account_type=AccountType.DEMO, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
         self.account = fxcmpy(access_token=access_token,
@@ -110,5 +110,5 @@ if __name__ == '__main__':
     YOURTOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
     pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD',
              'USOil', 'USD/CNH']
-    r = FXCMStreamRunner(queue, pairs, YOURTOKEN, [debug, tft])
+    r = FXCMStreamRunner(queue, pairs=pairs, access_token=YOURTOKEN, handlers=[debug, tft])
     r.run()
