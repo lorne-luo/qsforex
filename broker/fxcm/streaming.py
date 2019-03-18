@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -9,6 +10,7 @@ from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
 from event.event import TickPriceEvent, TimeFrameEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
+from utils.redis import price_redis
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +81,9 @@ class FXCMStreamRunner(StreamRunnerBase):
         ask = Decimal(str(data['Rates'][1]))
         tick = TickPriceEvent(self.broker, instrument, time, bid, ask)
         self.put(tick)
+        price_redis.set('%s_TICK' % instrument.upper(),
+                        json.dumps(
+                            {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')}))
 
         try:
             event = self.queue.get(False)

@@ -51,7 +51,7 @@ def _save_redis(symbol, result):
     %s
     }''' % output
     data = eval(output)
-    price_redis.set(symbol, json.dumps(data))
+    price_redis.set('%s_H1' % symbol, json.dumps(data))
 
 
 def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
@@ -79,7 +79,7 @@ def update_density(symbol, account=None):
     last_time = price_redis.get(symbol + TIME_SUFFIX)
     last_time = parse(last_time) if last_time else None
     now = datetime.utcnow()
-    data = price_redis.get(symbol)
+    data = price_redis.get('%s_H1' % symbol)
     data = json.loads(data) if data else {}
 
     fxcm = account or SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
@@ -117,7 +117,7 @@ def _draw(data, symbol, price, filename=None):
 def draw_history(symbol, price):
     price = float(price)
     symbol = get_mt4_symbol(symbol)
-    data = price_redis.get(symbol)
+    data = price_redis.get('%s_H1' % symbol)
     if not data:
         print('No data for %s' % symbol)
         return
