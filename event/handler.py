@@ -123,7 +123,7 @@ class TimeFrameTicker(BaseHandler):
                 self.candle_time[timeframe] = new
 
                 if timeframe == PERIOD_H1:
-                    logger.info('H1 timeframe tick = %s' % new.strftime('%Y-%m-%d %H:%M'))
+                    logger.info('TimeFrame H1 heartbeat = %s' % new.strftime('%Y-%m-%d %H:%M'))
 
         open = is_market_open()
         self.set_market_open(open)

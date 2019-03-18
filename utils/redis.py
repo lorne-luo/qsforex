@@ -23,7 +23,7 @@ order_redis = redis.StrictRedis(host=settings.REDIS_HOST,
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, db=settings.QUEUE_CHANNEL, host=settings.REDIS_HOST,
+    def __init__(self, name, db=settings.SYSTEM_CHANNEL, host=settings.REDIS_HOST,
                  port=settings.REDIS_PORT):
         self.__db = redis.StrictRedis(host=host,
                                       port=port,
