@@ -6,7 +6,7 @@ from event.event import TickPriceEvent
 from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler
 from utils.price_density import PriceDensityHandler
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s|%(levelname)s|%(name)s %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s|%(levelname)s|%(name)s:%(lineno)d %(message)s')
 logging.getLogger('FXCM').setLevel(logging.WARN)
 
 queue = Queue()

@@ -48,13 +48,13 @@ class DebugHandler(BaseHandler):
         print('[%s] %s' % (event.type, event.__dict__))
 
 
-# class EventLoggerHandler(DebugHandler):
-#     def __init__(self, queue, events=None, *args, **kwargs):
-#         super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
-#         self.logger = logging.getLogger('EventLog')
-#
-#     def process(self, event):
-#         self.logger.info('[%s] %s' % (event.type, event.__dict__))
+class EventLoggerHandler(DebugHandler):
+    def __init__(self, queue, events=None, *args, **kwargs):
+        super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
+        self.logger = logging.getLogger('EventLog')
+
+    def process(self, event):
+        self.logger.info('[%s] %s' % (event.type, event.__dict__))
 
 
 class TickPriceHandler(BaseHandler):
@@ -110,6 +110,9 @@ class TimeFrameTicker(BaseHandler):
                 # print(self.candle_time[timeframe], new)
                 self.candle_time[timeframe] = new
 
+                if timeframe == PERIOD_H1:
+                    logger.info('H1 timeframe tick = %s' % new.strftime('%Y-%m-%d %H:%M'))
+
         open = is_market_open()
         self.set_market_open(open)
 
@@ -117,17 +120,8 @@ class TimeFrameTicker(BaseHandler):
         if self.market_open != current_status:
             if current_status:
                 self.put(MarketEvent(MarketAction.OPEN))
+                logger.info('Market status changed opened.')
             else:
                 self.put(MarketEvent(MarketAction.CLOSE))
+                logger.info('Market status changed closed.')
             self.market_open = current_status
-
-
-class EventLoggerHandler(BaseHandler):
-    subscription = [TimeFrameEvent.type, MarketEvent.type]
-
-    def process(self, event):
-        if event.type == TimeFrameEvent.type:
-            if event.timeframe == PERIOD_H1:
-                logger.info('H1 timeframe tick = %s' % event.current_time.strftime('%Y-%m-%d %H:%M:%S'))
-        elif event.type == MarketEvent.type:
-            logger.info('Market status changed to %s' % event.action)
