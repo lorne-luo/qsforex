@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 from datetime import datetime
 
@@ -24,10 +25,21 @@ class QueueBase(object):
             self.queue = queue
 
     def put(self, event):
-        if self.queue:
-            self.queue.put(event)
-        else:
-            logger.error('Handler do not have queue')
+        try:
+            data = json.dumps(event.to_dict())
+            self.queue.put(data)
+        except Exception as ex:
+            logger.error('queue put error=%s' % ex)
+
+    def get(self, block=False):
+        try:
+            data = self.queue.get(block)
+            if data:
+                data = json.loads(data)
+                return Event.from_dict(data)
+        except Exception as ex:
+            logger.error('queue get error=%s' % ex)
+        return None
 
 
 class BaseHandler(QueueBase):

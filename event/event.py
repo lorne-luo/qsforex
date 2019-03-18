@@ -1,4 +1,7 @@
 from datetime import datetime
+from decimal import Decimal
+
+from dateparser import parse
 
 
 class SignalAction(object):
@@ -31,6 +34,38 @@ class Event(object):
     def __init__(self):
         self.time = datetime.utcnow()
 
+    def to_dict(self):
+        data = self.__dict__
+        for k in data.keys():
+            if type(data[k]) in (str, float, int):
+                pass
+            elif type(data[k]) is Decimal:
+                data[k] = float(data[k])
+            elif type(data[k]) is datetime:
+                data[k] = data[k].strftime('%Y-%m-%d %H:%M:%S:%f')
+            else:
+                raise Exception('%s.%s is not serializable.' % (self.__class__.__name__, k))
+        data['type'] = self.type
+        return data
+
+    @staticmethod
+    def from_dict(data):
+        instance = Event()
+        for k in data.keys():
+            if type(data[k]) is int:
+                pass
+            elif type(data[k]) is float:
+                data[k] = Decimal(str(data[k]))
+
+            elif type(data[k]) is str:
+                dt = parse(data[k], date_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S:%f',
+                                                  '%Y-%m-%dT%H:%M:%S'])
+                data[k] = dt or data[k]
+            else:
+                raise Exception('Event.from_dict %s=%s is not deserializable.' % (k, data[k]))
+            setattr(instance, k, data[k])
+        return instance
+
 
 class HeartBeatEvent(Event):
     type = EventType.HEARTBEAT
@@ -50,7 +85,6 @@ class TimeFrameEvent(Event):
 
 class MarketEvent(Event):
     type = EventType.MARKET_OPEN
-    open = True
 
     def __init__(self, action):
         super(MarketEvent, self).__init__()

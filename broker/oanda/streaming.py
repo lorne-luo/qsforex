@@ -57,14 +57,12 @@ class OandaV20StreamRunner(StreamRunnerBase):
             else:
                 print('Unknow type:', msg_type, msg.__dict__)
 
-            try:
-                event = self.queue.get(False)
-            except Empty:
-                self.put(HeartBeatEvent())
-            else:
+            while True:
+                event = self.get(False)
                 if event:
-                    logger.debug("Received new %s event: %s", (event.type, event.__dict__))
                     self.handle_event(event)
+                else:
+                    break
 
             if not self.running:
                 self.stop()

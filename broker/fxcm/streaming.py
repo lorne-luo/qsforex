@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime
 from decimal import Decimal
+from queue import Empty
 
 from fxcmpy import fxcmpy
 
@@ -85,14 +86,12 @@ class FXCMStreamRunner(StreamRunnerBase):
                         json.dumps(
                             {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')}))
 
-        try:
-            event = self.queue.get(False)
-        except Empty:
-            pass
-        else:
+        while True:
+            event = self.get(False)
             if event:
-                logger.debug("Received new %s event: %s", (event.type, event.__dict__))
                 self.handle_event(event)
+            else:
+                break
 
     def stop(self):
         self.account.close()

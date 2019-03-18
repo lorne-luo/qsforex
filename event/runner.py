@@ -54,22 +54,22 @@ class HeartbeatRunner(Runner):
         self.register(*args)
 
     def run(self):
-        print('%s statup.' % self.__class__.__name__)
-        print('Registered handler: %s' % ', '.join([x.__class__.__name__ for x in self.handlers]))
-        print('\n')
+        logger.info('%s statup.' % self.__class__.__name__)
+        logger.info('Registered handler: %s' % ', '.join([x.__class__.__name__ for x in self.handlers]))
+        logger.info('\n')
 
         while True:
             try:
-                event = self.queue.get(False)
+                event = self.get(False)
             except queue.Empty:
                 time.sleep(self.heartbeat)
                 self.put(HeartBeatEvent())
             else:
                 if event:
                     if settings.DEBUG:
-                        print("Received new %s event: %s", (event.type, event.__dict__))
+                        logger.info("New %sEvent: %s", (event.type, event.__dict__))
                     else:
-                        logger.debug("Received new %s event: %s", (event.type, event.__dict__))
+                        logger.debug("New %sEvent: %s", (event.type, event.__dict__))
 
                     self.handle_event(event)
 
