@@ -1,18 +1,14 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
 
+import settings
 from broker.base import TradeBase
-from mt4.constants import OrderSide
-from broker.oanda.common.convertor import get_symbol
-
 from broker.oanda.base import api, OANDABase
+from broker.oanda.common.constants import TransactionName
+from broker.oanda.common.convertor import lots_to_units
 from broker.oanda.common.logger import log_error
 from broker.oanda.common.prints import print_trades
-from broker.oanda.common.view import print_entity, print_response_entity
-from broker.oanda.common.convertor import get_symbol, lots_to_units
-from broker.oanda.common.constants import TransactionName, OrderType, OrderPositionFill, TimeInForce, \
-    OrderTriggerCondition
-import settings
+from broker.oanda.common.view import print_entity
+from mt4.constants import OrderSide
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +63,7 @@ class TradeMixin(OANDABase, TradeBase):
             print_trades([trade])
         return trade
 
-    def update_trade(self, trade_id, is_stop, rate, is_in_pips=True, trailing_step=0):
-        self.fxcmpy.change_trade_stop_limit(trade_id, is_stop, rate, is_in_pips, trailing_step)
-
-    def close_trade(self, trade_id, lots):
+    def close_trade(self, trade_id, lots=None, percent=None):
         # units : (string, default=ALL)
         # Indication of how much of the Trade to close. Either the string “ALL”
         # (indicating that all of the Trade should be closed), or a DecimalNumber
@@ -78,8 +71,12 @@ class TradeMixin(OANDABase, TradeBase):
         # TradeClose MarketOrder. The units specified must always be positive, and
         # the magnitude of the value cannot exceed the magnitude of the Trade’s
         # open units.
-        lots = lots or 'ALL'
-        if lots != 'ALL':
+
+        if percent:
+            trade = self.get_trade(trade_id)
+            units = trade.currentUnits
+            units = units * percent
+        elif lots:
             units = str(lots_to_units(lots, OrderSide.BUY))
         else:
             units = 'ALL'

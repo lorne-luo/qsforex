@@ -1,5 +1,4 @@
 from mt4.constants import OrderSide
-from utils.singleton import SingletonDecorator
 
 
 class AccountType(object):
@@ -233,7 +232,7 @@ class TradeBase(object):
     def get_trade(self, trade_id):
         raise NotImplementedError
 
-    def close_trade(self, trade_id, lots):
+    def close_trade(self, trade_id, lots=None, percent=None):
         raise NotImplementedError
 
 

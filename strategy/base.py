@@ -22,7 +22,7 @@ class StrategyBase(QueueBase):
     def __str__(self):
         return '%s v%s #%s' % (self.name, self.version, self.magic_number)
 
-    def __init__(self, reader, queue, *args, **kwargs):
+    def __init__(self, queue, reader, *args, **kwargs):
         super(StrategyBase, self).__init__(queue)
         self.data_reader = reader
 

@@ -1,5 +1,4 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
 
 from broker.base import PositionBase
 from broker.fxcm.constants import get_fxcm_symbol
@@ -22,10 +21,16 @@ class PositionMixin(PositionBase):
         return
 
     def list_all_positions(self):
-        return True, self.fxcmpy.open_pos + self.fxcmpy.closed_pos
+        data = {}
+        for k, v in self.fxcmpy.open_pos.items():
+            data[k] = v
+        for k, v in self.fxcmpy.closed_pos.items():
+            data[k] = v
+
+        return True, data
 
     def list_open_positions(self):
-        return True, self.fxcmpy.open_pos
+        return True, self.fxcmpy.get_open_positions()
 
     def close_all_position(self):
         self.fxcmpy.close_all()

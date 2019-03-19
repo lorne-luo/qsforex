@@ -1,12 +1,10 @@
 import logging
 
-from fxcmpy.fxcmpy import ServerError
-
 from broker.base import OrderBase
 from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import TimeInForce, OrderPositionFill, OrderTriggerCondition
 from broker.oanda.common.convertor import lots_to_units
-from mt4.constants import OrderSide, pip
+from mt4.constants import OrderSide
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +20,11 @@ class OrderMixin(OrderBase):
             return orders[orders['status'] in ['1', '7']].T.to_dict()
         return []
 
+    def open_order_ids(self):
+        return [int(x.get('orderId')) for x in self.fxcmpy.get_orders('list')]
+
     def get_order(self, order_id):
+        order_id = int(order_id)
         return self.fxcmpy.get_order(order_id)
 
     def create_entry_order(self, symbol, is_buy, amount, time_in_force=TimeInForce.GTC, take_profit=0,
@@ -79,15 +81,14 @@ class OrderMixin(OrderBase):
                 if kw:
                     self.fxcmpy.change_order_stop_limit(order_id, **kw)
             else:
-                order = self.create_entry_order(symbol, is_buy, amount,
-                                                time_in_force=TimeInForce.GTC, price=price,
-                                                take_profit=take_profit,
-                                                stop_loss=stop_loss, trailing_pip=trailing_pip,
-                                                **kwargs)
+                return self.create_entry_order(symbol, is_buy, amount,
+                                               time_in_force=TimeInForce.GTC, price=price,
+                                               take_profit=take_profit,
+                                               stop_loss=stop_loss, trailing_pip=trailing_pip,
+                                               **kwargs)
         except Exception as ex:
-            print(ex)
-            return False
-        return order
+            logger.error('[Limit Order] %s' % ex)
+            return False, str(ex)
 
     def stop_order(self, instrument, side, price,
                    lots, timeInForce=TimeInForce.GTC,
@@ -122,15 +123,14 @@ class OrderMixin(OrderBase):
                     self.fxcmpy.change_order_stop_limit(order_id, **kw)
 
             else:
-                order = self.create_entry_order(symbol, is_buy, amount,
-                                                time_in_force=TimeInForce.GTC, price=price,
-                                                take_profit=take_profit,
-                                                stop_loss=stop_loss, trailing_pip=trailing_pip,
-                                                **kwargs)
+                return self.create_entry_order(symbol, is_buy, amount,
+                                               time_in_force=TimeInForce.GTC, price=price,
+                                               take_profit=take_profit,
+                                               stop_loss=stop_loss, trailing_pip=trailing_pip,
+                                               **kwargs)
         except Exception as ex:
-            print(ex)
-            return False
-        return order
+            logger.error('[Stop Order] %s' % ex)
+            return False, str(ex)
 
     def update_order(self, order_id,
                      take_profit=None,
@@ -138,6 +138,7 @@ class OrderMixin(OrderBase):
                      is_in_pips=True):
         if not order_id:
             return
+        order_id = int(order_id)
 
         kw = {}
         if stop_loss:
@@ -169,13 +170,13 @@ class OrderMixin(OrderBase):
         try:
             order = self.fxcmpy.open_trade(symbol, is_buy,
                                            amount, timeInForce, order_type='AtMarket', rate=0,
-                                           is_in_pips=is_in_pips, limit=None, at_market=0, stop=stop_loss,
+                                           is_in_pips=is_in_pips, limit=take_profit, at_market=0, stop=stop_loss,
                                            trailing_step=trailing_pip, account_id=self.account_id)
-            order.set_stop_rate(take_profit, is_in_pips=False)
         except Exception as ex:
+            logger.error('[Market Order] %s' % ex)
             print(ex)
-            return False
-        return True
+            return False, str(ex)
+        return True, order
 
     # TP , SL and trailing SL
 
@@ -184,7 +185,13 @@ class OrderMixin(OrderBase):
                     trigger_condition=OrderTriggerCondition.DEFAULT,
                     client_id=None, client_tag=None, client_comment=None,
                     **kwargs):
-        self.fxcmpy.change_order_stop_limit(trade_id, limit=price, is_limit_in_pips=False)
+        trade_id = int(trade_id)
+        is_in_pips = kwargs.get('is_in_pips', True)
+
+        if trade_id in self.open_order_ids():
+            self.fxcmpy.change_order_stop_limit(trade_id, limit=price, is_limit_in_pips=is_in_pips)
+        elif trade_id in self.open_trade_ids():
+            self.fxcmpy.change_trade_stop_limit(trade_id, False, price, is_in_pips=is_in_pips)
 
     def stop_loss(self, trade_id, stop_loss_pip=None, price=None, order_id=None, client_trade_id=None,
                   timeInForce=TimeInForce.GTC, gtd_time=None,
@@ -192,17 +199,32 @@ class OrderMixin(OrderBase):
                   guaranteed=None,
                   client_id=None, client_tag=None, client_comment=None,
                   **kwargs):
-        self.fxcmpy.change_order_stop_limit(trade_id, stop=price, is_stop_in_pips=False)
+        trade_id = int(trade_id)
+        is_in_pips = kwargs.get('is_in_pips', True)
+        if is_in_pips:
+            price = -1 * price
+
+        if trade_id in self.open_order_ids():
+            self.fxcmpy.change_order_stop_limit(trade_id, stop=price, is_stop_in_pips=is_in_pips)
+        elif trade_id in self.open_trade_ids():
+            self.fxcmpy.change_trade_stop_limit(trade_id, True, price, is_in_pips=is_in_pips)
 
     def trailing_stop_loss(self, trade_id, stop_loss_pip=None, order_id=None, client_trade_id=None,
                            timeInForce=TimeInForce.GTC, gtd_time=None,
                            trigger_condition=OrderTriggerCondition.DEFAULT,
                            client_id=None, client_tag=None, client_comment=None,
                            **kwargs):
+        trade_id = int(trade_id)
+        is_in_pips = kwargs.get('is_in_pips', True)
 
-        pass
+        # @fixme
+        if trade_id in self.open_order_ids():
+            pass
+        elif trade_id in self.open_trade_ids():
+            self.fxcmpy.change_trade_stop_limit(trade_id, is_in_pips=is_in_pips, trailing_step=stop_loss_pip)
 
     # cancel & extensions
     def cancel_order(self, order_id, **kwargs):
+        order_id = int(order_id)
         self.fxcmpy.delete_order(order_id)
         return True
