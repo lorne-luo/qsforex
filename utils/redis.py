@@ -1,8 +1,11 @@
 import json
+from datetime import datetime
 
 import redis
 import settings
 from mt4.constants import get_mt4_symbol
+
+LAST_TICK_TIME_KEY = "LAST_TICK_TIME"
 
 price_redis = redis.StrictRedis(host=settings.REDIS_HOST,
                                 port=settings.REDIS_PORT,
@@ -18,6 +21,16 @@ order_redis = redis.StrictRedis(host=settings.REDIS_HOST,
                                 port=settings.REDIS_PORT,
                                 db=settings.SYSTEM_CHANNEL,
                                 decode_responses=True)
+
+
+def set_last_tick(dt):
+    if isinstance(dt, datetime):
+        dt = dt.strftime('%Y-%m-%d %H:%M:%S:%f')
+    system_redis.set(LAST_TICK_TIME_KEY, dt)
+
+
+def get_last_tick():
+    system_redis.get(LAST_TICK_TIME_KEY)
 
 
 class RedisQueue(object):

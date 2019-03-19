@@ -10,7 +10,7 @@ import settings
 from event.event import *
 from mt4.constants import PERIOD_CHOICES, get_candle_time, PERIOD_H1
 from utils.market import is_market_open
-from utils.redis import system_redis
+from utils.redis import system_redis, set_last_tick, get_last_tick
 
 logger = logging.getLogger(__name__)
 
@@ -76,11 +76,10 @@ class TickPriceHandler(BaseHandler):
     subscription = [TickPriceEvent.type]
 
     def process(self, event):
-        key = "LAST_TICK_TIME"
         if settings.DEBUG:
             print(event.__dict__)
         else:
-            system_redis.set(key, event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
+            set_last_tick(event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
 
 
 class HeartBeatPrintHandler(BaseHandler):
@@ -126,7 +125,9 @@ class TimeFrameTicker(BaseHandler):
                 self.candle_time[timeframe] = new
 
                 if timeframe == PERIOD_H1:
-                    logger.info('TimeFrame H1 heartbeat = %s' % new.strftime('%Y-%m-%d %H:%M'))
+                    last_tick = get_last_tick()
+                    logger.info('TimeFrame H1 heartbeat=%s, last tick=%s' % (new.strftime('%Y-%m-%d %H:%M'),
+                                                                               last_tick))
 
         open = is_market_open()
         self.set_market_open(open)

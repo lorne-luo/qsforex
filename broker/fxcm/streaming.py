@@ -44,7 +44,9 @@ class FXCMStreamRunner(StreamRunnerBase):
             time.sleep(10)
             if self.queue.qsize() > 10:
                 logger.error('Queue.size = %s' % self.queue.qsize())
+
             if not self.fxcm.is_connected():
+                logger.error('[Connect Lost] is_connected=false')
                 retry = 11
                 count = 1
                 while not self.fxcm.is_connected() and count < retry:
@@ -55,6 +57,8 @@ class FXCMStreamRunner(StreamRunnerBase):
                     if not self.fxcm.is_connected():
                         logger.error('[System Exit] Cant connect to server')
                         send_to_admin('[System Exit] Cant connect to server')
+                    else:
+                        logger.info('Reconnected')
 
     def subscribe_pair(self):
         # for symbol in ALL_SYMBOLS:
