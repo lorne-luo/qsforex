@@ -67,6 +67,9 @@ class TradeMixin(OANDABase, TradeBase):
             print_trades([trade])
         return trade
 
+    def update_trade(self, trade_id, is_stop, rate, is_in_pips=True, trailing_step=0):
+        self.fxcmpy.change_trade_stop_limit(trade_id, is_stop, rate, is_in_pips, trailing_step)
+
     def close_trade(self, trade_id, lots):
         # units : (string, default=ALL)
         # Indication of how much of the Trade to close. Either the string “ALL”
@@ -75,7 +78,7 @@ class TradeMixin(OANDABase, TradeBase):
         # TradeClose MarketOrder. The units specified must always be positive, and
         # the magnitude of the value cannot exceed the magnitude of the Trade’s
         # open units.
-        lots=lots or 'ALL'
+        lots = lots or 'ALL'
         if lots != 'ALL':
             units = str(lots_to_units(lots, OrderSide.BUY))
         else:

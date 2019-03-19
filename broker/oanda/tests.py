@@ -82,7 +82,7 @@ class TestAccount(unittest.TestCase):
         trade_exists = len(trades)
 
         success, transactions = self.account.market_order(self.currency, OrderSide.BUY, lots=0.1,
-                                                          take_profit_price=tp_price, stop_loss_pip=40)
+                                                          take_profit=tp_price, stop_loss=40)
         self.assertTrue(success)
 
         success, trades = self.account.list_trade()

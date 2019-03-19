@@ -22,7 +22,11 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         self.access_token = access_token
         super(FXCM, self).__init__(*args, **kwargs)
         server = 'real' if type == AccountType.REAL else 'demo'
-        self.fxcmpy = fxcmpy(access_token=access_token, server=server)
+
+        if not access_token:
+            self.fxcmpy = kwargs.get('fxcmapi')
+        else:
+            self.fxcmpy = fxcmpy(access_token=access_token, server=server)
         self.fxcmpy.set_max_prices(self.max_prices)
 
         if self.account_id != self.fxcmpy.default_account:

@@ -25,8 +25,6 @@ class BrokerAccount(object):
         self.name = self.id
 
 
-
-
 class PositionBase(object):
 
     def pull_position(self, instrument):
@@ -61,11 +59,12 @@ class OrderBase(object):
                     positionFill,
                     trigger_condition,
                     gtd_time=None,
-                    take_profit_price=None,
-                    stop_loss_pip=None,
+                    take_profit=None,
+                    stop_loss=None,
                     trailing_pip=None,
                     order_id=None,  # order to replace
-                    client_id=None, client_tag=None, client_comment=None):
+                    client_id=None, client_tag=None, client_comment=None,
+                    **kwargs):
         raise NotImplementedError
 
     def limit_buy(self, instrument, price,
@@ -73,53 +72,57 @@ class OrderBase(object):
                   positionFill,
                   trigger_condition,
                   gtd_time=None,
-                  take_profit_price=None,
-                  stop_loss_pip=None,
+                  take_profit=None,
+                  stop_loss=None,
                   trailing_pip=None,
                   order_id=None,
-                  client_id=None, client_tag=None, client_comment=None):
+                  client_id=None, client_tag=None, client_comment=None,
+                  **kwargs):
         return self.limit_order(instrument=instrument, side=OrderSide.BUY, price=price,
                                 lots=lots, timeInForce=timeInForce,
                                 positionFill=positionFill,
                                 trigger_condition=trigger_condition,
                                 gtd_time=gtd_time,
-                                take_profit_price=take_profit_price,
-                                stop_loss_pip=stop_loss_pip,
+                                take_profit=take_profit,
+                                stop_loss=stop_loss,
                                 trailing_pip=trailing_pip,
                                 order_id=order_id,
-                                client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+                                client_id=client_id, client_tag=client_tag, client_comment=client_comment,
+                                **kwargs)
 
     def limit_sell(self, instrument, price,
                    lots, timeInForce,
                    positionFill,
                    trigger_condition,
                    gtd_time=None,
-                   take_profit_price=None,
-                   stop_loss_pip=None,
+                   take_profit=None,
+                   stop_loss=None,
                    trailing_pip=None,
                    order_id=None,  # order to replace
-                   client_id=None, client_tag=None, client_comment=None):
+                   client_id=None, client_tag=None, client_comment=None, **kwargs):
         return self.limit_order(instrument=instrument, side=OrderSide.SELL, price=price,
                                 lots=lots, timeInForce=timeInForce,
                                 positionFill=positionFill,
                                 trigger_condition=trigger_condition,
                                 gtd_time=gtd_time,
-                                take_profit_price=take_profit_price,
-                                stop_loss_pip=stop_loss_pip,
+                                take_profit=take_profit,
+                                stop_loss=stop_loss,
                                 trailing_pip=trailing_pip,
                                 order_id=order_id,
-                                client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+                                client_id=client_id, client_tag=client_tag, client_comment=client_comment,
+                                **kwargs)
 
     def stop_order(self, instrument, side, price,
                    lots, timeInForce,
                    positionFill, priceBound,
                    trigger_condition,
                    gtd_time=None,
-                   take_profit_price=None,
-                   stop_loss_pip=None,
+                   take_profit=None,
+                   stop_loss=None,
                    trailing_pip=None,
                    order_id=None,  # order to replace
-                   client_id=None, client_tag=None, client_comment=None):
+                   client_id=None, client_tag=None, client_comment=None,
+                   **kwargs):
         raise NotImplementedError
 
     def stop_buy(self, instrument, price,
@@ -127,87 +130,96 @@ class OrderBase(object):
                  positionFill, priceBound,
                  trigger_condition,
                  gtd_time=None,
-                 take_profit_price=None,
-                 stop_loss_pip=None,
+                 take_profit=None,
+                 stop_loss=None,
                  trailing_pip=None,
                  order_id=None,  # order to replace
-                 client_id=None, client_tag=None, client_comment=None):
+                 client_id=None, client_tag=None, client_comment=None,
+                 **kwargs):
         """buy shortcut for stop order"""
         return self.stop_order(instrument=instrument, side=OrderSide.BUY, price=price,
                                lots=lots, timeInForce=timeInForce, priceBound=priceBound,
                                positionFill=positionFill,
                                trigger_condition=trigger_condition,
                                gtd_time=gtd_time,
-                               take_profit_price=take_profit_price,
-                               stop_loss_pip=stop_loss_pip,
+                               take_profit=take_profit,
+                               stop_loss=stop_loss,
                                trailing_pip=trailing_pip,
                                order_id=order_id,
-                               client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+                               client_id=client_id, client_tag=client_tag, client_comment=client_comment,
+                               **kwargs)
 
     def stop_sell(self, instrument, price,
                   lots, timeInForce,
                   positionFill, priceBound,
                   trigger_condition,
                   gtd_time=None,
-                  take_profit_price=None,
-                  stop_loss_pip=None,
+                  take_profit=None,
+                  stop_loss=None,
                   trailing_pip=None,
                   order_id=None,  # order to replace
-                  client_id=None, client_tag=None, client_comment=None):
+                  client_id=None, client_tag=None, client_comment=None,
+                  **kwargs):
         """sell shortcut for stop order"""
         return self.stop_order(instrument=instrument, side=OrderSide.SELL, price=price,
                                lots=lots, timeInForce=timeInForce, priceBound=priceBound,
                                positionFill=positionFill,
                                trigger_condition=trigger_condition,
                                gtd_time=gtd_time,
-                               take_profit_price=take_profit_price,
-                               stop_loss_pip=stop_loss_pip,
+                               take_profit=take_profit,
+                               stop_loss=stop_loss,
                                trailing_pip=trailing_pip,
                                order_id=order_id,
-                               client_id=client_id, client_tag=client_tag, client_comment=client_comment)
+                               client_id=client_id, client_tag=client_tag, client_comment=client_comment,
+                               **kwargs)
 
     def market_order(self, instrument, side,
                      lots, timeInForce,
                      priceBound, positionFill,
-                     take_profit_price=None,
-                     stop_loss_pip=None,
+                     take_profit=None,
+                     stop_loss=None,
                      trailing_pip=None,
                      client_id=None, client_tag=None, client_comment=None,
-                     trade_client_id=None, trade_client_tag=None, trade_client_comment=None):
+                     trade_client_id=None, trade_client_tag=None, trade_client_comment=None,
+                     **kwargs):
         raise NotImplementedError
 
     def market_if_touched(self, instrument, side, price, lots,
                           priceBound, timeInForce,
                           gtd_time, positionFill,
                           trigger_condition,
-                          take_profit_price=None,
-                          stop_loss_pip=None,
+                          take_profit=None,
+                          stop_loss=None,
                           trailing_pip=None,
                           order_id=None,  # order to replace
                           client_id=None, client_tag=None, client_comment=None,
-                          trade_client_id=None, trade_client_tag=None, trade_client_comment=None):
+                          trade_client_id=None, trade_client_tag=None, trade_client_comment=None,
+                          **kwargs):
         raise NotImplementedError
 
     def take_profit(self, trade_id, price, order_id, client_trade_id,
                     timeInForce, gtd_time,
                     trigger_condition,
-                    client_id=None, client_tag=None, client_comment=None):
+                    client_id=None, client_tag=None, client_comment=None,
+                    **kwargs):
         raise NotImplementedError
 
     def stop_loss(self, trade_id, stop_loss_pip, price, order_id, client_trade_id,
                   timeInForce, gtd_time,
                   trigger_condition,
                   guaranteed=None,
-                  client_id=None, client_tag=None, client_comment=None):
+                  client_id=None, client_tag=None, client_comment=None,
+                  **kwargs):
         raise NotImplementedError
 
     def trailing_stop_loss(self, trade_id, stop_loss_pip, order_id, client_trade_id,
                            timeInForce, gtd_time,
                            trigger_condition,
-                           client_id=None, client_tag=None, client_comment=None):
+                           client_id=None, client_tag=None, client_comment=None,
+                           **kwargs):
         raise NotImplementedError
 
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id, **kwargs):
         raise NotImplementedError
 
 
@@ -236,10 +248,12 @@ class InstrumentBase(object):
     def list_instruments(self):
         raise NotImplementedError
 
+
 class PriceBase(object):
 
     def list_prices(self, instruments=None, since=None, includeUnitsAvailable=True):
         raise NotImplementedError
+
     def get_price(self, instrument, type='mid'):
         raise NotImplementedError
 
