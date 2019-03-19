@@ -6,6 +6,8 @@ env = Env()
 
 env.read_env('.env')
 
+DEBUG = env.bool('DEBUG', True)
+
 OANDA_ENVIRONMENTS = {
     "streaming": {
         "real": "stream-fxtrade.oanda.com",
@@ -32,7 +34,11 @@ ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
 APPLICATION_NAME = 'qsforex'
 BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
-DEBUG = env.bool('DEBUG', True)
+
+
+TELSTRA_CLIENT_KEY = env.str('TELSTRA_CLIENT_KEY', '')
+TELSTRA_CLIENT_SECRET = env.str('TELSTRA_CLIENT_SECRET', '')
+ADMIN_MOBILE_NUMBER = env.str('ADMIN_MOBILE_NUMBER', '')
 
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = 6379
