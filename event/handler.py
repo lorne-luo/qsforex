@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 from datetime import datetime
+from queue import Empty
 
 from dateutil.relativedelta import relativedelta
 
@@ -37,6 +38,8 @@ class QueueBase(object):
             if data:
                 data = json.loads(data)
                 return Event.from_dict(data)
+        except Empty:
+            return None
         except Exception as ex:
             logger.error('queue get error=%s' % ex)
         return None

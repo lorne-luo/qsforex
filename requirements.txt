@@ -8,7 +8,7 @@ TA-lib==0.4.17
 pyparsing==2.3.1
 python-dateutil==2.8.0
 pytz==2018.9
-scikit-learn==0.20.2
+scikit-learn==0.20.3
 scipy==1.2.1
 seaborn==0.9.0
 six==1.11.0
@@ -27,6 +27,5 @@ redis==3.2.0
 bt==0.2.7
 pyllist==0.3
 environs==4.1.0
-scikit-learn==0.20.3
 graphviz==0.10.1
 git+https://github.com/Telstra/MessagingAPI-SDK-python.git
