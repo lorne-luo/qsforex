@@ -30,7 +30,7 @@ def set_last_tick(dt):
 
 
 def get_last_tick():
-    system_redis.get(LAST_TICK_TIME_KEY)
+    return system_redis.get(LAST_TICK_TIME_KEY)
 
 
 class RedisQueue(object):
