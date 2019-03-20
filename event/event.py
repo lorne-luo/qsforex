@@ -22,8 +22,11 @@ class EventType(object):
     TICK_PRICE = 'TICK_PRICE'
     TIMEFRAME = 'TIMEFRAME'
     SIGNAL = 'SIGNAL'
+    ORDER_CLOSE = 'ORDER_CLOSE'
+    ORDER_HOLDING = 'ORDER_HOLDING'
+    ORDER_OPENED = 'ORDER_OPENED'
+    ORDER_CLOSED = 'ORDER_CLOSED'
     ORDER = 'ORDER'
-    CLOSE = 'CLOSE'
     MARKET_OPEN = 'MARKET_OPEN'
     MARKET_CLOSE = 'MARKET_CLOSE'
 
@@ -145,6 +148,63 @@ class SignalEvent(Event):
             str(self.type), str(self.instrument),
             str(self.order_type), str(self.side)
         )
+
+
+class OrderCloseEvent(Event):
+    """close signal"""
+    type = EventType.ORDER_CLOSE
+
+    def __init__(self, strategy_name, version, magic_number, instrument, side, percent=None):
+        self.strategy = strategy_name
+        self.version = version
+        self.magic_number = magic_number
+        self.instrument = instrument
+        self.side = side
+        self.percent = percent
+        super(OrderCloseEvent, self).__init__()
+
+
+class OrderHoldingEvent(Event):
+    """order holding, to notify strategy to calculate close signal"""
+    type = EventType.ORDER_HOLDING
+
+    def __init__(self, broker, account_id, order_id, instrument, magic_number):
+        self.broker = broker
+        self.account_id = account_id
+        self.order_id = order_id
+        self.instrument = instrument
+        self.magic_number = magic_number
+        super(OrderHoldingEvent, self).__init__()
+
+
+class OrderClosedEvent(Event):
+    type = EventType.ORDER_CLOSED
+
+    def __init__(self, broker, account_id, order_id, instrument, lots, profit, pips, close_time, close_price):
+        self.broker = broker
+        self.account_id = account_id
+        self.order_id = order_id
+        self.instrument = instrument
+        self.lots = lots
+        self.profit = profit
+        self.pips = pips
+        self.close_time = close_time
+        self.close_price = close_price
+        super(OrderClosedEvent, self).__init__()
+
+
+class OrderOpenedEvent(Event):
+    type = EventType.ORDER_OPENED
+
+    def __init__(self, broker, account_id, order_id, instrument, lots, open_time, open_price):
+        self.broker = broker
+        self.account_id = account_id
+        self.order_id = order_id
+        self.instrument = instrument
+        self.lots = lots
+        self.open_time = open_time
+        self.open_price = open_price
+        super(OrderOpenedEvent, self).__init__()
 
 
 class OrderEvent(Event):
