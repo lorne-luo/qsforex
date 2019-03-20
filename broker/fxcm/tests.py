@@ -2,7 +2,7 @@ import unittest
 
 import settings
 from broker.base import AccountType
-from broker.fxcm.account import SingletonFXCMAccount
+from broker import SingletonFXCM
 from mt4.constants import OrderSide
 
 
@@ -13,9 +13,9 @@ class TestAccount(unittest.TestCase):
     def setUp(self):
         ACCOUNT_ID = 3261139
         ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
-        self.account = SingletonFXCMAccount(type=AccountType.DEMO,
-                                            account_id=ACCOUNT_ID,
-                                            access_token=ACCESS_TOKEN)
+        self.account = SingletonFXCM(type=AccountType.DEMO,
+                                     account_id=ACCOUNT_ID,
+                                     access_token=ACCESS_TOKEN)
 
     def test_instrument(self):
         pass

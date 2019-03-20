@@ -1,13 +1,11 @@
 from fxcmpy import fxcmpy
 
 from broker.base import BrokerAccount, AccountType
-from broker.fxcm.constants import FXCM_CONFIG
 from broker.fxcm.instrument import InstrumentMixin
 from broker.fxcm.order import OrderMixin
 from broker.fxcm.position import PositionMixin
 from broker.fxcm.price import PriceMixin
 from broker.fxcm.trade import TradeMixin
-from utils.singleton import SingletonDecorator
 
 
 class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, BrokerAccount):
@@ -43,11 +41,10 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         print(self.summary)
 
 
-SingletonFXCMAccount = SingletonDecorator(FXCM)
 
 if __name__ == '__main__':
     #    from broker.fxcm.account import *
 
     ACCOUNT_ID = 3261139
     ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
-    fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = FXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)

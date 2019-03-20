@@ -1,23 +1,18 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-
-from v20.transaction import StopLossDetails, TakeProfitDetails, TrailingStopLossDetails, ClientExtensions
+from decimal import Decimal
 
 import broker.oanda.common.view as common_view
 from broker.base import BrokerAccount
-from mt4.constants import OrderSide
-from broker.oanda.base import OANDABase, SingletonAPIContext
+from broker.oanda.base import SingletonAPIContext
+from broker.oanda.common.constants import ENVIRONMENTS
+from broker.oanda.common.convertor import get_symbol
 from broker.oanda.common.logger import log_error
-from broker.oanda.common.constants import TransactionName, OrderType, TimeInForce, OrderPositionFill, ENVIRONMENTS
-from broker.oanda.common.convertor import get_symbol, lots_to_units
+from broker.oanda.common.prints import print_positions_map, print_orders_map, print_trades_map
 from broker.oanda.instrument import InstrumentMixin
 from broker.oanda.order import OrderMixin
 from broker.oanda.position import PositionMixin
-from broker.oanda.common.prints import print_positions_map, print_orders_map, print_trades_map
-import settings
 from broker.oanda.price import PriceMixin
 from broker.oanda.trade import TradeMixin
-from utils.singleton import SingletonDecorator
 
 logger = logging.getLogger(__name__)
 
@@ -294,6 +289,3 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
 
             return Decimal(level).quantize(Decimal('0.01'))
         return 0
-
-
-SingletonOANDAAccount = SingletonDecorator(OANDA)

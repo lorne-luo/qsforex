@@ -9,7 +9,7 @@ from dateparser import parse
 from dateutil.relativedelta import relativedelta
 from mt4.constants import PERIOD_D1, PERIOD_M5, PERIOD_M1, PERIOD_H4
 from broker.base import AccountType
-from broker.fxcm.account import FXCM, SingletonFXCMAccount
+from broker import FXCM, SingletonFXCM
 from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TimeFrameEvent
 from event.handler import BaseHandler
@@ -56,7 +56,7 @@ def _save_redis(symbol, result):
 
 def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
     symbol = get_mt4_symbol(symbol)
-    fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
     end = datetime.utcnow()
     result = {}
@@ -82,7 +82,7 @@ def update_density(symbol, account=None):
     data = price_redis.get('%s_H1' % symbol)
     data = json.loads(data) if data else {}
 
-    fxcm = account or SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     if last_time:
         df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=last_time, end=now,
                                      columns=['askhigh', 'bidlow', 'tickqty'])
@@ -130,7 +130,7 @@ def draw_rencent(symbol, days=None):
     symbol = get_mt4_symbol(symbol)
     now = datetime.utcnow()
 
-    fxcm = SingletonFXCMAccount(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
                                  columns=['askclose', 'askhigh', 'bidlow', 'tickqty'])
     price = df.iloc[-1].askclose

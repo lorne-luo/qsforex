@@ -1,10 +1,9 @@
 import logging
-from decimal import Decimal
 from queue import Empty, Queue
 import dateparser
 
 from broker.base import AccountType
-from broker.oanda.account import SingletonOANDAAccount
+from broker import SingletonOANDA
 from event.runner import StreamRunnerBase
 from broker.oanda.common.convertor import get_symbol
 
@@ -23,10 +22,10 @@ class OandaV20StreamRunner(StreamRunnerBase):
         self.account_id = account_id
         handlers = handlers or []
         self.register(*handlers)
-        self.account = SingletonOANDAAccount(type=account_type,
-                                             account_id=account_id,
-                                             access_token=access_token,
-                                             application_name=settings.APPLICATION_NAME)
+        self.account = SingletonOANDA(type=account_type,
+                                      account_id=account_id,
+                                      access_token=access_token,
+                                      application_name=settings.APPLICATION_NAME)
 
     def run(self):
         print('%s statup.' % self.__class__.__name__)
