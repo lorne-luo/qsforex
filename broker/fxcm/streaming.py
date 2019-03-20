@@ -41,9 +41,14 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.subscribe_pair()
 
         while self.running:
+            while True:
+                event = self.get(False)
+                if event:
+                    self.handle_event(event)
+                else:
+                    break
+
             time.sleep(10)
-            if self.queue.qsize() > 10:
-                logger.error('Queue.size = %s' % self.queue.qsize())
 
             if not self.fxcm.is_connected():
                 logger.error('[Connect Lost] is_connected=false')
