@@ -16,7 +16,7 @@ class OrderMixin(OrderBase):
 
     def list_pending_order(self):
         orders = self.list_order()
-        if orders:
+        if orders.bool():
             return orders[orders['status'] in ['1', '7']].T.to_dict()
         return []
 

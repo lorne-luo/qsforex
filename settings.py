@@ -35,7 +35,6 @@ APPLICATION_NAME = 'qsforex'
 BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
 
-
 TELSTRA_CLIENT_KEY = env.str('TELSTRA_CLIENT_KEY', '')
 TELSTRA_CLIENT_SECRET = env.str('TELSTRA_CLIENT_SECRET', '')
 ADMIN_MOBILE_NUMBER = env.str('ADMIN_MOBILE_NUMBER', '')
@@ -50,16 +49,3 @@ try:
     from local import *
 except ImportError:
     pass
-
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ozsales',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
-}
