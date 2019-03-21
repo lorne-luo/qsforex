@@ -42,7 +42,10 @@ class Runner(QueueBase):
             handler.process(event)
         except Exception as ex:
             logger.error('%s: %s' % (handler.__class__.__name__, ex))
-            logger.error('%s', traceback.format_stack())
+            # print trace stack
+            extracted_list = traceback.extract_tb(ex.__traceback__)
+            for item in traceback.StackSummary.from_list(extracted_list).format()[:6]:
+                logger.error(item.strip())
 
     def print(self):
         print(self.handlers)
