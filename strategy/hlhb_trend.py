@@ -1,11 +1,14 @@
+import logging
+
 import talib as ta
 
 from broker.oanda.common.constants import OrderType
-from event.event import SignalEvent, SignalAction
-from mt4.constants import PERIOD_H1
+from event.event import SignalEvent, SignalAction, TimeFrameEvent, OrderHoldingEvent
+from mt4.constants import PERIOD_H1, OrderSide, PERIOD_M1
 from strategy.base import StrategyBase
 from strategy.helper import check_cross
-from utils.market import is_market_open
+
+logger = logging.getLogger(__name__)
 
 
 class HLHBTrend(StrategyBase):
@@ -24,36 +27,66 @@ class HLHBTrend(StrategyBase):
     magic_number = '20190304'
     source = 'https://www.babypips.com/trading/forex-hlhb-system-20190128'
 
-    weekdays = [0, 1, 2, 3, 4]
     timeframes = [PERIOD_H1]
+    weekdays = [0, 1, 2, 3, 4]
     hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]  # GMT hour
 
-    pairs = ['EURUSD']
+    subscription = [TimeFrameEvent.type, OrderHoldingEvent.type]
+
+    pairs = ['EURUSD', 'GBPUSD']
     params = {'short_ema': 5,
               'long_ema': 10,
-              'adx': 14, }
+              'adx': 14,
+              'rsi': 14, }
 
-    def calculate_signals(self):
-        if not is_market_open():
-            return
-        for symbol in self.pairs:
-            self.process_pair(symbol)
+    take_profit = 400
+    trailing_stop = 150
 
-    def process_pair(self, symbol):
+    def signal_pair(self, symbol):
         short_ema = self.params.get('short_ema')
         long_ema = self.params.get('long_ema')
         adx_period = self.params.get('adx')
-        h1_candles = self.data_reader.get_candle(symbol, PERIOD_H1, count=50, fromTime=None, toTime=None,
-                                                 price_type='M', smooth=False)
-        adx = ta.ADX(h1_candles['high'], h1_candles['low'], h1_candles['close'], timeperiod=adx_period)
-        if adx <= 25:
-            return
-        ema5 = ta.EMA(h1_candles['close'], timeperiod=short_ema)
-        ema10 = ta.EMA(h1_candles['close'], timeperiod=long_ema)
+        rsi = self.params.get('rsi')
 
+        candles = self.data_reader.get_candle(symbol, PERIOD_H1, count=50, fromTime=None, toTime=None,
+                                              price_type='M', smooth=False)
+
+        adx = ta.ADX(candles['askhigh'], candles['bidlow'], candles['bidclose'], timeperiod=adx_period)
+        ema_short = ta.EMA(candles['bidclose'], timeperiod=short_ema)
+        ema_long = ta.EMA(candles['bidclose'], timeperiod=long_ema)
+        mean = (candles['askhigh'] + candles['bidlow']) / 2
+        rsi = ta.RSI(mean, timeperiod=rsi)
         # upper, middle, lower = ta.BBANDS(h1_candles['close'], matype=MA_Type.T3)
-        side = check_cross(ema5, ema10)
-        if side:
+
+        self.open(symbol, ema_short, ema_long, adx, rsi)
+        self.close(symbol, ema_short, ema_long, adx, rsi)
+
+    def open(self, symbol, ema_short, ema_long, adx, rsi):
+        logger.debug('%s@%s param=%s, %s, %s, %s' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
+
+        if not self.can_open():
+            return
+
+        if adx[-1] <= 25:
+            return
+
+        side = check_cross(ema_short, ema_long, shift=0)
+        event = None
+        if side == OrderSide.BUY and 70 > rsi[-1] > 50:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
-                                symbol, OrderType.MARKET, side)
+                                symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit)
             self.put(event)
+        elif side == OrderSide.SELL and 50 > rsi[-1] > 30:
+            event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
+                                symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit)
+            self.put(event)
+        if event:
+            logger.info('%s|%s@%s %s, param=%s, %s, %s, %s' % (
+                self.name, self.magic_number, symbol, side, ema_short, ema_long, adx[-1], rsi[-1]))
+
+        return side
+
+    def close(self, symbol, ema_short, ema_long, adx, rsi):
+        pass

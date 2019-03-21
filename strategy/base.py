@@ -1,10 +1,16 @@
 from datetime import datetime
 
-from event.handler import QueueBase
+from event.event import TimeFrameEvent, OrderHoldingEvent
+from event.handler import QueueBase, BaseHandler
 from utils.market import is_market_open
 
 
-class StrategyBase(QueueBase):
+class SignalAction(object):
+    OPEN = 'OPEN'
+    CLOSE = 'CLOSE'
+
+
+class StrategyBase(BaseHandler, QueueBase):
     name = None
     version = None
     magic_number = None
@@ -18,6 +24,11 @@ class StrategyBase(QueueBase):
     pairs = []
     data_reader = None
     params = {}
+    subscription = [TimeFrameEvent.type, OrderHoldingEvent.type]
+
+    stop_loss = 100
+    take_profit = None
+    trailing_stop = None
 
     def __str__(self):
         return '%s v%s #%s' % (self.name, self.version, self.magic_number)
@@ -26,10 +37,16 @@ class StrategyBase(QueueBase):
         super(StrategyBase, self).__init__(queue)
         self.data_reader = reader
 
-    def calculate_signals(self):
+    def signal(self):
+        if not is_market_open():
+            return
+        for symbol in self.pairs:
+            self.signal_pair(symbol)
+
+    def signal_pair(self, symbol):
         raise NotImplementedError
 
-    def can_open_trade(self):
+    def can_open(self):
         if not is_market_open():
             return False
 
@@ -39,3 +56,9 @@ class StrategyBase(QueueBase):
         if now.hour not in self.weekdays:
             return False
         return True
+
+    def process(self, event):
+        if event.type == TimeFrameEvent.type and event.timeframe in self.timeframes:
+            self.signal()
+        elif event.type == OrderHoldingEvent.type:
+            self.signal()
