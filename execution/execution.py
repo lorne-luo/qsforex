@@ -10,22 +10,43 @@ from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
 
 from broker.oanda.common.convertor import get_symbol
+from event.event import SignalEvent, SignalAction
+from event.handler import BaseHandler
 
 
-class ExecutionHandler(object):
+class BaseExecutionHandler(BaseHandler):
     """
     Provides an abstract base class to handle all execution in the
     backtesting and live trading system.
     """
+    subscription = [SignalEvent.type]
+    broker = None
 
     __metaclass__ = ABCMeta
 
+    def __init__(self, queue, broker, *args, **kwargs):
+        super(BaseExecutionHandler, self).__init__(queue)
+        self.broker = broker
+
     @abstractmethod
-    def execute_order(self, event):
-        """
-        Send the order to the brokerage.
-        """
-        raise NotImplementedError("Should implement execute_order()")
+    def open(self, event):
+        raise NotImplementedError
+
+    @abstractmethod
+    def close(self, event):
+        raise NotImplementedError
+
+    @abstractmethod
+    def update(self, event):
+        raise NotImplementedError
+
+    def process(self, event):
+        if event.action == SignalAction.OPEN:
+            self.open(event)
+        if event.action == SignalAction.CLOSE:
+            self.close(event)
+        if event.action == SignalAction.UPDATE:
+            self.update(event)
 
 
 class SimulatedExecution(object):
@@ -41,8 +62,22 @@ class SimulatedExecution(object):
         pass
 
 
-class OANDAExecutionHandler(ExecutionHandler):
-    def __init__(self, domain, access_token, account_id):
+class BaseBrokerExecutionHandler(BaseExecutionHandler):
+
+    def open(self, event):
+        # check spread
+        self.broker.market_order()
+
+    def close(self, event):
+        self.broker.close_trade(event)
+
+    def update(self, event):
+        self.broker.update_order()
+
+
+class OANDAExecutionHandler(BaseExecutionHandler):
+    def __init__(self, queue, broker, domain, access_token, account_id):
+        super(OANDAExecutionHandler, self).__init__(queue, broker)
         self.domain = domain
         self.access_token = access_token
         self.account_id = account_id
@@ -52,7 +87,7 @@ class OANDAExecutionHandler(ExecutionHandler):
     def obtain_connection(self):
         return httplib.HTTPSConnection(self.domain)
 
-    def execute_order(self, event):
+    def open(self, event):
         instrument = get_symbol(event.instrument)
         if event.order_type == 'market':
             if event.side == 'buy':

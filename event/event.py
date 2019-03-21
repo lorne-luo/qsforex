@@ -7,6 +7,7 @@ from dateparser import parse
 class SignalAction(object):
     OPEN = 'OPEN'
     CLOSE = 'CLOSE'
+    UPDATE = 'UPDATE'
 
 
 class MarketAction(object):
@@ -137,7 +138,7 @@ class SignalEvent(Event):
     type = EventType.SIGNAL
 
     def __init__(self, action, strategy_name, version, magic_number, instrument, order_type, side, stop_loss=None,
-                 take_profit=None, trailing_stop=None, strength=None):
+                 take_profit=None, trailing_stop=None, percent=None):
         self.action = action
         self.strategy = strategy_name
         self.version = version
@@ -145,10 +146,10 @@ class SignalEvent(Event):
         self.instrument = instrument
         self.order_type = order_type
         self.side = side
-        self.strength = strength
         self.stop_loss = stop_loss
         self.take_profit = take_profit
         self.trailing_stop = trailing_stop
+        self.percent = percent
         super(SignalEvent, self).__init__()
 
     def __str__(self):
@@ -158,18 +159,21 @@ class SignalEvent(Event):
         )
 
 
-class OrderCloseEvent(Event):
-    """close signal"""
+class OrderUpdateEvent(Event):
+    """order update signal"""
     type = EventType.ORDER_CLOSE
 
-    def __init__(self, strategy_name, version, magic_number, instrument, side, percent=None):
+    def __init__(self, strategy_name, version, magic_number, instrument, stop_loss=None, take_profit=None,
+                 trailing_stop=None, percent=None):
         self.strategy = strategy_name
         self.version = version
         self.magic_number = magic_number
         self.instrument = instrument
-        self.side = side
+        self.stop_loss = stop_loss
+        self.take_profit = take_profit
+        self.trailing_stop = trailing_stop
         self.percent = percent
-        super(OrderCloseEvent, self).__init__()
+        super(OrderUpdateEvent, self).__init__()
 
 
 class OrderHoldingEvent(Event):
@@ -239,7 +243,7 @@ class OrderEvent(Event):
 
 class FillEvent(Event):
     """
-    When an ExecutionHandler receives an OrderEvent it must transact the order. Once an order has been transacted it generates a FillEvent, which describes the cost of purchase or sale as well as the transaction costs, such as fees or slippage.
+    When an BaseExecutionHandler receives an OrderEvent it must transact the order. Once an order has been transacted it generates a FillEvent, which describes the cost of purchase or sale as well as the transaction costs, such as fees or slippage.
     The FillEvent is the Event with the greatest complexity. It contains a timestamp for when an order was filled, the symbol of the order and the exchange it was executed on, the quantity of shares transacted, the actual price of the purchase and the commission incurred.
 
     Encapsulates the notion of a Filled Order, as returned

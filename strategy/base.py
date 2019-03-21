@@ -5,11 +5,6 @@ from event.handler import QueueBase, BaseHandler
 from utils.market import is_market_open
 
 
-class SignalAction(object):
-    OPEN = 'OPEN'
-    CLOSE = 'CLOSE'
-
-
 class StrategyBase(BaseHandler, QueueBase):
     name = None
     version = None
