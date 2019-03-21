@@ -11,7 +11,7 @@ from strategy.helper import check_cross
 logger = logging.getLogger(__name__)
 
 
-class HLHBTrend(StrategyBase):
+class HLHBTrendStrategy(StrategyBase):
     """
     Basically, I’m catching trends whenever the 5 EMA crosses above or below the 10 EMA.
     A trade is only valid if RSI crosses above or below the 50.00 mark when the signal pops up.

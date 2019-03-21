@@ -1,13 +1,13 @@
 from __future__ import print_function
 
+import http.client as httplib
 import json
 import logging
 from abc import ABCMeta, abstractmethod
-import http.client as httplib
 
 import oandapyV20
-from oandapyV20.contrib.requests import MarketOrderRequest
 import oandapyV20.endpoints.orders as orders
+from oandapyV20.contrib.requests import MarketOrderRequest
 
 from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction
@@ -62,17 +62,24 @@ class SimulatedExecution(object):
         pass
 
 
-class BaseBrokerExecutionHandler(BaseExecutionHandler):
+class BrokerExecutionHandler(BaseExecutionHandler):
 
     def open(self, event):
         # check spread
-        self.broker.market_order()
+        lots = self.broker.get_lots(event.instrument)
+        self.broker.market_order(event.instrument, event.side, lots, take_profit=event.take_profit,
+                                 stop_loss=event.stop_loss, trailing_pip=event.trailing_pip)
 
     def close(self, event):
-        self.broker.close_trade(event)
+        closed_trade = self.broker.close_symbol(event.instrument, event.side, event.percet)
+        for trade in closed_trade:
+            pass
+            # todo pop OrderClosedEvent
 
     def update(self, event):
-        self.broker.update_order()
+        pass
+        # todo update trade
+        # self.broker.update_order()
 
 
 class OANDAExecutionHandler(BaseExecutionHandler):
