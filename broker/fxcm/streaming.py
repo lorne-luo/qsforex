@@ -24,6 +24,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     broker = 'FXCM'
     max_prices = 4000
     heartbeat = 10
+    loop_counter = 0
 
     def __init__(self, queue, *, pairs, access_token, handlers, account_type=AccountType.DEMO, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
@@ -43,7 +44,6 @@ class FXCMStreamRunner(StreamRunnerBase):
 
         self.subscribe_pair()
 
-        loop_count = 0
         while self.running:
             while True:
                 event = self.get(False)
@@ -53,12 +53,13 @@ class FXCMStreamRunner(StreamRunnerBase):
                     break
 
             time.sleep(0.5)
-            loop_count += 1
+            self.loop_counter += 1
             # if not datetime.now().second % self.heartbeat:
             #     self.put(HeartBeatEvent())
-            
-            if loop_count == 20:
-                loop_count = 0
+
+            if not self.loop_counter % 20:
+                self.put(HeartBeatEvent(self.loop_counter))
+
                 if not self.fxcm.is_connected():
                     logger.error('[Connect Lost] is_connected=false')
                     retry = 11
@@ -73,7 +74,6 @@ class FXCMStreamRunner(StreamRunnerBase):
                             send_to_admin('[System Exit] Cant connect to server')
                         else:
                             logger.info('Reconnected')
-
     def subscribe_pair(self):
         # for symbol in ALL_SYMBOLS:
         #     if symbol not in self.pairs:

@@ -73,6 +73,10 @@ class Event(object):
 class HeartBeatEvent(Event):
     type = EventType.HEARTBEAT
 
+    def __init__(self, hearbeat_count):
+        super(HeartBeatEvent, self).__init__()
+        self.counter = hearbeat_count
+
 
 class TimeFrameEvent(Event):
     type = EventType.TIMEFRAME
