@@ -47,6 +47,7 @@ class QueueBase(object):
 
 class BaseHandler(QueueBase):
     subscription = []
+    account = None
 
     def process(self, event):
         raise NotImplementedError

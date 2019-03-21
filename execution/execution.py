@@ -20,13 +20,12 @@ class BaseExecutionHandler(BaseHandler):
     backtesting and live trading system.
     """
     subscription = [SignalEvent.type]
-    broker = None
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, queue, broker, *args, **kwargs):
+    def __init__(self, queue, account, *args, **kwargs):
         super(BaseExecutionHandler, self).__init__(queue)
-        self.broker = broker
+        self.account = account
 
     @abstractmethod
     def open(self, event):
@@ -66,12 +65,12 @@ class BrokerExecutionHandler(BaseExecutionHandler):
 
     def open(self, event):
         # check spread
-        lots = self.broker.get_lots(event.instrument)
-        self.broker.market_order(event.instrument, event.side, lots, take_profit=event.take_profit,
+        lots = self.account.get_lots(event.instrument)
+        self.account.market_order(event.instrument, event.side, lots, take_profit=event.take_profit,
                                  stop_loss=event.stop_loss, trailing_pip=event.trailing_pip)
 
     def close(self, event):
-        closed_trade = self.broker.close_symbol(event.instrument, event.side, event.percet)
+        closed_trade = self.account.close_symbol(event.instrument, event.side, event.percet)
         for trade in closed_trade:
             pass
             # todo pop OrderClosedEvent
@@ -79,12 +78,12 @@ class BrokerExecutionHandler(BaseExecutionHandler):
     def update(self, event):
         pass
         # todo update trade
-        # self.broker.update_order()
+        # self.account.update_order()
 
 
 class OANDAExecutionHandler(BaseExecutionHandler):
-    def __init__(self, queue, broker, domain, access_token, account_id):
-        super(OANDAExecutionHandler, self).__init__(queue, broker)
+    def __init__(self, queue, account, domain, access_token, account_id):
+        super(OANDAExecutionHandler, self).__init__(queue, account)
         self.domain = domain
         self.access_token = access_token
         self.account_id = account_id
