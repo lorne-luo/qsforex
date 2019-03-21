@@ -62,7 +62,7 @@ class HLHBTrendStrategy(StrategyBase):
         self.close(symbol, ema_short, ema_long, adx, rsi)
 
     def open(self, symbol, ema_short, ema_long, adx, rsi):
-        logger.debug('%s@%s param=%s, %s, %s, %s' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
+        logger.info('%s@%s param=%s, %s, %s, %s' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
         if not self.can_open():
             return
