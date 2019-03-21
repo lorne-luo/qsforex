@@ -1,8 +1,12 @@
+import json
 import logging
+from decimal import Decimal
 
 from broker.base import PriceBase
 from broker.fxcm.constants import get_fxcm_symbol, get_fxcm_timeframe
 from broker.oanda.base import OANDABase
+from mt4.constants import get_mt4_symbol, pip, pip_unit
+from utils.redis import price_redis
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +23,34 @@ class PriceMixin(OANDABase, PriceBase):
         return result
 
     def get_price(self, instrument, type='mid'):
-        instrument = get_fxcm_symbol(instrument)
-        return self.fxcmpy.get_last_price(instrument)
+        instrument = get_mt4_symbol(instrument)
+        pip_u = pip_unit(instrument)
+        data = price_redis.get('%s_TICK' % instrument.upper())
+        if not data:
+            raise Exception('get_price, %s price is None' % instrument)
+        price = json.loads(data)
+        if type == 'ask':
+            return Decimal(str(price.get('ask'))).quantize(pip_u)
+        elif type == 'bid':
+            return Decimal(str(price.get('bid'))).quantize(pip_u)
+        elif type == 'mid':
+            price = (price.get('bid') + price.get('ask')) / 2
+            return Decimal(str(price)).quantize(pip_u)
+
+    # def get_price(self, instrument, type='mid'):
+    #     instrument = get_fxcm_symbol(instrument)
+    #     pip_u = pip_unit(instrument)
+
+    #     data = self.fxcmpy.get_last_price(instrument)
+    #     if type == 'mid':
+    #         price = (data['Ask'] + data['Bid']) / 2
+    #         return Decimal(str(price)).quantize(pip_u)
+    #     elif type == 'ask':
+    #         return Decimal(str(data['Ask'])).quantize(pip_u)
+    #     elif type == 'bid':
+    #         return Decimal(str(data['Bid'])).quantize(pip_u)
 
     def get_candle(self, instrument, granularity, count=120, fromTime=None, toTime=None, price_type='M', smooth=False):
         instrument = get_fxcm_symbol(instrument)
         granularity = get_fxcm_timeframe(granularity)
-        return self.fxcmpy.get_candles(instrument,period=granularity,number=count,start=fromTime,end=toTime)
+        return self.fxcmpy.get_candles(instrument, period=granularity, number=count, start=fromTime, end=toTime)

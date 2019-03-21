@@ -78,20 +78,6 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         units = int(value / 100) * 100
         return units_to_lots(units).quantize(Decimal("0.001"))
 
-    def get_price(self, instrument, type='mid'):
-        instrument = get_mt4_symbol(instrument)
-        data = price_redis.get('%s_TICK' % instrument.upper())
-        if not data:
-            raise Exception('get_price, %s price is None' % instrument)
-        price = json.loads(data)
-        if type == 'ask':
-            return Decimal(str(price.get('ask')))
-        elif type == 'bid':
-            return Decimal(str(price.get('bid')))
-        elif type == 'mid':
-            price = (price.get('bid') + price.get('ask')) / 2
-            return Decimal(str(price))
-
 
 if __name__ == '__main__':
     #    from broker.fxcm.account import *
