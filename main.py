@@ -28,8 +28,8 @@ pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/
 
 fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
 
-timeframe_ticker = TimeFrameTicker(queue, 0)
-price_density = PriceDensityHandler(queue, pairs)
+timeframe_ticker = TimeFrameTicker(queue, timezone=0)
+price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
 fxcm_execution = BrokerExecutionHandler(queue, fxcm)
 

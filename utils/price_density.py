@@ -55,9 +55,9 @@ def _save_redis(symbol, result):
     price_redis.set('%s_H1' % symbol, json.dumps(data))
 
 
-def init_density(symbol, start=datetime(2019, 1, 18, 18, 1)):
+def init_density(symbol, start=datetime(2019, 1, 18, 18, 1), account=None):
     symbol = get_mt4_symbol(symbol)
-    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
     end = datetime.utcnow()
     result = {}
@@ -127,11 +127,11 @@ def draw_history(symbol, price):
     _draw(data, symbol, price, filename)
 
 
-def draw_rencent(symbol, days=None):
+def draw_rencent(symbol, days=None, account=None):
     symbol = get_mt4_symbol(symbol)
     now = datetime.utcnow()
 
-    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
     df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
                                  columns=['askclose', 'askhigh', 'bidlow', 'tickqty'])
     price = df.iloc[-1].askclose
@@ -171,9 +171,10 @@ class PriceDensityHandler(BaseHandler):
     subscription = [TimeFrameEvent.type]
     pairs = []
 
-    def __init__(self, queue=None, pairs=None):
+    def __init__(self, queue=None, account=None, pairs=None):
         super(PriceDensityHandler, self).__init__(queue)
         self.pairs = pairs
+        self.account = account
 
     def process(self, event):
         if event.timeframe != PERIOD_D1:
@@ -181,7 +182,7 @@ class PriceDensityHandler(BaseHandler):
 
         for symbol in self.pairs:
             try:
-                last_time = update_density(symbol)
+                last_time = update_density(symbol, self.account)
                 logger.info('%s density updated to %s.' % (symbol, last_time.strftime('%Y-%m-%d %H:%M')))
             except Exception as ex:
                 logger.error('update_density error, symbol=%s, %s' % (symbol, ex))
