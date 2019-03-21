@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta, MO
 
+PERIOD_TICK = 0
 PERIOD_M1 = 1
 PERIOD_M5 = 5
 PERIOD_M15 = 15

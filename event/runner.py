@@ -1,7 +1,7 @@
 import logging
-import queue
 import sys
 import time
+import traceback
 
 import settings
 from event.handler import QueueBase, HeartBeatEvent, BaseHandler
@@ -24,19 +24,25 @@ class Runner(QueueBase):
 
     def handle_event(self, event):
         """loop handlers to process event"""
+        re_put = False
         for handler in self.handlers:
             if '*' in handler.subscription:
-                self.process_event(handler, event)
+                result = self.process_event(handler, event)
+                re_put = re_put or result
                 continue
             elif event.type in handler.subscription:
-                self.process_event(handler, event)
+                result = self.process_event(handler, event)
+                re_put = re_put or result
+        if re_put:
+            self.put(event)
 
     def process_event(self, handler, event):
         """process event by single handler"""
         try:
             handler.process(event)
         except Exception as ex:
-            logger.error('%s: %s' % (handler.__class__, ex))
+            logger.error('%s: %s' % (handler.__class__.__name__, ex))
+            logger.error('%s', traceback.format_stack())
 
     def print(self):
         print(self.handlers)

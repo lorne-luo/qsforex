@@ -136,7 +136,8 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, action, strategy_name, version, magic_number, instrument, order_type, side, strength=None):
+    def __init__(self, action, strategy_name, version, magic_number, instrument, order_type, side, stop_loss=None,
+                 take_profit=None, trailing_stop=None, strength=None):
         self.action = action
         self.strategy = strategy_name
         self.version = version
@@ -145,6 +146,9 @@ class SignalEvent(Event):
         self.order_type = order_type
         self.side = side
         self.strength = strength
+        self.stop_loss = stop_loss
+        self.take_profit = take_profit
+        self.trailing_stop = trailing_stop
         super(SignalEvent, self).__init__()
 
     def __str__(self):
@@ -172,11 +176,8 @@ class OrderHoldingEvent(Event):
     """order holding, to notify strategy to calculate close signal"""
     type = EventType.ORDER_HOLDING
 
-    def __init__(self, broker, account_id, order_id, instrument, magic_number):
-        self.broker = broker
-        self.account_id = account_id
-        self.order_id = order_id
-        self.instrument = instrument
+    def __init__(self, magic_number, orders):
+        self.orders = orders
         self.magic_number = magic_number
         super(OrderHoldingEvent, self).__init__()
 
