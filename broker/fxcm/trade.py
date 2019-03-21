@@ -31,7 +31,7 @@ class TradeMixin(OANDABase, TradeBase):
         if percent:
             amount = amount * percent
         elif lots:
-            amount = lots_to_units(lots)
+            amount = lots_to_units(lots) / 1000
 
         try:
             self.fxcmpy.close_trade(trade_id, amount, order_type='AtMarket',
@@ -41,11 +41,20 @@ class TradeMixin(OANDABase, TradeBase):
 
     def close_symbol(self, instrument, side, percent=None):
         instrument = get_fxcm_symbol(instrument)
-        for trade in self.fxcmpy.open_pos:
+        data = []
+        for trade_id, trade in self.fxcmpy.open_pos.items():
+
             if instrument == trade.get_currency():
                 trade_side = OrderSide.BUY if trade.get_isBuy() else OrderSide.SELL
                 if trade_side == side:
                     units = trade.get_amount()
+
                     if percent and 1 >= percent > 0:
                         units = int(units * percent)
-                    trade.close(amount=units)
+
+                    try:
+                        trade.close(amount=units)
+                        data.append({'trade_id': trade_id, 'side': side, 'instrument': instrument, 'units': units})
+                    except Exception as ex:
+                        logger.error('Cant close trade = %s, %s' % (trade_id, ex))
+        return data

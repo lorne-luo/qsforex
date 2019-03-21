@@ -62,7 +62,7 @@ class OrderMixin(OrderBase):
                     **kwargs):
         symbol = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
-        amount = lots_to_units(lots)
+        amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
         try:
@@ -103,7 +103,7 @@ class OrderMixin(OrderBase):
                    **kwargs):
         symbol = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
-        amount = lots_to_units(lots)
+        amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
         try:
@@ -161,7 +161,7 @@ class OrderMixin(OrderBase):
                      **kwargs):
         symbol = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
-        amount = lots_to_units(lots)
+        amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
         if is_in_pips and stop_loss > 0:

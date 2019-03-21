@@ -23,7 +23,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
     def __init__(self, type, account_id, access_token, *args, **kwargs):
         self.type = 'real' if type == AccountType.REAL else 'demo'
-        self.account_id = account_id
+        self.account_id = int(account_id)
         self.access_token = access_token
         super(FXCM, self).__init__(*args, **kwargs)
         server = 'real' if type == AccountType.REAL else 'demo'
