@@ -26,11 +26,11 @@ order_redis = redis.StrictRedis(host=settings.REDIS_HOST,
 def set_last_tick(dt):
     if isinstance(dt, datetime):
         dt = dt.strftime('%Y-%m-%d %H:%M:%S:%f')
-    system_redis.set(LAST_TICK_TIME_KEY, dt)
+    price_redis.set(LAST_TICK_TIME_KEY, dt)
 
 
 def get_last_tick():
-    return system_redis.get(LAST_TICK_TIME_KEY)
+    return price_redis.get(LAST_TICK_TIME_KEY)
 
 
 class RedisQueue(object):

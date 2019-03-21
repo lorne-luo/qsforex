@@ -1,17 +1,19 @@
 import json
 import logging
+import threading
 import time
 from datetime import datetime
 from decimal import Decimal
 
 from fxcmpy import fxcmpy
 
+import settings
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
-from event.event import TickPriceEvent, TimeFrameEvent
+from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
-from utils.redis import price_redis, RedisQueue
+from utils.redis import price_redis, RedisQueue, set_last_tick
 from utils.telstra_api_v2 import send_to_admin
 
 logger = logging.getLogger(__name__)
@@ -21,6 +23,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     account = None
     broker = 'FXCM'
     max_prices = 4000
+    heartbeat = 10
 
     def __init__(self, queue, *, pairs, access_token, handlers, account_type=AccountType.DEMO, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
@@ -40,6 +43,7 @@ class FXCMStreamRunner(StreamRunnerBase):
 
         self.subscribe_pair()
 
+        loop_count = 0
         while self.running:
             while True:
                 event = self.get(False)
@@ -48,22 +52,27 @@ class FXCMStreamRunner(StreamRunnerBase):
                 else:
                     break
 
-            time.sleep(10)
-
-            if not self.fxcm.is_connected():
-                logger.error('[Connect Lost] is_connected=false')
-                retry = 11
-                count = 1
-                while not self.fxcm.is_connected() and count < retry:
-                    self.fxcm.__reconnect__(count)
-                    count += 1
-                    time.sleep(15)
-                else:
-                    if not self.fxcm.is_connected():
-                        logger.error('[System Exit] Cant connect to server')
-                        send_to_admin('[System Exit] Cant connect to server')
+            time.sleep(0.5)
+            loop_count += 1
+            # if not datetime.now().second % self.heartbeat:
+            #     self.put(HeartBeatEvent())
+            
+            if loop_count == 20:
+                loop_count = 0
+                if not self.fxcm.is_connected():
+                    logger.error('[Connect Lost] is_connected=false')
+                    retry = 11
+                    count = 1
+                    while not self.fxcm.is_connected() and count < retry:
+                        self.fxcm.__reconnect__(count)
+                        count += 1
+                        time.sleep(15)
                     else:
-                        logger.info('Reconnected')
+                        if not self.fxcm.is_connected():
+                            logger.error('[System Exit] Cant connect to server')
+                            send_to_admin('[System Exit] Cant connect to server')
+                        else:
+                            logger.info('Reconnected')
 
     def subscribe_pair(self):
         # for symbol in ALL_SYMBOLS:
@@ -103,7 +112,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     def tick_data(self, data, dataframe):
         try:
             instrument = get_mt4_symbol(data['Symbol'])
-            time = datetime.fromtimestamp(int(data['Updated']) / 1000.0)
+            time = datetime.utcfromtimestamp(int(data['Updated']) / 1000.0)
 
             bid = Decimal(str(data['Rates'][0]))
             ask = Decimal(str(data['Rates'][1]))
@@ -112,15 +121,10 @@ class FXCMStreamRunner(StreamRunnerBase):
             price_redis.set('%s_TICK' % instrument.upper(),
                             json.dumps(
                                 {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')}))
-
-            while True:
-                event = self.get(False)
-                if event:
-                    self.handle_event(event)
-                else:
-                    break
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)
+
+        set_last_tick(datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
     def stop(self):
         self.fxcm.close()

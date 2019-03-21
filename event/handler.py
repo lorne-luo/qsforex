@@ -82,12 +82,14 @@ class TickPriceHandler(BaseHandler):
             set_last_tick(event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
 
 
-class HeartBeatPrintHandler(BaseHandler):
+class HeartBeatHandler(BaseHandler):
     subscription = [HeartBeatEvent.type]
 
     def process(self, event):
         if self.DEBUG:
-            print('HeartBeat: %s' % datetime.utcnow())
+            print('HeartBeat: %s' % datetime.now())
+        else:
+            system_redis.set('Heartbeat', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
 
 class TimeFrameTicker(BaseHandler):
@@ -127,7 +129,7 @@ class TimeFrameTicker(BaseHandler):
                 if timeframe == PERIOD_H1:
                     last_tick = get_last_tick()
                     logger.info('TimeFrame H1 heartbeat=%s, last tick=%s' % (new.strftime('%Y-%m-%d %H:%M'),
-                                                                               last_tick))
+                                                                             last_tick))
 
         open = is_market_open()
         self.set_market_open(open)
