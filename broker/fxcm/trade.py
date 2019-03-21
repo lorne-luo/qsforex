@@ -1,8 +1,10 @@
 import logging
 
 from broker.base import TradeBase
+from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.base import OANDABase
 from broker.oanda.common.convertor import lots_to_units
+from mt4.constants import OrderSide
 
 logger = logging.getLogger(__name__)
 
@@ -36,3 +38,14 @@ class TradeMixin(OANDABase, TradeBase):
                                     time_in_force='IOC', rate=None, at_market=None)
         except Exception as ex:
             logger.error('[Closet Trade] %s' % ex)
+
+    def close_symbol(self, instrument, side, percent=None):
+        instrument = get_fxcm_symbol(instrument)
+        for trade in self.fxcmpy.open_pos:
+            if instrument == trade.get_currency():
+                trade_side = OrderSide.BUY if trade.get_isBuy() else OrderSide.SELL
+                if trade_side == side:
+                    units = trade.get_amount()
+                    if percent and 1 >= percent > 0:
+                        units = int(units * percent)
+                    trade.close(amount=units)

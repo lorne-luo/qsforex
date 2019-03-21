@@ -1,11 +1,18 @@
+import json
+from decimal import Decimal
+
 from fxcmpy import fxcmpy
 
 from broker.base import BrokerAccount, AccountType
+from broker.fxcm.constants import get_fxcm_symbol
 from broker.fxcm.instrument import InstrumentMixin
 from broker.fxcm.order import OrderMixin
 from broker.fxcm.position import PositionMixin
 from broker.fxcm.price import PriceMixin
 from broker.fxcm.trade import TradeMixin
+from broker.oanda.common.convertor import units_to_lots
+from mt4.constants import pip, get_mt4_symbol
+from utils.redis import price_redis
 
 
 class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, BrokerAccount):
@@ -40,6 +47,50 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
     def dump(self):
         print(self.summary)
 
+    def get_equity(self):
+        summarys = self.fxcmpy.get_accounts('list')
+        for s in summarys:
+            if str(s.get('accountId')) == str(self.account_id):
+                equity = s.get('equity')
+                return Decimal(str(equity))
+
+        raise Exception('Cant get equity.')
+
+    def get_lots(self, instrument, stop_loss_pips=None, risk_ratio=Decimal('0.05')):
+        equity = self.get_equity()
+        if not stop_loss_pips:
+            return equity / 1000 * Decimal('0.1')
+
+        instrument = get_fxcm_symbol(instrument)
+        pip_unit = pip(instrument)
+
+        risk = equity * risk_ratio
+        value = risk / stop_loss_pips / pip_unit
+
+        if instrument.upper().endswith('USD'):
+            price = self.get_price(instrument)
+            value = value * price
+        elif instrument.upper().startswith('USD'):
+            return equity / 1000 * Decimal('0.1')
+        else:
+            # cross pair
+            raise NotImplementedError
+        units = int(value / 100) * 100
+        return units_to_lots(units).quantize(Decimal("0.001"))
+
+    def get_price(self, instrument, type='mid'):
+        instrument = get_mt4_symbol(instrument)
+        data = price_redis.get('%s_TICK' % instrument.upper())
+        if not data:
+            raise Exception('get_price, %s price is None' % instrument)
+        price = json.loads(data)
+        if type == 'ask':
+            return Decimal(str(price.get('ask')))
+        elif type == 'bid':
+            return Decimal(str(price.get('bid')))
+        elif type == 'mid':
+            price = (price.get('bid') + price.get('ask')) / 2
+            return Decimal(str(price))
 
 
 if __name__ == '__main__':
