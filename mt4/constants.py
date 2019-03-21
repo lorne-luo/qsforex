@@ -179,10 +179,17 @@ def get_mt4_symbol(symbol):
     return symbol.replace(' ', '').replace('_', '').replace('-', '').replace('/', '')
 
 
+def pip_unit(symbol):
+    symbol = get_mt4_symbol(symbol)
+    if symbol not in PIP_DICT:
+        raise Exception('%s not in PIP_DICT.')
+    return PIP_DICT[symbol]
+
+
 def pip(symbol, price=None, abs=False):
     symbol = get_mt4_symbol(symbol)
     if symbol not in PIP_DICT:
-        raise Exception('%s not exists in PIP_DICT' % symbol)
+        raise Exception('%s not in PIP_DICT.' % symbol)
 
     pip_unit = PIP_DICT[symbol]
     if price:
