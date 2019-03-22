@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from event.event import TimeFrameEvent, OrderHoldingEvent
+from event.event import TimeFrameEvent, OrderHoldingEvent, StartUpEvent
 from event.handler import QueueBase, BaseHandler
 from utils.market import is_market_open
 
@@ -57,3 +57,8 @@ class StrategyBase(BaseHandler, QueueBase):
             self.signal()
         elif event.type == OrderHoldingEvent.type:
             self.signal()
+        elif event.type == StartUpEvent.type:
+            self.signal()
+
+    def send_event(self, event):
+        self.put(event)

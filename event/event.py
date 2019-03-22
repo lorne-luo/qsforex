@@ -75,6 +75,9 @@ class Event(object):
         return instance
 
 
+class StartUpEvent(Event):
+    type = EventType.STARTUP
+
 class HeartBeatEvent(Event):
     type = EventType.HEARTBEAT
 

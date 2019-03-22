@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class Runner(QueueBase):
     handlers = []
     running = True
+    initialized =False
 
     def run(self):
         raise NotImplementedError
@@ -41,7 +42,7 @@ class Runner(QueueBase):
         try:
             handler.process(event)
         except Exception as ex:
-            logger.error('%s: %s' % (handler.__class__.__name__, ex))
+            logger.error('[EVENT_PROCESS] %s, event=%s' % (ex, event.__dict__))
             # print trace stack
             extracted_list = traceback.extract_tb(ex.__traceback__)
             for item in traceback.StackSummary.from_list(extracted_list).format()[:6]:

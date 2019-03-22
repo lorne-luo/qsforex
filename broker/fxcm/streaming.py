@@ -8,6 +8,7 @@ from decimal import Decimal
 from fxcmpy import fxcmpy
 
 import settings
+from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
 from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent
@@ -58,6 +59,10 @@ class FXCMStreamRunner(StreamRunnerBase):
             #     self.put(HeartBeatEvent())
 
             if not self.loop_counter % 20:
+                if not self.initialized:
+                    self.initialized = True
+                    self.put(StartUpEvent())
+
                 self.put(HeartBeatEvent(self.loop_counter))
 
                 if not self.fxcm.is_connected():
@@ -74,6 +79,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                             send_to_admin('[System Exit] Cant connect to server')
                         else:
                             logger.info('Reconnected')
+
     def subscribe_pair(self):
         # for symbol in ALL_SYMBOLS:
         #     if symbol not in self.pairs:
@@ -139,7 +145,10 @@ if __name__ == '__main__':
     queue = RedisQueue('Pricing')
     debug = DebugHandler(queue, events=[TimeFrameEvent.type])
     tft = TimeFrameTicker(queue, timezone=0)
-    YOURTOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
+    ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
+    ACCOUNT_ID = 3261139
     pairs = ['EUR/USD']
-    r = FXCMStreamRunner(queue, pairs=pairs, access_token=YOURTOKEN, handlers=[debug, tft])
+    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+
+    r = FXCMStreamRunner(queue, pairs=pairs, handlers=[debug, tft], api=fxcm.fxcmpy)
     r.run()

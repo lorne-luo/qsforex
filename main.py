@@ -20,7 +20,7 @@ logging.basicConfig(level=log_level,
                     format='%(asctime)s|%(levelname)s|%(threadName)s|%(name)s:%(lineno)d %(message)s')
 logging.getLogger('FXCM').setLevel(logging.WARN)
 
-queue = RedisQueue('Pricing')
+queue = RedisQueue('FXCM')
 # trade_queue = RedisQueue('Trading')
 ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
 ACCOUNT_ID = 3261139
@@ -32,7 +32,10 @@ timeframe_ticker = TimeFrameTicker(queue, timezone=0)
 price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
 fxcm_execution = BrokerExecutionHandler(queue, fxcm)
+debug = DebugHandler(queue, fxcm)
 
-runner = FXCMStreamRunner(queue, pairs=pairs, access_token=ACCESS_TOKEN,
-                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density])
+runner = FXCMStreamRunner(queue,
+                          pairs=pairs,
+                          api=fxcm.fxcmpy,
+                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug])
 runner.run()
