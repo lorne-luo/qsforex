@@ -2,11 +2,13 @@ import logging
 
 import talib as ta
 
+from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import OrderType
-from event.event import SignalEvent, SignalAction, TimeFrameEvent, OrderHoldingEvent
+from event.event import SignalEvent, SignalAction, TimeFrameEvent, OrderHoldingEvent, StartUpEvent
 from mt4.constants import PERIOD_H1, OrderSide, PERIOD_M1
 from strategy.base import StrategyBase
 from strategy.helper import check_cross
+from utils.market import is_market_open
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +33,9 @@ class HLHBTrendStrategy(StrategyBase):
     weekdays = [0, 1, 2, 3, 4]
     hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]  # GMT hour
 
-    subscription = [TimeFrameEvent.type, OrderHoldingEvent.type]
+    subscription = [TimeFrameEvent.type, OrderHoldingEvent.type, StartUpEvent.type]
 
-    pairs = ['EURUSD', 'GBPUSD']
+    pairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD']
     params = {'short_ema': 5,
               'long_ema': 10,
               'adx': 14,
@@ -61,6 +63,14 @@ class HLHBTrendStrategy(StrategyBase):
         self.open(symbol, ema_short, ema_long, adx, rsi)
         self.close(symbol, ema_short, ema_long, adx, rsi)
 
+    def check_trade_exist(self, instrument, side):
+        instrument = get_fxcm_symbol(instrument)
+        is_buy = side == OrderSide.BUY
+        for id, trade in self.account.get_trades():
+            if trade.get_currency() == instrument and is_buy == trade.get_isBuy():
+                return True
+        return False
+
     def open(self, symbol, ema_short, ema_long, adx, rsi):
         logger.info('%s@%s param=%s, %s, %s, %s' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
@@ -76,17 +86,25 @@ class HLHBTrendStrategy(StrategyBase):
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
                                 symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
                                 take_profit=self.take_profit)
-            self.put(event)
+            self.send_event(event)
         elif side == OrderSide.SELL and 50 > rsi[-1] > 30:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
                                 symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
                                 take_profit=self.take_profit)
-            self.put(event)
+            self.send_event(event)
         if event:
-            logger.info('%s|%s@%s %s, param=%s, %s, %s, %s' % (
-                self.name, self.magic_number, symbol, side, ema_short, ema_long, adx[-1], rsi[-1]))
+            logger.info('[ORDER_OPEN]%s|%s@%s %s, param=%s, %s, %s, %s' % (
+                self.name, self.magic_number, symbol, side, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
         return side
 
     def close(self, symbol, ema_short, ema_long, adx, rsi):
         pass
+
+    def send_event(self, event):
+        if event.action == SignalAction.OPEN:
+            if self.check_trade_exist(event.instrument, event.side):
+                logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
+                return
+
+        super(HLHBTrendStrategy, self).send_event(event)
