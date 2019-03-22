@@ -11,7 +11,7 @@ import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
-from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent
+from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
 from utils.redis import price_redis, RedisQueue, set_last_tick
@@ -27,13 +27,14 @@ class FXCMStreamRunner(StreamRunnerBase):
     heartbeat = 10
     loop_counter = 0
 
-    def __init__(self, queue, *, pairs, access_token, handlers, account_type=AccountType.DEMO, **kwargs):
+    def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.fxcm = fxcmpy(access_token=access_token, server=server)
+        self.fxcm = api or fxcmpy(access_token=access_token, server=server)
         self.fxcm.set_max_prices(self.max_prices)
         handlers = handlers or []
         self.register(*handlers)
+        self.subscribe_pair()
 
     def run(self):
         logger.info('%s statup.' % self.__class__.__name__)
@@ -42,8 +43,6 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.pairs = [get_fxcm_symbol(pair) for pair in self.pairs]
         pair_list = ",".join(self.pairs)
         logger.info('Pairs: %s\n' % pair_list)
-
-        self.subscribe_pair()
 
         while self.running:
             while True:
