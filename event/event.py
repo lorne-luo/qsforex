@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from decimal import Decimal
 
@@ -18,6 +19,7 @@ class MarketAction(object):
 
 
 class EventType(object):
+    DEBUG = 'DEBUG'
     STARTUP = 'STARTUP'
     SHUTDOWN = 'SHUTDOWN'
     HEARTBEAT = 'HEARTBEAT'
@@ -78,12 +80,21 @@ class Event(object):
 class StartUpEvent(Event):
     type = EventType.STARTUP
 
+
 class HeartBeatEvent(Event):
     type = EventType.HEARTBEAT
 
     def __init__(self, hearbeat_count):
         super(HeartBeatEvent, self).__init__()
         self.counter = hearbeat_count
+
+
+class DebugEvent(Event):
+    type = EventType.DEBUG
+
+    def __init__(self, action):
+        super(DebugEvent, self).__init__()
+        self.action = action
 
 
 class TimeFrameEvent(Event):

@@ -49,19 +49,34 @@ class BaseHandler(QueueBase):
     subscription = []
     account = None
 
+    def __init__(self, queue, account=None, *args, **kwargs):
+        super(BaseHandler, self).__init__(queue)
+        self.account = account
+
     def process(self, event):
         raise NotImplementedError
 
 
 class DebugHandler(BaseHandler):
-    subscription = ['*']
+    subscription = [DebugEvent.type]
 
-    def __init__(self, queue, events=None, *args, **kwargs):
+    def __init__(self, queue, account=None, events=None, *args, **kwargs):
         super(DebugHandler, self).__init__(queue)
-        self.subscription = events or ['*']
+        self.subscription = events or []
+        if DebugEvent.type not in self.subscription:
+            self.subscription.append(DebugEvent.type)
+        self.account = account
 
     def process(self, event):
-        print('[%s] %s' % (event.type, event.__dict__))
+        if event.type == DebugEvent.type and self.account:
+            if event.action == 'account':
+                self.account.log_account()
+            elif event.action == 'trade':
+                self.account.log_trade()
+            elif event.action == 'order':
+                self.account.log_order()
+        else:
+            print('[%s] %s' % (event.type, event.__dict__))
 
 
 class EventLoggerHandler(DebugHandler):
