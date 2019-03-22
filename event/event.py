@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from dateparser import parse
 
+from broker.oanda.common.constants import OrderType
+
 
 class SignalAction(object):
     OPEN = 'OPEN'
@@ -39,14 +41,14 @@ class Event(object):
         self.time = datetime.utcnow()
 
     def to_dict(self):
-        data = self.__dict__
+        data = self.__dict__.copy()
         for k in data.keys():
-            if type(data[k]) in (str, float, int):
+            if type(data[k]) in (str, float, int) or data[k] is None:
                 pass
             elif type(data[k]) is Decimal:
                 data[k] = float(data[k])
-            elif type(data[k]) is datetime:
-                data[k] = data[k].strftime('%Y-%m-%d %H:%M:%S:%f')
+            elif isinstance(data[k], datetime):
+                data[k] = 'datetime:%s' % data[k].strftime('%Y-%m-%d %H:%M:%S:%f')
             else:
                 raise Exception('%s.%s is not serializable.' % (self.__class__.__name__, k))
         data['type'] = self.type
@@ -56,15 +58,17 @@ class Event(object):
     def from_dict(data):
         instance = Event()
         for k in data.keys():
-            if type(data[k]) is int:
+            if type(data[k]) is int or data[k] is None:
                 pass
             elif type(data[k]) is float:
                 data[k] = Decimal(str(data[k]))
 
             elif type(data[k]) is str:
-                dt = parse(data[k], date_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S:%f',
-                                                  '%Y-%m-%dT%H:%M:%S'])
-                data[k] = dt or data[k]
+                if data[k].startswith('datetime:'):
+                    dt_str = data[k].replace('datetime:', '')
+                    dt = parse(dt_str, date_formats=['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S:%f',
+                                                     '%Y-%m-%dT%H:%M:%S'])
+                    data[k] = dt or data[k]
             else:
                 raise Exception('Event.from_dict %s=%s is not deserializable.' % (k, data[k]))
             setattr(instance, k, data[k])
@@ -137,8 +141,9 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, action, strategy_name, version, magic_number, instrument, order_type, side, stop_loss=None,
-                 take_profit=None, trailing_stop=None, percent=None):
+    def __init__(self, action, strategy_name, version, magic_number, instrument, side, order_type=OrderType.MARKET,
+                 stop_loss=None,
+                 take_profit=None, trailing_stop=None, percent=None, trade_id=None):
         self.action = action
         self.strategy = strategy_name
         self.version = version
@@ -150,6 +155,7 @@ class SignalEvent(Event):
         self.take_profit = take_profit
         self.trailing_stop = trailing_stop
         self.percent = percent
+        self.trade_id = trade_id
         super(SignalEvent, self).__init__()
 
     def __str__(self):
