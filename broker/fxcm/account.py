@@ -15,6 +15,7 @@ from broker.fxcm.trade import TradeMixin
 from broker.oanda.common.convertor import units_to_lots
 from mt4.constants import pip, get_mt4_symbol
 from utils.redis import price_redis
+from utils.string import format_dict
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +85,12 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
     def log_account(self):
         logger.info('[LOG_ACCOUNT]')
+        content = format_dict(self.summary)
+
         if settings.DEBUG:
-            print(str(self.summary))
+            print(content)
         else:
-            logger.info(str(self.summary))
+            logger.info(content)
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import TimeInForce, OrderPositionFill, OrderTriggerCondition
 from broker.oanda.common.convertor import lots_to_units
 from mt4.constants import OrderSide
+from utils.string import format_dict
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +235,8 @@ class OrderMixin(OrderBase):
         logger.info('[LOG_ORDER]')
         orders = self.fxcmpy.get_orders('list')
         for order in orders:
+            content=format_dict(order)
             if settings.DEBUG:
-                print(order)
+                print(content)
             else:
-                logger.info(str(order))
+                logger.info(content)
