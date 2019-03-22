@@ -13,6 +13,8 @@ from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction
 from event.handler import BaseHandler
 
+logger = logging.getLogger(__name__)
+
 
 class BaseExecutionHandler(BaseHandler):
     """
@@ -66,19 +68,31 @@ class BrokerExecutionHandler(BaseExecutionHandler):
     def open(self, event):
         # check spread
         lots = self.account.get_lots(event.instrument)
-        self.account.market_order(event.instrument, event.side, lots, take_profit=event.take_profit,
-                                 stop_loss=event.stop_loss, trailing_pip=event.trailing_pip)
+        self.account.market_order(event.instrument,
+                                  event.side,
+                                  lots,
+                                  take_profit=event.take_profit,
+                                  stop_loss=event.stop_loss,
+                                  trailing_pip=event.trailing_stop)
+        event_dict = event.__dict__.copy()
+        event_dict.pop('time')
+        logger.info('[TRADE_OPEN] event = %s' % event_dict)
 
     def close(self, event):
-        closed_trade = self.account.close_symbol(event.instrument, event.side, event.percet)
+        closed_trade = self.account.close_symbol(event.instrument, event.side, event.percent)
         for trade in closed_trade:
             pass
             # todo pop OrderClosedEvent
+        logger.info('[ORDER_CLOSED] event = %s' % event.__dict__)
 
     def update(self, event):
-        pass
-        # todo update trade
-        # self.account.update_order()
+        if event.trade_id:
+            trailing_stop = event.trailing_stop
+            # todo update trade
+            self.account.update_trade(event.trade_id, is_stop=True, rate=event.stop_loss, is_in_pips=True)
+            self.account.update_trade(event.trade_id, is_stop=False, rate=event.take_profit, is_in_pips=True)
+
+        logger.info('[ORDER_UPDATE] event = %s' % event.__dict__)
 
 
 class OANDAExecutionHandler(BaseExecutionHandler):
@@ -88,7 +102,6 @@ class OANDAExecutionHandler(BaseExecutionHandler):
         self.access_token = access_token
         self.account_id = account_id
         self.conn = self.obtain_connection()
-        self.logger = logging.getLogger(__name__)
 
     def obtain_connection(self):
         return httplib.HTTPSConnection(self.domain)
@@ -129,4 +142,4 @@ class OANDAExecutionHandler(BaseExecutionHandler):
             print(json.dumps(rv, indent=2))
 
         # response = self.conn.getresponse().read().decode("utf-8").replace("\n","").replace("\t","")
-        self.logger.debug(json.dumps(rv, indent=2))
+        logger.debug(json.dumps(rv, indent=2))
