@@ -1,5 +1,6 @@
 import logging
 
+import settings
 from broker.base import OrderBase
 from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import TimeInForce, OrderPositionFill, OrderTriggerCondition
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class OrderMixin(OrderBase):
 
     def list_order(self, ids=None, state=None, instrument=None, count=100, beforeID=None):
-        return self.fxcmpy.get_orders()
+        return self.fxcmpy.get_orders('list')
 
     def list_pending_order(self):
         orders = self.list_order()
@@ -33,7 +34,7 @@ class OrderMixin(OrderBase):
                            expiration=None, **kwargs):
         is_in_pips = kwargs.get('is_in_pips', True)
 
-        if is_in_pips and stop_loss > 0:
+        if is_in_pips and stop_loss and stop_loss > 0:
             stop_loss = -1 * stop_loss
 
         try:
@@ -164,7 +165,7 @@ class OrderMixin(OrderBase):
         amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
-        if is_in_pips and stop_loss > 0:
+        if is_in_pips and stop_loss and stop_loss > 0:
             stop_loss = -1 * stop_loss
 
         try:
@@ -228,3 +229,12 @@ class OrderMixin(OrderBase):
         order_id = int(order_id)
         self.fxcmpy.delete_order(order_id)
         return True
+
+    def log_order(self):
+        logger.info('[LOG_ORDER]')
+        orders = self.fxcmpy.get_orders('list')
+        for order in orders:
+            if settings.DEBUG:
+                print(order)
+            else:
+                logger.info(str(order))

@@ -1,8 +1,10 @@
 import json
+import logging
 from decimal import Decimal
 
 from fxcmpy import fxcmpy
 
+import settings
 from broker.base import BrokerAccount, AccountType
 from broker.fxcm.constants import get_fxcm_symbol
 from broker.fxcm.instrument import InstrumentMixin
@@ -13,6 +15,8 @@ from broker.fxcm.trade import TradeMixin
 from broker.oanda.common.convertor import units_to_lots
 from mt4.constants import pip, get_mt4_symbol
 from utils.redis import price_redis
+
+logger = logging.getLogger(__name__)
 
 
 class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, BrokerAccount):
@@ -39,10 +43,10 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
     @property
     def summary(self):
-        result = {}
-        for k, v in self.fxcmpy.get_accounts().T.to_dict().items():
-            result[v['accountId']] = v
-        return result
+        for account in self.fxcmpy.get_accounts('list'):
+            if account['accountId'] == str(self.account_id):
+                return account
+        return None
 
     def dump(self):
         print(self.summary)
@@ -77,6 +81,13 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
             raise NotImplementedError
         units = int(value / 100) * 100
         return units_to_lots(units).quantize(Decimal("0.001"))
+
+    def log_account(self):
+        logger.info('[LOG_ACCOUNT]')
+        if settings.DEBUG:
+            print(str(self.summary))
+        else:
+            logger.info(str(self.summary))
 
 
 if __name__ == '__main__':
