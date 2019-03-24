@@ -11,11 +11,9 @@ class TestAccount(unittest.TestCase):
     currency = 'EUR_USD'
 
     def setUp(self):
-        ACCOUNT_ID = 3261139
-        ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
         self.account = SingletonFXCM(type=AccountType.DEMO,
-                                     account_id=ACCOUNT_ID,
-                                     access_token=ACCESS_TOKEN)
+                                     account_id=settings.FXCM_ACCOUNT_ID,
+                                     access_token=settings.FXCM_ACCESS_TOKEN)
 
     def test_instrument(self):
         pass

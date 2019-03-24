@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime
 
+import settings
+
 try:
     import Queue as queue
 except ImportError:
@@ -96,7 +98,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename='backtest.log', level=logging.INFO, filemode='w+')
     logger = logging.getLogger('RestMeanReversion.backtest.log')
 
-    fxcm_token = "8a1e87908a70362782ea9744e2c9c82689bde3ac"
+    fxcm_token = settings.FXCM_ACCESS_TOKEN
     # Enter the pair(s) you would like to trade as a list
     # Pick from {'EUR/USD','USD/JPY','GBP/USD','USD/CHF','EUR/CHF','AUD/USD','USD/CAD','NZD/USD',
     #           'EUR/GBP','EUR/JPY','GBP/JPY','CHF/JPY','GBP/CHF','EUR/AUD','EUR/CAD','AUD/CAD',

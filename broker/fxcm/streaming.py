@@ -144,10 +144,8 @@ if __name__ == '__main__':
     queue = RedisQueue('Pricing')
     debug = DebugHandler(queue, events=[TimeFrameEvent.type])
     tft = TimeFrameTicker(queue, timezone=0)
-    ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
-    ACCOUNT_ID = 3261139
     pairs = ['EUR/USD']
-    fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
 
     r = FXCMStreamRunner(queue, pairs=pairs, handlers=[debug, tft], api=fxcm.fxcmpy)
     r.run()

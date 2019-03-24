@@ -22,11 +22,9 @@ logging.getLogger('FXCM').setLevel(logging.WARN)
 
 queue = RedisQueue('FXCM')
 # trade_queue = RedisQueue('Trading')
-ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
-ACCOUNT_ID = 3261139
 pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD']
 
-fxcm = SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+fxcm = SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
 
 timeframe_ticker = TimeFrameTicker(queue, timezone=0)
 price_density = PriceDensityHandler(queue, fxcm, pairs)

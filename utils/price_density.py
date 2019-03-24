@@ -7,6 +7,8 @@ from decimal import Decimal, ROUND_HALF_EVEN
 import matplotlib.pyplot as plt
 from dateparser import parse
 from dateutil.relativedelta import relativedelta
+
+import settings
 from mt4.constants import PERIOD_D1, PERIOD_M5, PERIOD_M1, PERIOD_H4
 from broker.base import AccountType
 from broker import FXCM, SingletonFXCM
@@ -17,8 +19,6 @@ from mt4.constants import pip, get_mt4_symbol
 from mt4.constants import pip_unit as get_pip_unit
 from utils.redis import price_redis
 
-ACCOUNT_ID = 3261139
-ACCESS_TOKEN = '8a1e87908a70362782ea9744e2c9c82689bde3ac'
 TIME_SUFFIX = '_LAST_TIME'
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def _save_redis(symbol, result):
 
 def init_density(symbol, start=datetime(2019, 1, 18, 18, 1), account=None):
     symbol = get_mt4_symbol(symbol)
-    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
     now = datetime.utcnow() - relativedelta(minutes=1)  # shift 1 minute
     end = datetime.utcnow()
     result = {}
