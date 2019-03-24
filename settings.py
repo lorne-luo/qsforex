@@ -12,22 +12,7 @@ APPLICATION_NAME = 'qsforex'
 BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
 
-OANDA_ENVIRONMENTS = {
-    "streaming": {
-        "real": "stream-fxtrade.oanda.com",
-        "practice": "stream-fxpractice.oanda.com",
-        "sandbox": "stream-sandbox.oanda.com"
-    },
-    "api": {
-        "real": "api-fxtrade.oanda.com",
-        "practice": "api-fxpractice.oanda.com",
-        "sandbox": "api-sandbox.oanda.com"
-    }
-}
-
-OANDA_DOMAIN = os.environ.get('DOMAIN', 'practice')
-OANDA_API_DOMAIN = OANDA_ENVIRONMENTS["api"][OANDA_DOMAIN]
-OANDA_STREAM_DOMAIN = OANDA_ENVIRONMENTS["streaming"][OANDA_DOMAIN]
+OANDA_DOMAIN = os.environ.get('OANDA_DOMAIN', 'DEMO')
 OANDA_ACCESS_TOKEN = os.environ.get('OANDA_ACCESS_TOKEN', None)
 OANDA_ACCOUNT_ID = os.environ.get('OANDA_ACCOUNT_ID', None)
 

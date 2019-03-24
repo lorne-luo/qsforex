@@ -123,7 +123,7 @@ class TransactionType(object):
     RESET_RESETTABLE_PL = 'RESET_RESETTABLE_PL'  # Reset Resettable PL Transaction
 
 
-ENVIRONMENTS = {
+OANDA_ENVIRONMENTS = {
     "streaming": {
         AccountType.REAL: "stream-fxtrade.oanda.com",
         AccountType.DEMO: "stream-fxpractice.oanda.com",

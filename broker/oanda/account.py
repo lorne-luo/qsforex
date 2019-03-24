@@ -4,7 +4,7 @@ from decimal import Decimal
 import broker.oanda.common.view as common_view
 from broker.base import BrokerAccount
 from broker.oanda.base import SingletonAPIContext
-from broker.oanda.common.constants import ENVIRONMENTS
+from broker.oanda.common.constants import OANDA_ENVIRONMENTS
 from broker.oanda.common.convertor import get_symbol
 from broker.oanda.common.logger import log_error
 from broker.oanda.common.prints import print_positions_map, print_orders_map, print_trades_map
@@ -29,8 +29,8 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
 
     def setup_api(self, type, access_token, application_name):
         self.type = type
-        hostname = ENVIRONMENTS["api"][type]
-        stream_hostname = ENVIRONMENTS["streaming"][type]
+        hostname = OANDA_ENVIRONMENTS["api"][type]
+        stream_hostname = OANDA_ENVIRONMENTS["streaming"][type]
         self.api = SingletonAPIContext(hostname=hostname, token=access_token, application=application_name)
         self.stream_api = SingletonAPIContext(hostname=stream_hostname, token=access_token,
                                               application=application_name)
