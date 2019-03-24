@@ -11,9 +11,10 @@ import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
-from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent
+from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
+from utils.market import is_market_open
 from utils.redis import price_redis, RedisQueue, set_last_tick
 from utils.telstra_api_v2 import send_to_admin
 
@@ -24,8 +25,10 @@ class FXCMStreamRunner(StreamRunnerBase):
     account = None
     broker = 'FXCM'
     max_prices = 4000
-    heartbeat = 10
+    heartbeat = 5  # seconds
+    loop_sleep = 0.5  # seconds
     loop_counter = 0
+    market_open = True
 
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
@@ -35,6 +38,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         handlers = handlers or []
         self.register(*handlers)
         self.subscribe_pair()
+        self.market_open = is_market_open()
 
     def run(self):
         logger.info('%s statup.' % self.__class__.__name__)
@@ -48,36 +52,73 @@ class FXCMStreamRunner(StreamRunnerBase):
             while True:
                 event = self.get(False)
                 if event:
-                    self.handle_event(event)
+                    if event.type == ConnectEvent.type:
+                        self.process_connect_event(event)
+                    else:
+                        self.handle_event(event)
                 else:
                     break
 
-            time.sleep(0.5)
+            time.sleep(self.loop_sleep)
             self.loop_counter += 1
             # if not datetime.now().second % self.heartbeat:
             #     self.put(HeartBeatEvent())
 
-            if not self.loop_counter % 20:
+            if not self.loop_counter % (self.heartbeat / self.loop_sleep):
+                self.put(HeartBeatEvent(self.loop_counter))
                 if not self.initialized:
                     self.initialized = True
                     self.put(StartUpEvent())
 
-                self.put(HeartBeatEvent(self.loop_counter))
+            if not self.loop_counter % (3 * self.heartbeat / self.loop_sleep):
+                self.check_connection()
 
-                if not self.fxcm.is_connected():
-                    logger.error('[Connect Lost] is_connected=false')
-                    retry = 11
-                    count = 1
-                    while not self.fxcm.is_connected() and count < retry:
-                        self.fxcm.__reconnect__(count)
-                        count += 1
-                        time.sleep(15)
-                    else:
-                        if not self.fxcm.is_connected():
-                            logger.error('[System Exit] Cant connect to server')
-                            send_to_admin('[System Exit] Cant connect to server')
-                        else:
-                            logger.info('Reconnected')
+    def check_connection(self):
+        if not is_market_open():
+            time.sleep(3600)
+            return
+
+        # self.socket is not None and self.socket.connected and self.socket_thread.is_alive()
+        if self.fxcm.__disconnected__ or not self.fxcm.socket_thread.is_alive():
+            logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
+                self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
+            try:
+                self.fxcm.connect()
+            except Exception as ex:
+                logger.error('[Check_Connection] %s' % ex)
+
+        elif not self.fxcm.is_connected():
+            logger.error('[Connect_Lost] is_connected=false')
+            try:
+                self.reconnect()
+            except Exception as ex:
+                logger.error('[Check_Connection] %s' % ex)
+
+    def reconnect(self):
+        retry = 11
+        count = 1
+        while not self.fxcm.is_connected() and count < retry:
+            self.fxcm.__reconnect__(count)
+            count += 1
+            time.sleep(self.heartbeat)
+        else:
+            if not self.fxcm.is_connected():
+                logger.error('[System Exit] Cant connect to server')
+                send_to_admin('[System Exit] Cant connect to server')
+            else:
+                logger.info('Reconnected')
+
+    def process_connect_event(self, event):
+        if event.action == 'CONNECT':
+            if self.fxcm.__disconnected__ or not self.fxcm.socket_thread.is_alive():
+                self.fxcm.connect()
+            elif not self.fxcm.is_connected():
+                self.reconnect()
+        elif event.action == 'DISCONNECT':
+            if self.fxcm.is_connected():
+                self.fxcm.close()
+
+        logger.info('[ConnectEvent] %s' % event.action)
 
     def subscribe_pair(self):
         # for symbol in ALL_SYMBOLS:
