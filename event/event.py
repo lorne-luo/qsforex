@@ -261,6 +261,12 @@ class OrderEvent(Event):
         )
 
 
+class ConnectEvent(Event):
+    def __init__(self, action):
+        self.action = action.upper()
+        super(ConnectEvent, self).__init__()
+
+
 class FillEvent(Event):
     """
     When an BaseExecutionHandler receives an OrderEvent it must transact the order. Once an order has been transacted it generates a FillEvent, which describes the cost of purchase or sale as well as the transaction costs, such as fees or slippage.
