@@ -1,14 +1,10 @@
 import logging
-from queue import Queue
-
-from fxcmpy import fxcmpy
-
 import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.streaming import FXCMStreamRunner
 from event.event import TickPriceEvent
-from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler
+from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler, HeartBeatHandler
 from execution.execution import BrokerExecutionHandler
 from strategy.hlhb_trend import HLHBTrendStrategy
 from utils.price_density import PriceDensityHandler
@@ -27,6 +23,7 @@ pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/
 fxcm = SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
 
 timeframe_ticker = TimeFrameTicker(queue, timezone=0)
+heartbeat_handler = HeartBeatHandler(queue)
 price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
 fxcm_execution = BrokerExecutionHandler(queue, fxcm)
@@ -35,5 +32,5 @@ debug = DebugHandler(queue, fxcm)
 runner = FXCMStreamRunner(queue,
                           pairs=pairs,
                           api=fxcm.fxcmpy,
-                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug])
+                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug, heartbeat_handler])
 runner.run()

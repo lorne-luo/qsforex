@@ -80,10 +80,9 @@ class DebugHandler(BaseHandler):
 class EventLoggerHandler(DebugHandler):
     def __init__(self, queue, events=None, *args, **kwargs):
         super(EventLoggerHandler, self).__init__(queue, events, *args, **kwargs)
-        self.logger = logging.getLogger('EventLog')
 
     def process(self, event):
-        self.logger.info('[%s] %s' % (event.type, event.__dict__))
+        logger.info('[%s] %s' % (event.type, event.__dict__))
 
 
 class TickPriceHandler(BaseHandler):
@@ -100,10 +99,14 @@ class HeartBeatHandler(BaseHandler):
     subscription = [HeartBeatEvent.type]
 
     def process(self, event):
-        if self.DEBUG:
-            print('HeartBeat: %s' % datetime.now())
-        else:
-            system_redis.set('Heartbeat', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
+        if not event.counter % 10:
+            if settings.DEBUG:
+                print('HeartBeat: %s' % datetime.now())
+            else:
+                system_redis.set('Heartbeat', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
+
+        if not event.counter % 720:
+            logger.info('[HeartBeatHandler] %s' % event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
 
 
 class TimeFrameTicker(BaseHandler):
@@ -131,6 +134,11 @@ class TimeFrameTicker(BaseHandler):
     def process(self, event):
         if isinstance(event, TickPriceEvent):
             self.set_market_open(True)
+            return
+        else:
+            open = is_market_open()
+            self.set_market_open(open)
+
         now = self.get_now()
         for timeframe in PERIOD_CHOICES:
             new = get_candle_time(now, timeframe)
@@ -142,20 +150,16 @@ class TimeFrameTicker(BaseHandler):
 
                 if timeframe == PERIOD_H1:
                     last_tick = get_last_tick()
-                    logger.info('TimeFrame H1 heartbeat=%s, last tick=%s' % (new.strftime('%Y-%m-%d %H:%M'),
-                                                                             last_tick))
-
-        open = is_market_open()
-        self.set_market_open(open)
+                    logger.info('TimeFrame H1 , market_open=%s, last tick=%s' % (self.market_open, last_tick))
 
     def set_market_open(self, current_status):
         if self.market_open != current_status:
             if current_status:
                 self.put(MarketEvent(MarketAction.OPEN))
-                logger.info('Market status changed opened.')
+                logger.info('[MarketEvent] Market opened.')
             else:
                 self.put(MarketEvent(MarketAction.CLOSE))
-                logger.info('Market status changed closed.')
+                logger.info('[MarketEvent] Market closed.')
             self.market_open = current_status
 
 
