@@ -3,7 +3,6 @@ from datetime import datetime
 
 import redis
 import settings
-from mt4.constants import get_mt4_symbol
 
 LAST_TICK_TIME_KEY = "LAST_TICK_TIME"
 

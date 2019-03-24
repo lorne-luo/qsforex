@@ -106,7 +106,9 @@ class HeartBeatHandler(BaseHandler):
                 system_redis.set('Heartbeat', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
         if not event.counter % 720:
-            logger.info('[HeartBeatHandler] %s' % event.time.strftime('%Y-%m-%d %H:%M:%S:%f'))
+            last_tick = get_last_tick()
+            logger.info('[HeartBeatHandler] %s, last_tick=%s' % (event.time.strftime('%Y-%m-%d %H:%M:%S:%f'),
+                                                                 last_tick.strftime('%Y-%m-%d %H:%M:%S:%f')))
 
 
 class TimeFrameTicker(BaseHandler):
@@ -150,7 +152,7 @@ class TimeFrameTicker(BaseHandler):
 
                 if timeframe == PERIOD_H1:
                     last_tick = get_last_tick()
-                    logger.info('TimeFrame H1 , market_open=%s, last tick=%s' % (self.market_open, last_tick))
+                    logger.info('TimeFrame H1 , market_open=%s, last_tick=%s' % (self.market_open, last_tick))
 
     def set_market_open(self, current_status):
         if self.market_open != current_status:

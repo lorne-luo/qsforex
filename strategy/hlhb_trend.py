@@ -72,7 +72,7 @@ class HLHBTrendStrategy(StrategyBase):
         return False
 
     def open(self, symbol, ema_short, ema_long, adx, rsi):
-        logger.info('%s@%s param=%s, %s, %s, %s' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
+        logger.info('%s@%s param=%0.5f, %0.5f, %0.2f, %0.2f' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
         if not self.can_open():
             return
@@ -93,7 +93,7 @@ class HLHBTrendStrategy(StrategyBase):
                                 take_profit=self.take_profit)
             self.send_event(event)
         if event:
-            logger.info('[ORDER_OPEN]%s|%s@%s %s, param=%s, %s, %s, %s' % (
+            logger.info('[ORDER_OPEN]%s|%s@%s %s, param=%0.5f, %0.5f, %0.2f, %0.2f' % (
                 self.name, self.magic_number, symbol, side, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
         return side
