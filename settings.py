@@ -8,6 +8,10 @@ env.read_env('.env')
 
 DEBUG = env.bool('DEBUG', True)
 
+APPLICATION_NAME = 'qsforex'
+BASE_CURRENCY = "USD"
+EQUITY = Decimal("1000.00")
+
 OANDA_ENVIRONMENTS = {
     "streaming": {
         "real": "stream-fxtrade.oanda.com",
@@ -21,19 +25,14 @@ OANDA_ENVIRONMENTS = {
     }
 }
 
-DOMAIN = os.environ.get('DOMAIN', 'practice')
-API_DOMAIN = OANDA_ENVIRONMENTS["api"][DOMAIN]
-STREAM_DOMAIN = OANDA_ENVIRONMENTS["streaming"][DOMAIN]
+OANDA_DOMAIN = os.environ.get('DOMAIN', 'practice')
+OANDA_API_DOMAIN = OANDA_ENVIRONMENTS["api"][OANDA_DOMAIN]
+OANDA_STREAM_DOMAIN = OANDA_ENVIRONMENTS["streaming"][OANDA_DOMAIN]
+OANDA_ACCESS_TOKEN = os.environ.get('OANDA_ACCESS_TOKEN', None)
+OANDA_ACCOUNT_ID = os.environ.get('OANDA_ACCOUNT_ID', None)
 
 CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
 OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
-
-ACCESS_TOKEN = os.environ.get('OANDA_API_ACCESS_TOKEN', None)
-ACCOUNT_ID = os.environ.get('OANDA_API_ACCOUNT_ID', None)
-
-APPLICATION_NAME = 'qsforex'
-BASE_CURRENCY = "USD"
-EQUITY = Decimal("1000.00")
 
 TELSTRA_CLIENT_KEY = env.str('TELSTRA_CLIENT_KEY', '')
 TELSTRA_CLIENT_SECRET = env.str('TELSTRA_CLIENT_SECRET', '')

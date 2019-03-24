@@ -60,8 +60,8 @@ if __name__ == "__main__":
     # Create the OANDA market price streaming class
     # making sure to provide authentication commands
     prices = StreamingForexPrices(
-        settings.STREAM_DOMAIN, settings.ACCESS_TOKEN,
-        settings.ACCOUNT_ID, pairs, events
+        settings.OANDA_STREAM_DOMAIN, settings.OANDA_ACCESS_TOKEN,
+        settings.OANDA_ACCOUNT_ID, pairs, events
     )
 
     # Create the strategy/signal generator, passing the 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # Create the execution handler making sure to
     # provide authentication commands
     execution = OANDAExecutionHandler(
-        settings.API_DOMAIN,
+        settings.OANDA_API_DOMAIN,
         settings.ACCESS_TOKEN,
         settings.ACCOUNT_ID
     )

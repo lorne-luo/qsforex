@@ -145,7 +145,7 @@ class TestAccount(unittest.TestCase):
 class TestPortifolio(unittest.TestCase):
 
     def test_oanda_portifolio(self):
-        profile = OandaV20Portfolio('practice', settings.ACCESS_TOKEN, '101-011-10496264-002', None)
+        profile = OandaV20Portfolio('practice', settings.OANDA_ACCESS_TOKEN, settings.OANDA_ACCOUNT_ID, None)
         units = profile.trade_units('EURUSD', 30)
         print(units_to_lots(units))
         units = profile.trade_units('USDJPY', 30)
