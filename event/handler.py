@@ -1,16 +1,14 @@
-import copy
-import json
 import logging
-from datetime import datetime
 from queue import Empty
 
 from dateutil.relativedelta import relativedelta
 
 import settings
 from event.event import *
-from mt4.constants import PERIOD_CHOICES, get_candle_time, PERIOD_H1
+from mt4.constants import PERIOD_CHOICES, get_candle_time, PERIOD_H1, get_mt4_symbol, PERIOD_D1
 from utils.market import is_market_open
-from utils.redis import system_redis, set_last_tick, get_last_tick
+from utils.redis import system_redis, set_last_tick, get_last_tick, price_redis
+from utils.telstra_api_v2 import send_to_admin
 
 logger = logging.getLogger(__name__)
 
@@ -159,3 +157,61 @@ class TimeFrameTicker(BaseHandler):
                 self.put(MarketEvent(MarketAction.CLOSE))
                 logger.info('Market status changed closed.')
             self.market_open = current_status
+
+
+pass
+
+
+class PriceAlertHandler(BaseHandler):
+    subscription = [TickPriceEvent.type, TimeFrameEvent.type]
+    resistance_suffix = ['R1', 'R2', 'R3', 'CR1', 'CR2', 'CR3']
+    support_suffix = ['S1', 'S2', 'S3', 'CS1', 'CS2', 'CS3']
+
+    def process(self, event):
+        if event.type == TickPriceEvent.type:
+            self.price_alert(event)
+        elif event.type == TimeFrameEvent.type:
+            if event.timeframe == PERIOD_D1:
+                self.reset_rs(event)
+
+    def price_alert(self, event):
+        symbol = get_mt4_symbol(event.instrument)
+        for resistance_level in self.resistance_suffix:
+            key = '%s_%s' % (symbol, resistance_level)
+            resistance = price_redis.get(key)
+            if not resistance:
+                continue
+            resistance = json.loads(resistance)
+
+            price = resistance.get('price')
+            if not price:
+                continue
+
+            price = Decimal(str(price))
+            if not resistance.get('passed') and event.bid > price:
+                msg = '%s down corss %s = %s' % (symbol, resistance_level, price)
+                send_to_admin(msg)
+                resistance['passed'] = True
+                price_redis.set(key, json.dumps(resistance))
+
+        for support_level in self.support_suffix:
+            key = '%s%s' % (symbol, support_level)
+            support = price_redis.get(key)
+            if not support:
+                continue
+
+            support = json.loads(support)
+            price = support.get('price')
+            if not price:
+                continue
+
+            price = Decimal(str(support.get('price')))
+            if not support.get('passed') and event.ask < price:
+                msg = '%s down corss %s = %s' % (symbol, support_level, price)
+                send_to_admin(msg)
+                support['passed'] = True
+                price_redis.set(key, json.dumps(support))
+
+    def reset_rs(self, event):
+        # todo reset resistance and support
+        pass

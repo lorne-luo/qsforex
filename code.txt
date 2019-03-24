@@ -19,6 +19,30 @@ exit accuracy= 1 - profit missed / (max-min)
 risk:reward= 1: max/-min or 1:max
 drawdown
 
+
+accountId:        3261139
+accountName:      03261139
+amountK:          330
+close:            110.665               current_price
+com:              0
+currency:         USD/JPY
+currencyPoint:    29.80209
+grossPL:          149.09863             profit
+isBuy:            False
+isDisabled:       False
+limit:            106.2                 take_profit
+open:             110.715               open_price
+roll:             0
+stop:             110.96                stop_loss
+stopMove:         0
+time:             2019-03-22 02:11:39   open_time
+tradeId:          207362756
+usedMargin:       825
+valueDate:
+visiblePL:        5.2                   pips
+
+
+
 ac.trades['99'].__dict__
 Out[12]:
 {'id': '99',
