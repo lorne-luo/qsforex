@@ -103,7 +103,7 @@ class HeartBeatHandler(BaseHandler):
             if settings.DEBUG:
                 print('HeartBeat: %s' % datetime.now())
             else:
-                system_redis.set('Heartbeat', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
+                system_redis.set('HEARTBEAT', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
         if not event.counter % 720:
             last_tick = get_last_tick()
