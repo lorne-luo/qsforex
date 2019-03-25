@@ -25,8 +25,6 @@ class FXCMStreamRunner(StreamRunnerBase):
     account = None
     broker = 'FXCM'
     max_prices = 4000
-    heartbeat = 5  # seconds
-    loop_sleep = 0.5  # seconds
     loop_counter = 0
     market_open = True
 
@@ -59,18 +57,18 @@ class FXCMStreamRunner(StreamRunnerBase):
                 else:
                     break
 
-            time.sleep(self.loop_sleep)
+            time.sleep(settings.LOOP_SLEEP)
             self.loop_counter += 1
-            # if not datetime.now().second % self.heartbeat:
+            # if not datetime.now().second % settings.HEARTBEAT:
             #     self.put(HeartBeatEvent())
 
-            if not self.loop_counter % (self.heartbeat / self.loop_sleep):
+            if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
                 self.put(HeartBeatEvent(self.loop_counter))
                 if not self.initialized:
                     self.initialized = True
                     self.put(StartUpEvent())
 
-            if not self.loop_counter % (3 * self.heartbeat / self.loop_sleep):
+            if not self.loop_counter % (3 * settings.HEARTBEAT / settings.LOOP_SLEEP):
                 self.check_connection()
 
     def check_connection(self):
@@ -100,7 +98,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         while not self.fxcm.is_connected() and count < retry:
             self.fxcm.__reconnect__(count)
             count += 1
-            time.sleep(self.heartbeat)
+            time.sleep(settings.HEARTBEAT)
         else:
             if not self.fxcm.is_connected():
                 logger.error('[System Exit] Cant connect to server')

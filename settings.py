@@ -29,6 +29,9 @@ PRICE_CHANNEL = 15
 SYSTEM_CHANNEL = 14
 ORDER_CHANNEL = 12
 
+LOOP_SLEEP = 0.5
+HEARTBEAT = 5
+
 try:
     from local import *
 except ImportError:
