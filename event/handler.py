@@ -211,7 +211,7 @@ class PriceAlertHandler(BaseHandler):
                 msg = '%s up corss %s = %s' % (symbol, resistance_level, price)
                 logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
-                price_redis.delete(key)
+                self.remove(key)
 
         for support_level in self.support_suffix:
             key = '%s%s' % (symbol, support_level)
@@ -224,7 +224,11 @@ class PriceAlertHandler(BaseHandler):
                 msg = '%s down corss %s = %s' % (symbol, support_level, price)
                 logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
-                price_redis.delete(key)
+                self.remove(key)
+
+    def remove(self, key):
+        price_redis.delete(key)
+        self.prices.pop(key)
 
     def reset_rs(self, event):
         # todo reset resistance and support

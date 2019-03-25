@@ -60,7 +60,8 @@ class HLHBTrendStrategy(StrategyBase):
         rsi = ta.RSI(mean, timeperiod=rsi)
         # upper, middle, lower = ta.BBANDS(h1_candles['close'], matype=MA_Type.T3)
 
-        self.open(symbol, ema_short, ema_long, adx, rsi)
+        if self.can_open():
+            self.open(symbol, ema_short, ema_long, adx, rsi)
         self.close(symbol, ema_short, ema_long, adx, rsi)
 
     def check_trade_exist(self, instrument, side):
@@ -72,10 +73,8 @@ class HLHBTrendStrategy(StrategyBase):
         return False
 
     def open(self, symbol, ema_short, ema_long, adx, rsi):
-        logger.info('%s@%s param=%0.5f, %0.5f, %0.2f, %0.2f' % (self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
-
-        if not self.can_open():
-            return
+        logger.info('%s@%s param=%0.5f, %0.5f, %0.2f, %0.2f' % (
+        self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
 
         if adx[-1] <= 25:
             return

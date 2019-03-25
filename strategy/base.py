@@ -42,13 +42,10 @@ class StrategyBase(BaseHandler, QueueBase):
         raise NotImplementedError
 
     def can_open(self):
-        if not is_market_open():
-            return False
-
         now = datetime.utcnow()
         if now.weekday() not in self.weekdays:
             return False
-        if now.hour not in self.weekdays:
+        if now.hour not in self.hours:
             return False
         return True
 
