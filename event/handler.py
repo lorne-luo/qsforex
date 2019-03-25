@@ -108,7 +108,7 @@ class HeartBeatHandler(BaseHandler):
         if not event.counter % 720:
             last_tick = get_last_tick()
             logger.info('[HeartBeatHandler] %s, last_tick=%s' % (event.time.strftime('%Y-%m-%d %H:%M:%S:%f'),
-                                                                 last_tick.strftime('%Y-%m-%d %H:%M:%S:%f')))
+                                                                 last_tick))
 
 
 class TimeFrameTicker(BaseHandler):
@@ -206,7 +206,7 @@ class PriceAlertHandler(BaseHandler):
                 continue
 
             price = Decimal(str(resistance))
-            if not resistance.get('passed') and event.bid > price:
+            if event.bid > price:
                 msg = '%s down corss %s = %s' % (symbol, resistance_level, price)
                 send_to_admin(msg)
                 price_redis.delete(key)
@@ -218,7 +218,7 @@ class PriceAlertHandler(BaseHandler):
                 continue
 
             price = Decimal(str(support))
-            if not support.get('passed') and event.ask < price:
+            if event.ask < price:
                 msg = '%s down corss %s = %s' % (symbol, support_level, price)
                 send_to_admin(msg)
                 price_redis.delete(key)
