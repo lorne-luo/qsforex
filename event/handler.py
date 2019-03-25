@@ -99,13 +99,13 @@ class HeartBeatHandler(BaseHandler):
     subscription = [HeartBeatEvent.type]
 
     def process(self, event):
-        if not event.counter % 10:
+        if not event.counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
             if settings.DEBUG:
                 print('HeartBeat: %s' % datetime.now())
             else:
                 system_redis.set('HEARTBEAT', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
-        if not event.counter % 720:
+        if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             last_tick = get_last_tick()
             logger.info('[HeartBeatHandler] %s, last_tick=%s' % (event.time.strftime('%Y-%m-%d %H:%M:%S:%f'),
                                                                  last_tick))
@@ -179,6 +179,7 @@ class PriceAlertHandler(BaseHandler):
         super(PriceAlertHandler, self).__init__(queue)
         if instruments:
             self.instruments = [get_mt4_symbol(ins) for ins in instruments]
+        self.update_price()
 
     def process(self, event):
         if event.type == TickPriceEvent.type:
@@ -188,7 +189,7 @@ class PriceAlertHandler(BaseHandler):
             if event.timeframe == PERIOD_D1:
                 self.reset_rs(event)
         elif event.type == HeartBeatEvent.type:
-            if not event.counter % 10:
+            if not event.counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
                 self.update_price()
 
     def update_price(self):
@@ -207,7 +208,8 @@ class PriceAlertHandler(BaseHandler):
 
             price = Decimal(str(resistance))
             if event.bid > price:
-                msg = '%s down corss %s = %s' % (symbol, resistance_level, price)
+                msg = '%s up corss %s = %s' % (symbol, resistance_level, price)
+                logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
                 price_redis.delete(key)
 
@@ -220,6 +222,7 @@ class PriceAlertHandler(BaseHandler):
             price = Decimal(str(support))
             if event.ask < price:
                 msg = '%s down corss %s = %s' % (symbol, support_level, price)
+                logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
                 price_redis.delete(key)
 
