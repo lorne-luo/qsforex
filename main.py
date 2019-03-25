@@ -4,7 +4,8 @@ from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.streaming import FXCMStreamRunner
 from event.event import TickPriceEvent
-from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler, HeartBeatHandler
+from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler, HeartBeatHandler, \
+    PriceAlertHandler
 from execution.execution import BrokerExecutionHandler
 from strategy.hlhb_trend import HLHBTrendStrategy
 from utils.price_density import PriceDensityHandler
@@ -28,9 +29,11 @@ price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
 fxcm_execution = BrokerExecutionHandler(queue, fxcm)
 debug = DebugHandler(queue, fxcm)
+price_alert = PriceAlertHandler(None, instruments=pairs)
 
 runner = FXCMStreamRunner(queue,
                           pairs=pairs,
                           api=fxcm.fxcmpy,
-                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug, heartbeat_handler])
+                          handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug,
+                                    heartbeat_handler, price_alert])
 runner.run()

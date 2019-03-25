@@ -169,54 +169,59 @@ pass
 
 
 class PriceAlertHandler(BaseHandler):
-    subscription = [TickPriceEvent.type, TimeFrameEvent.type]
-    resistance_suffix = ['R1', 'R2', 'R3', 'CR1', 'CR2', 'CR3']
-    support_suffix = ['S1', 'S2', 'S3', 'CS1', 'CS2', 'CS3']
+    subscription = [TickPriceEvent.type, TimeFrameEvent.type, HeartBeatEvent.type]
+    resistance_suffix = ['R1', 'R2', 'R3', 'R']
+    support_suffix = ['S1', 'S2', 'S3', 'S']
+    instruments = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'NZDUSD', 'XAUUSD']
+    prices = {}
+
+    def __init__(self, queue, account=None, instruments=None, *args, **kwargs):
+        super(PriceAlertHandler, self).__init__(queue)
+        if instruments:
+            self.instruments = [get_mt4_symbol(ins) for ins in instruments]
 
     def process(self, event):
         if event.type == TickPriceEvent.type:
-            self.price_alert(event)
+            if event.instrument in self.instruments:
+                self.price_alert(event)
         elif event.type == TimeFrameEvent.type:
             if event.timeframe == PERIOD_D1:
                 self.reset_rs(event)
+        elif event.type == HeartBeatEvent.type:
+            if not event.counter % 10:
+                self.update_price()
+
+    def update_price(self):
+        for ins in self.instruments:
+            for suffix in self.resistance_suffix + self.support_suffix:
+                key = '%s_%s' % (ins, suffix)
+                self.prices[key] = price_redis.get(key)
 
     def price_alert(self, event):
         symbol = get_mt4_symbol(event.instrument)
         for resistance_level in self.resistance_suffix:
             key = '%s_%s' % (symbol, resistance_level)
-            resistance = price_redis.get(key)
+            resistance = self.prices.get(key)
             if not resistance:
                 continue
-            resistance = json.loads(resistance)
 
-            price = resistance.get('price')
-            if not price:
-                continue
-
-            price = Decimal(str(price))
+            price = Decimal(str(resistance))
             if not resistance.get('passed') and event.bid > price:
                 msg = '%s down corss %s = %s' % (symbol, resistance_level, price)
                 send_to_admin(msg)
-                resistance['passed'] = True
-                price_redis.set(key, json.dumps(resistance))
+                price_redis.delete(key)
 
         for support_level in self.support_suffix:
             key = '%s%s' % (symbol, support_level)
-            support = price_redis.get(key)
+            support = self.prices.get(key)
             if not support:
                 continue
 
-            support = json.loads(support)
-            price = support.get('price')
-            if not price:
-                continue
-
-            price = Decimal(str(support.get('price')))
+            price = Decimal(str(support))
             if not support.get('passed') and event.ask < price:
                 msg = '%s down corss %s = %s' % (symbol, support_level, price)
                 send_to_admin(msg)
-                support['passed'] = True
-                price_redis.set(key, json.dumps(support))
+                price_redis.delete(key)
 
     def reset_rs(self, event):
         # todo reset resistance and support
