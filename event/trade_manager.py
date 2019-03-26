@@ -68,6 +68,7 @@ class TradeManageHandler(BaseHandler):
             trade['profitable_seconds'] = 0
             trade['last_profitable_start'] = None
             trade['last_tick_time'] = None
+            trade['start_from'] = datetime.utcnow()
 
             self.trades[trade_id] = trade
 
@@ -84,7 +85,7 @@ class TradeManageHandler(BaseHandler):
         close_price = event.close_price
         max = trade.get('max')
         min = trade.get('min')
-        profit_pips = profit_pip(trade.get('instrument'), trade.get('open_price'), close_price, trade.get('side'))
+        profit_pips = event.pips or profit_pip(trade.get('instrument'), trade.get('open_price'), close_price, trade.get('side'))
         profit_missed = max - profit_pips
         trade['profit_missed'] = profit_missed
         trade['entry_accuracy'] = round(1 - (abs(min) / (max - min)), 3)
@@ -97,15 +98,15 @@ class TradeManageHandler(BaseHandler):
         logger.info('[Trade_Manage] trade closed=%s' % trade)
 
     def heartbeat(self, event):
-        if not event.counter % (60 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+        if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             if settings.DEBUG:
                 print(self.trades)
             else:
                 for trade_id, trade in self.trades.items():
-                    total_time = datetime.utcnow() - trade['open_time']
+                    total_time = datetime.utcnow() - trade['start_from']
                     trade['profitable_time'] = round(trade['profitable_seconds'] - total_time.seconds, 3)
                     logger.info(
-                        '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s,profitable_time=%s, last_tick=%s' % (
+                        '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
                             trade_id, trade['max'], trade['min'], trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
                 # todo save into redis
@@ -130,7 +131,8 @@ class TradeManageHandler(BaseHandler):
                     'min': 0,
                     'profitable_seconds': 0,
                     'last_profitable_start': None,
-                    'last_tick_time': None
+                    'last_tick_time': None,
+                    'start_from': datetime.utcnow()
                 }
 
         else:
