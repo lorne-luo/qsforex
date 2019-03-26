@@ -138,12 +138,12 @@ class TickPriceEvent(Event):
     type = EventType.TICK_PRICE
 
     def __init__(self, broker, instrument, time, bid, ask):
+        super(TickPriceEvent, self).__init__()
         self.broker = broker
         self.instrument = instrument
         self.time = time
         self.bid = bid
         self.ask = ask
-        super(TickPriceEvent, self).__init__()
 
     def __str__(self):
         return "Type: %s, Instrument: %s, Time: %s, Bid: %s, Ask: %s" % (
@@ -207,7 +207,7 @@ class OrderHoldingEvent(Event):
 
 
 class TradeCloseEvent(Event):
-    type = EventType.ORDER_CLOSED
+    type = EventType.ORDER_CLOSE
 
     def __init__(self, broker, account_id, order_id, instrument, lots, profit, pips, close_time, close_price):
         self.broker = broker

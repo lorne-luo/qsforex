@@ -200,6 +200,17 @@ def pip(symbol, price=None, abs=False):
     return pip_unit
 
 
+def profit_pip(symbol, open, close, side, abs=False):
+    open = Decimal(str(open))
+    close = Decimal(str(close))
+    if side == OrderSide.BUY:
+        profit = close - open
+    else:
+        profit = open - close
+
+    return pip(symbol, profit)
+
+
 def calculate_price(base_price, side, pip, instrument):
     instrument = get_mt4_symbol(instrument)
     pip_unit = pip(instrument)
