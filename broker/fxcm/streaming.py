@@ -83,6 +83,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.fxcm.close()
                 time.sleep(5)
                 self.fxcm.connect()
+                self.subscribe_pair()
                 logger.info('[Check_Connection] Closed and Reconnected')
             except Exception as ex:
                 logger.error('[Check_Connection] %s' % ex)
