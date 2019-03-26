@@ -64,14 +64,6 @@ class HLHBTrendStrategy(StrategyBase):
             self.open(symbol, ema_short, ema_long, adx, rsi)
         self.close(symbol, ema_short, ema_long, adx, rsi)
 
-    def check_trade_exist(self, instrument, side):
-        instrument = get_fxcm_symbol(instrument)
-        is_buy = side == OrderSide.BUY
-        for id, trade in self.account.get_trades():
-            if trade.get_currency() == instrument and is_buy == trade.get_isBuy():
-                return True
-        return False
-
     def open(self, symbol, ema_short, ema_long, adx, rsi):
         if adx[-1] <= 25:
             return
@@ -99,11 +91,3 @@ class HLHBTrendStrategy(StrategyBase):
 
     def close(self, symbol, ema_short, ema_long, adx, rsi):
         pass
-
-    def send_event(self, event):
-        if event.action == SignalAction.OPEN:
-            if self.check_trade_exist(event.instrument, event.side):
-                logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
-                return
-
-        super(HLHBTrendStrategy, self).send_event(event)

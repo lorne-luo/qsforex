@@ -9,9 +9,11 @@ import oandapyV20
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.contrib.requests import MarketOrderRequest
 
+from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction, TradeOpenEvent
 from event.handler import BaseHandler
+from mt4.constants import OrderSide
 from utils.time import str_to_datetime
 
 logger = logging.getLogger(__name__)
@@ -67,6 +69,11 @@ class SimulatedExecution(object):
 class FXCMExecutionHandler(BaseExecutionHandler):
 
     def open(self, event):
+        # check order exist
+        if self.check_trade_exist(event.instrument, event.side):
+            logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
+            return
+
         # check spread
         lots = self.account.get_lots(event.instrument)
         success, trade = self.account.market_order(event.instrument,
@@ -108,6 +115,15 @@ class FXCMExecutionHandler(BaseExecutionHandler):
             self.account.update_trade(event.trade_id, is_stop=False, rate=event.take_profit, is_in_pips=True)
 
         logger.info('[ORDER_UPDATE] event = %s' % event.__dict__)
+
+    def check_trade_exist(self, instrument, side):
+        instrument = get_fxcm_symbol(instrument)
+        is_buy = side == OrderSide.BUY
+        for id, trade in self.account.get_trades():
+            trade_instrument = get_fxcm_symbol(trade.get_currency())
+            if trade_instrument == instrument and is_buy == trade.get_isBuy():
+                return True
+        return False
 
 
 class OANDAExecutionHandler(BaseExecutionHandler):

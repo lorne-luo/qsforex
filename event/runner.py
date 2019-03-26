@@ -45,7 +45,7 @@ class Runner(QueueBase):
             logger.error('[EVENT_PROCESS] %s, event=%s' % (ex, event.__dict__))
             # print trace stack
             extracted_list = traceback.extract_tb(ex.__traceback__)
-            for item in traceback.StackSummary.from_list(extracted_list).format()[:6]:
+            for item in traceback.StackSummary.from_list(extracted_list).format()[:8]:
                 logger.error(item.strip())
 
     def print(self):
