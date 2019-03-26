@@ -63,7 +63,7 @@ class SimulatedExecution(object):
         pass
 
 
-class BrokerExecutionHandler(BaseExecutionHandler):
+class FXCMExecutionHandler(BaseExecutionHandler):
 
     def open(self, event):
         # check spread

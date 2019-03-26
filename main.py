@@ -6,7 +6,7 @@ from broker.fxcm.streaming import FXCMStreamRunner
 from event.event import TickPriceEvent
 from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler, HeartBeatHandler, \
     PriceAlertHandler
-from execution.execution import BrokerExecutionHandler
+from execution.execution import FXCMExecutionHandler
 from strategy.hlhb_trend import HLHBTrendStrategy
 from utils.price_density import PriceDensityHandler
 from utils.redis import RedisQueue
@@ -27,7 +27,7 @@ timeframe_ticker = TimeFrameTicker(queue, timezone=0)
 heartbeat_handler = HeartBeatHandler(queue)
 price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
-fxcm_execution = BrokerExecutionHandler(queue, fxcm)
+fxcm_execution = FXCMExecutionHandler(queue, fxcm)
 debug = DebugHandler(queue, fxcm)
 price_alert = PriceAlertHandler(None, instruments=pairs)
 

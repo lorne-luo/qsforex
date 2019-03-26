@@ -100,10 +100,7 @@ class HeartBeatHandler(BaseHandler):
 
     def process(self, event):
         if not event.counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
-            if settings.DEBUG:
-                print('HeartBeat: %s' % datetime.now())
-            else:
-                system_redis.set('HEARTBEAT', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
+            system_redis.set('HEARTBEAT', datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
         if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             last_tick = get_last_tick()
