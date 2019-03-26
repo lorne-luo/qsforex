@@ -7,6 +7,7 @@ from decimal import Decimal
 from fxcmpy import fxcmpy, fxcmpy_closed_position
 
 import settings
+from utils.redis import price_redis
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol
