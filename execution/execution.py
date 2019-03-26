@@ -10,8 +10,9 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.contrib.requests import MarketOrderRequest
 
 from broker.oanda.common.convertor import get_symbol
-from event.event import SignalEvent, SignalAction
+from event.event import SignalEvent, SignalAction, TradeOpenEvent
 from event.handler import BaseHandler
+from utils.time import str_to_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -68,15 +69,29 @@ class FXCMExecutionHandler(BaseExecutionHandler):
     def open(self, event):
         # check spread
         lots = self.account.get_lots(event.instrument)
-        self.account.market_order(event.instrument,
-                                  event.side,
-                                  lots,
-                                  take_profit=event.take_profit,
-                                  stop_loss=event.stop_loss,
-                                  trailing_pip=event.trailing_stop)
+        success, trade = self.account.market_order(event.instrument,
+                                                   event.side,
+                                                   lots,
+                                                   take_profit=event.take_profit,
+                                                   stop_loss=event.stop_loss,
+                                                   trailing_pip=event.trailing_stop)
         event_dict = event.__dict__.copy()
         event_dict.pop('time')
-        logger.info('[TRADE_OPEN] event = %s' % event_dict)
+        if success:
+            logger.info('[TRADE_OPEN] event = %s' % event_dict)
+            open_time = str_to_datetime(trade.get_time(), '%Y-%m-%d %H:%M:%S')
+            open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
+
+            event = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
+                                   trade_id=int(trade.get_tradeId()), lots=event.lots,
+                                   instrument=event.instrument, side=event.side, open_time=open_time,
+                                   open_price=open_price,
+                                   stop_loss=trade.get_stopRate(),
+                                   take_profit=trade.get_limitRate())
+            self.put(event)
+        else:
+            logger.info('[TRADE_OPEN] event = %s' % event_dict)
+            logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
 
     def close(self, event):
         closed_trade = self.account.close_symbol(event.instrument, event.side, event.percent)

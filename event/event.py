@@ -29,8 +29,8 @@ class EventType(object):
     SIGNAL = 'SIGNAL'
     ORDER_CLOSE = 'ORDER_CLOSE'
     ORDER_HOLDING = 'ORDER_HOLDING'
-    ORDER_OPENED = 'ORDER_OPENED'
-    ORDER_CLOSED = 'ORDER_CLOSED'
+    TRADE_OPEN = 'TRADE_OPEN'
+    TRADE_CLOSE = 'TRADE_CLOSE'
     ORDER = 'ORDER'
     MARKET_OPEN = 'MARKET_OPEN'
     MARKET_CLOSE = 'MARKET_CLOSE'
@@ -206,7 +206,7 @@ class OrderHoldingEvent(Event):
         super(OrderHoldingEvent, self).__init__()
 
 
-class OrderClosedEvent(Event):
+class TradeCloseEvent(Event):
     type = EventType.ORDER_CLOSED
 
     def __init__(self, broker, account_id, order_id, instrument, lots, profit, pips, close_time, close_price):
@@ -219,21 +219,25 @@ class OrderClosedEvent(Event):
         self.pips = pips
         self.close_time = close_time
         self.close_price = close_price
-        super(OrderClosedEvent, self).__init__()
+        super(TradeCloseEvent, self).__init__()
 
 
-class OrderOpenedEvent(Event):
-    type = EventType.ORDER_OPENED
+class TradeOpenEvent(Event):
+    type = EventType.TRADE_OPEN
 
-    def __init__(self, broker, account_id, order_id, instrument, lots, open_time, open_price):
+    def __init__(self, broker, account_id, trade_id, instrument, side, lots, open_time, open_price, stop_loss=None,
+                 take_profit=None):
         self.broker = broker
         self.account_id = account_id
-        self.order_id = order_id
+        self.trade_id = trade_id
         self.instrument = instrument
+        self.side = side
         self.lots = lots
         self.open_time = open_time
-        self.open_price = open_price
-        super(OrderOpenedEvent, self).__init__()
+        self.open_price = Decimal(str(open_price))
+        self.stop_loss = Decimal(str(stop_loss)) if stop_loss else None
+        self.take_profit = Decimal(str(take_profit)) if take_profit else None
+        super(TradeOpenEvent, self).__init__()
 
 
 class OrderEvent(Event):
