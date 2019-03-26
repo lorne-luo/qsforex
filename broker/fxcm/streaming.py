@@ -68,27 +68,22 @@ class FXCMStreamRunner(StreamRunnerBase):
                     self.initialized = True
                     self.put(StartUpEvent())
 
-            if not self.loop_counter % (3 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+            if not self.loop_counter % (12 * settings.HEARTBEAT / settings.LOOP_SLEEP):
                 self.check_connection()
 
     def check_connection(self):
         if not is_market_open():
             time.sleep(3600)
             return
-
-        # self.socket is not None and self.socket.connected and self.socket_thread.is_alive()
-        if self.fxcm.__disconnected__ or not self.fxcm.socket_thread.is_alive():
+        if not self.fxcm.is_connected():
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
-            try:
-                self.fxcm.connect()
-            except Exception as ex:
-                logger.error('[Check_Connection] %s' % ex)
 
-        elif not self.fxcm.is_connected():
-            logger.error('[Connect_Lost] is_connected=false')
             try:
-                self.reconnect()
+                self.fxcm.close()
+                time.sleep(5)
+                self.fxcm.connect()
+                logger.info('[Check_Connection] Closed and Reconnected')
             except Exception as ex:
                 logger.error('[Check_Connection] %s' % ex)
 
@@ -108,13 +103,11 @@ class FXCMStreamRunner(StreamRunnerBase):
 
     def process_connect_event(self, event):
         if event.action == 'CONNECT':
-            if self.fxcm.__disconnected__ or not self.fxcm.socket_thread.is_alive():
-                self.fxcm.connect()
-            elif not self.fxcm.is_connected():
-                self.reconnect()
+            self.fxcm.connect()
+        elif event.action == 'RECONNECT':
+            self.reconnect()
         elif event.action == 'DISCONNECT':
-            if self.fxcm.is_connected():
-                self.fxcm.close()
+            self.fxcm.close()
 
         logger.info('[ConnectEvent] %s' % event.action)
 
