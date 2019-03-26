@@ -73,13 +73,13 @@ class HLHBTrendStrategy(StrategyBase):
         return False
 
     def open(self, symbol, ema_short, ema_long, adx, rsi):
-        logger.info('%s@%s param=%0.5f, %0.5f, %0.2f, %0.2f' % (
-        self.name, symbol, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
-
         if adx[-1] <= 25:
             return
 
         side = check_cross(ema_short, ema_long, shift=0)
+        logger.info('%s@%s param=%s, %0.5f, %0.5f, %0.2f, %0.2f' % (
+            self.name, symbol, side, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
+
         event = None
         if side == OrderSide.BUY and 70 > rsi[-1] > 50:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
