@@ -4,7 +4,8 @@ from datetime import datetime
 import redis
 import settings
 
-LAST_TICK_TIME_KEY = "LAST_TICK_TIME"
+LAST_TICK_TIME_KEY = 'LAST_TICK_TIME'
+OPENING_TRADE_COUNT_KEY = 'OPENING_TRADE_COUNT'
 
 price_redis = redis.StrictRedis(host=settings.REDIS_HOST,
                                 port=settings.REDIS_PORT,

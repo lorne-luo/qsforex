@@ -6,6 +6,7 @@ import settings
 from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent
 from event.handler import BaseHandler
 from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
+from utils.redis import system_redis, OPENING_TRADE_COUNT_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,8 @@ class TradeManageHandler(BaseHandler):
         close_price = event.close_price
         max = trade.get('max')
         min = trade.get('min')
-        profit_pips = event.pips or profit_pip(trade.get('instrument'), trade.get('open_price'), close_price, trade.get('side'))
+        profit_pips = event.pips or profit_pip(trade.get('instrument'), trade.get('open_price'), close_price,
+                                               trade.get('side'))
         profit_missed = max - profit_pips
         trade['profit_missed'] = profit_missed
         trade['entry_accuracy'] = round(1 - (abs(min) / (max - min)), 3)
@@ -109,7 +111,7 @@ class TradeManageHandler(BaseHandler):
                         '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
                             trade_id, trade['max'], trade['min'], trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
-                # todo save into redis
+                system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
 
     def load_trades(self):
         logger.info('[Trade_Manage] loading trades.')
