@@ -5,6 +5,7 @@ from decimal import Decimal
 from dateparser import parse
 
 from broker.oanda.common.constants import OrderType
+from mt4.constants import get_mt4_symbol
 
 
 class SignalAction(object):
@@ -209,16 +210,16 @@ class OrderHoldingEvent(Event):
 class TradeCloseEvent(Event):
     type = EventType.ORDER_CLOSE
 
-    def __init__(self, broker, account_id, order_id, instrument, lots, profit, pips, close_time, close_price):
+    def __init__(self, broker, account_id, trade_id, instrument, lots, profit, close_time, close_price, pips=None):
         self.broker = broker
         self.account_id = account_id
-        self.order_id = order_id
-        self.instrument = instrument
+        self.trade_id = trade_id
+        self.instrument = get_mt4_symbol(instrument)
         self.lots = lots
-        self.profit = profit
-        self.pips = pips
-        self.close_time = close_time
-        self.close_price = close_price
+        self.profit = Decimal(str(profit))
+        self.close_time = Decimal(str(close_time))
+        self.close_price = Decimal(str(close_price))
+        self.pips = Decimal(str(pips))
         super(TradeCloseEvent, self).__init__()
 
 
@@ -230,7 +231,7 @@ class TradeOpenEvent(Event):
         self.broker = broker
         self.account_id = account_id
         self.trade_id = trade_id
-        self.instrument = instrument
+        self.instrument = get_mt4_symbol(instrument)
         self.side = side
         self.lots = lots
         self.open_time = open_time

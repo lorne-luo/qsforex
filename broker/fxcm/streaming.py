@@ -5,13 +5,13 @@ import time
 from datetime import datetime
 from decimal import Decimal
 
-from fxcmpy import fxcmpy
+from fxcmpy import fxcmpy, fxcmpy_closed_position
 
 import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
-from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent
+from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
 from utils.market import is_market_open
@@ -130,6 +130,8 @@ class FXCMStreamRunner(StreamRunnerBase):
             self.fxcm.subscribe_market_data(pair, (self.tick_data,))
             self.fxcm.subscribe_instrument(pair)
 
+        self.fxcm.subscribe_data_model('ClosedPosition', [self.trade_closed])
+
     def subscribe_data(self):
         # all_models['Offer', 'Account', 'Order', 'OpenPosition', 'ClosedPosition', 'Summary', 'Properties', 'LeverageProfile']
         models = ['Account', 'Order', 'OpenPosition', 'Summary']
@@ -173,6 +175,26 @@ class FXCMStreamRunner(StreamRunnerBase):
     def stop(self):
         self.fxcm.close()
         super(FXCMStreamRunner, self).stop()
+
+    def trade_closed(self, data):
+        # fixme should not be here
+        if 'tradeId' in data and data['tradeId'] != '':
+            trade_id = int(data['tradeId'])
+            if 'action' in data and data['action'] == 'I':
+                closed_trade = fxcmpy_closed_position(self, data)
+
+                event = TradeCloseEvent(
+                    broker=self.broker,
+                    account_id=self.fxcm.default_account,
+                    trade_id=trade_id,
+                    instrument=closed_trade.get_currency(),
+                    lots=closed_trade.get_amount(),
+                    profit=closed_trade.get_grossPL(),
+                    close_time=closed_trade.get_close_time(),
+                    close_price=closed_trade.get_close(),
+                    pips=closed_trade.get_visiblePL(),
+                )
+                self.put(event)
 
 
 if __name__ == '__main__':
