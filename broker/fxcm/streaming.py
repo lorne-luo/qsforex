@@ -1,6 +1,5 @@
 import json
 import logging
-import threading
 import time
 from datetime import datetime
 from decimal import Decimal
@@ -10,12 +9,12 @@ from fxcmpy import fxcmpy, fxcmpy_closed_position
 import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
-from broker.fxcm.constants import get_fxcm_symbol, ALL_SYMBOLS, FXCM_CONFIG
+from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol
 from utils.market import is_market_open
-from utils.redis import price_redis, RedisQueue, set_last_tick
+from utils.redis import set_last_tick
 from utils.telstra_api_v2 import send_to_admin
 
 logger = logging.getLogger(__name__)
@@ -39,6 +38,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.market_open = is_market_open()
 
     def run(self):
+        logger.info('\n')
         logger.info('%s statup.' % self.__class__.__name__)
         logger.info('Registered handler: %s' % ', '.join([x.__class__.__name__ for x in self.handlers]))
 
@@ -78,15 +78,16 @@ class FXCMStreamRunner(StreamRunnerBase):
         if not self.fxcm.is_connected():
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
+            self.reconnect()
+            time.sleep(settings.HEARTBEAT)
 
-            try:
+            if not self.fxcm.is_connected():
+                # close and connect again
                 self.fxcm.close()
                 time.sleep(5)
                 self.fxcm.connect()
                 self.subscribe_pair()
                 logger.info('[Check_Connection] Closed and Reconnected')
-            except Exception as ex:
-                logger.error('[Check_Connection] %s' % ex)
 
     def reconnect(self):
         retry = 11
