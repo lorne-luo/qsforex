@@ -19,7 +19,6 @@ from broker.oanda.streaming import OandaV20StreamRunner
 from event.event import HeartBeatEvent, TickPriceEvent
 from broker.oanda.common.convertor import get_symbol
 from event.runner import StreamRunnerBase
-from settings import OANDA_ENVIRONMENTS
 
 logger = logging.getLogger(__name__)
 

@@ -21,7 +21,6 @@ from broker.oanda.account import OANDA
 from broker.oanda.base import SingletonAPIContext
 from broker.oanda.common.constants import OrderType
 from broker.oanda.common.convertor import lots_to_units, get_symbol, units_to_lots
-from settings import OANDA_ENVIRONMENTS
 
 
 class Portfolio(object):
