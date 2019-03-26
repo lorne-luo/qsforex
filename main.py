@@ -6,6 +6,7 @@ from broker.fxcm.streaming import FXCMStreamRunner
 from event.event import TickPriceEvent
 from event.handler import DebugHandler, TimeFrameTicker, TimeFrameEvent, TickPriceHandler, HeartBeatHandler, \
     PriceAlertHandler
+from event.trade_manager import TradeManageHandler
 from execution.execution import FXCMExecutionHandler
 from strategy.hlhb_trend import HLHBTrendStrategy
 from utils.price_density import PriceDensityHandler
@@ -28,6 +29,7 @@ heartbeat_handler = HeartBeatHandler(queue)
 price_density = PriceDensityHandler(queue, fxcm, pairs)
 hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
 fxcm_execution = FXCMExecutionHandler(queue, fxcm)
+trade_manage = TradeManageHandler(queue, fxcm)
 debug = DebugHandler(queue, fxcm)
 price_alert = PriceAlertHandler(None, instruments=pairs)
 
@@ -35,5 +37,5 @@ runner = FXCMStreamRunner(queue,
                           pairs=pairs,
                           api=fxcm.fxcmpy,
                           handlers=[timeframe_ticker, hlhb_trend_strategy, fxcm_execution, price_density, debug,
-                                    heartbeat_handler, price_alert])
+                                    heartbeat_handler, price_alert, trade_manage])
 runner.run()

@@ -79,7 +79,7 @@ class FXCMExecutionHandler(BaseExecutionHandler):
         event_dict.pop('time')
         if success:
             logger.info('[TRADE_OPEN] event = %s' % event_dict)
-            open_time = str_to_datetime(trade.get_time(), '%Y-%m-%d %H:%M:%S')
+            open_time = trade.get_time()
             open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
 
             event = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,

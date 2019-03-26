@@ -1,0 +1,141 @@
+import logging
+from datetime import timedelta, datetime
+from decimal import Decimal
+
+import settings
+from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent
+from event.handler import BaseHandler
+from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
+
+logger = logging.getLogger(__name__)
+
+
+class TradeManageHandler(BaseHandler):
+    subscription = [TickPriceEvent.type, TradeOpenEvent.type, TradeCloseEvent.type, StartUpEvent.type,
+                    HeartBeatEvent.type]
+    trades = {}
+
+    def process(self, event):
+        if event.type == TickPriceEvent.type:
+            self.process_price(event)
+        elif event.type == TickPriceEvent.type:
+            self.trade_open(event)
+        elif event.type == TickPriceEvent.type:
+            self.trade_close(event)
+        elif event.type == StartUpEvent.type:
+            self.load_trades()
+        elif event.type == HeartBeatEvent.type:
+            self.heartbeat(event)
+
+    def get_trade(self, trade_id):
+        trade_id = str(trade_id)
+        return self.trades.get(trade_id)
+
+    def pop_trade(self, trade_id):
+        trade_id = str(trade_id)
+        return self.trades.pop(trade_id, None)
+
+    def process_price(self, event):
+        for trade_id, trade in self.trades.items():
+            if trade.get('instrument') == event.instrument:
+                self.process_trade(trade, event)
+
+    def process_trade(self, trade, event):
+        price = event.bid if trade['side'] == OrderSide.BUY else event.ask
+        profit_pips = profit_pip(event.instrument, trade.get('open_price'), price, trade.get('side'))
+        if profit_pips > trade['max']:
+            trade['max'] = profit_pips
+        if profit_pips < trade['min']:
+            trade['min'] = profit_pips
+
+        if profit_pips >= 0:
+            if not trade['last_profitable_start']:
+                trade['last_profitable_start'] = datetime.utcnow()
+        else:
+            if trade['last_profitable_start']:
+                delta = datetime.utcnow() - trade['last_profitable_start']
+                trade['profitable_seconds'] += delta.seconds
+                trade['last_profitable_start'] = None
+
+        trade['last_tick_time'] = event.time
+
+    def trade_open(self, event):
+        trade_id = str(event.trade_id)
+        if trade_id not in self.trades:
+            trade = event.to_dict().copy()
+            trade['max'] = 0
+            trade['min'] = 0
+            trade['profitable_seconds'] = 0
+            trade['last_profitable_start'] = None
+            trade['last_tick_time'] = None
+
+            self.trades[trade_id] = trade
+
+    def trade_close(self, event):
+        trade = self.pop_trade(event.trade_id)
+        if not trade:
+            logger.error('[Trade_Manage] Trade closed with no data in trade manager.')
+            return
+        # entry accuracy= 1 - min / (max-min)
+        # exit accuracy= 1 - profit missed / (max-min)
+        # risk:reward= 1: max/-min or 1:max
+
+        close_time = event.close_time
+        close_price = event.close_price
+        max = trade.get('max')
+        min = trade.get('min')
+        profit_pips = profit_pip(trade.get('instrument'), trade.get('open_price'), close_price, trade.get('side'))
+        profit_missed = max - profit_pips
+        trade['profit_missed'] = profit_missed
+        trade['entry_accuracy'] = round(1 - (abs(min) / (max - min)), 3)
+        trade['exit_accuracy'] = round(1 - (profit_missed / (max - min)), 3)
+        trade['risk'] = round(max / abs(min), 3) if min else max
+        # trade['drawdown'] =
+
+        trade['profitable_time'] = round(trade['profitable_seconds'] / (close_time - trade['open_time']).seconds, 3)
+
+        logger.info('[Trade_Manage] trade closed=%s' % trade)
+
+    def heartbeat(self, event):
+        if not event.counter % (60 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+            if settings.DEBUG:
+                print(self.trades)
+            else:
+                for trade_id, trade in self.trades.items():
+                    total_time = datetime.utcnow() - trade['open_time']
+                    trade['profitable_time'] = round(trade['profitable_seconds'] - total_time.seconds, 3)
+                    logger.info(
+                        '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s,profitable_time=%s, last_tick=%s' % (
+                            trade_id, trade['max'], trade['min'], trade['last_profitable_start'],
+                            trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
+                # todo save into redis
+
+    def load_trades(self):
+        logger.info('[Trade_Manage] loading trades.')
+        if self.account.broker == 'FXCM':
+            for trade_id, trade in self.account.get_trades().items():
+                if str(trade_id) in self.trades:
+                    continue
+                self.trades[str(trade_id)] = {
+                    'broker': self.account.broker,
+                    'account_id': self.account.account_id,
+                    'trade_id': trade.get_tradeId(),
+                    'instrument': get_mt4_symbol(trade.get_currency()),
+                    'side': OrderSide.BUY if trade.get_isBuy() else OrderSide.SELL,
+                    'open_time': trade.get_time(),
+                    'open_price': Decimal(str(trade.get_open())),
+                    'take_profit': Decimal(str(trade.get_limit())),
+                    'stop_loss': Decimal(str(trade.get_stop())),
+                    'max': 0,
+                    'min': 0,
+                    'profitable_seconds': 0,
+                    'last_profitable_start': None,
+                    'last_tick_time': None
+                }
+
+        else:
+            raise NotImplementedError
+
+        if settings.DEBUG:
+            if self.trades:
+                print(self.trades)
