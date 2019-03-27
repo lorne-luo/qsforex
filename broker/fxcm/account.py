@@ -62,6 +62,10 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
         raise Exception('Cant get equity.')
 
     def get_lots(self, instrument, stop_loss_pips=None, risk_ratio=Decimal('0.05')):
+        max_trade = 5
+        if len(self.get_trades() >= max_trade):
+            return 0
+
         equity = self.get_equity()
         if not stop_loss_pips:
             return equity / 1000 * Decimal('0.1')
@@ -76,12 +80,13 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
             price = self.get_price(instrument)
             value = value * price
         elif instrument.upper().startswith('USD'):
-            return equity / 1000 * Decimal('0.1')
+            lots = equity / 1000 * Decimal('0.1')
+            return lots.quantize(Decimal("0.01"))
         else:
             # cross pair
             raise NotImplementedError
         units = int(value / 100) * 100
-        return units_to_lots(units).quantize(Decimal("0.001"))
+        return units_to_lots(units).quantize(Decimal("0.01"))
 
     def log_account(self):
         logger.info('[LOG_ACCOUNT]')

@@ -16,7 +16,7 @@ def get_symbol(symbol):
 
 def lots_to_units(lot, side=OrderSide.BUY):
     try:
-        lot = Decimal(str(lot))
+        lot = Decimal(str(lot)).quantize(Decimal('0.01'))
     except:
         return None
 
