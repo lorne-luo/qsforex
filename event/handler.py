@@ -215,7 +215,7 @@ class PriceAlertHandler(BaseHandler):
                 self.remove(key)
 
         for support_level in self.support_suffix:
-            key = '%s%s' % (symbol, support_level)
+            key = '%s_%s' % (symbol, support_level)
             support = self.prices.get(key)
             if not support:
                 continue
@@ -232,5 +232,11 @@ class PriceAlertHandler(BaseHandler):
         self.prices.pop(key)
 
     def reset_rs(self, event):
-        # todo reset resistance and support
-        pass
+        suffix = self.resistance_suffix + self.support_suffix
+        suffix.remove('R')
+        suffix.remove('S')
+        for instrument in self.instruments:
+            for su in suffix:
+                key = '%s_%s' % (instrument, su)
+                self.remove(key)
+                # todo reset resistance and support

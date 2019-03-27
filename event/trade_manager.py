@@ -73,6 +73,8 @@ class TradeManageHandler(BaseHandler):
 
             self.trades[trade_id] = trade
 
+        system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
+
     def trade_close(self, event):
         trade = self.pop_trade(event.trade_id)
         if not trade:
@@ -106,7 +108,7 @@ class TradeManageHandler(BaseHandler):
             else:
                 for trade_id, trade in self.trades.items():
                     total_time = datetime.utcnow() - trade['start_from']
-                    trade['profitable_time'] = round(trade['profitable_seconds'] - total_time.seconds, 3)
+                    trade['profitable_time'] = round(trade['profitable_seconds'] / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
                             trade_id, trade['max'], trade['min'], trade['last_profitable_start'],
