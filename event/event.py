@@ -156,9 +156,9 @@ class TickPriceEvent(Event):
 class SignalEvent(Event):
     type = EventType.SIGNAL
 
-    def __init__(self, action, strategy_name, version, magic_number, instrument, side, order_type=OrderType.MARKET,
-                 stop_loss=None,
-                 take_profit=None, trailing_stop=None, percent=None, trade_id=None):
+    def __init__(self, action, strategy_name, version, magic_number, instrument, side, price=None,
+                 stop_loss=None, take_profit=None, trailing_stop=None, percent=None, trade_id=None,
+                 order_type=OrderType.MARKET):
         self.action = action
         self.strategy = strategy_name
         self.version = version
@@ -166,6 +166,7 @@ class SignalEvent(Event):
         self.instrument = instrument
         self.order_type = order_type
         self.side = side
+        self.price = price
         self.stop_loss = stop_loss
         self.take_profit = take_profit
         self.trailing_stop = trailing_stop

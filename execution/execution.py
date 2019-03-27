@@ -10,6 +10,7 @@ import oandapyV20.endpoints.orders as orders
 from oandapyV20.contrib.requests import MarketOrderRequest
 
 from broker.fxcm.constants import get_fxcm_symbol
+from broker.oanda.common.constants import OrderType
 from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction, TradeOpenEvent
 from event.handler import BaseHandler
@@ -68,7 +69,17 @@ class SimulatedExecution(object):
 
 class FXCMExecutionHandler(BaseExecutionHandler):
 
+    def validate_event(self, event):
+        if event.order_type in [OrderType.LIMIT, OrderType.STOP]:
+            if not event.price:
+                logger.error('[Excution %s] do not have price' % event.order_type)
+                return False
+        return True
+
     def open(self, event):
+        if not self.validate_event(event):
+            return
+
         # check order exist
         if self.check_trade_exist(event.instrument, event.side):
             logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
@@ -76,21 +87,42 @@ class FXCMExecutionHandler(BaseExecutionHandler):
 
         # check spread
         lots = self.account.get_lots(event.instrument)
-        success, trade = self.account.market_order(event.instrument,
-                                                   event.side,
-                                                   lots,
-                                                   take_profit=event.take_profit,
-                                                   stop_loss=event.stop_loss,
-                                                   trailing_pip=event.trailing_stop)
+
+        if not lots:
+            logger.warning('[TRADE_SKIP] reach max trades or not enough margin.')
+            return
+
+        if event.percent:
+            lots = lots * event.percent
+
+        if event.order_type == OrderType.MARKET:
+            success, trade = self.account.market_order(event.instrument, event.side, lots,
+                                                       take_profit=event.take_profit,
+                                                       stop_loss=event.stop_loss,
+                                                       trailing_pip=event.trailing_stop)
+        elif event.order_type == OrderType.LIMIT:
+            success, trade = self.account.limit_order(event.instrument, event.side, event.price, lots,
+                                                      take_profit=event.take_profit,
+                                                      stop_loss=event.stop_loss,
+                                                      trailing_pip=event.trailing_stop)
+        elif event.order_type == OrderType.STOP:
+            success, trade = self.account.stop_order(event.instrument, event.side, event.price, lots,
+                                                     take_profit=event.take_profit,
+                                                     stop_loss=event.stop_loss,
+                                                     trailing_pip=event.trailing_stop)
+        else:
+            return
+
         event_dict = event.__dict__.copy()
         event_dict.pop('time')
+        logger.info('[TRADE_OPEN] event = %s' % event_dict)
+
         if success:
-            logger.info('[TRADE_OPEN] event = %s' % event_dict)
             open_time = trade.get_time()
             open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
 
             event = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
-                                   trade_id=int(trade.get_tradeId()), lots=event.lots,
+                                   trade_id=int(trade.get_tradeId()), lots=lots,
                                    instrument=event.instrument, side=event.side, open_time=open_time,
                                    open_price=open_price,
                                    stop_loss=trade.get_stopRate(),
@@ -98,7 +130,6 @@ class FXCMExecutionHandler(BaseExecutionHandler):
                                    magic_number=event.magic_number)
             self.put(event)
         else:
-            logger.info('[TRADE_OPEN] event = %s' % event_dict)
             logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
 
     def close(self, event):
@@ -120,7 +151,9 @@ class FXCMExecutionHandler(BaseExecutionHandler):
     def check_trade_exist(self, instrument, side):
         instrument = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
-        for id, trade in self.account.get_trades():
+        trades = self.account.get_trades()
+
+        for id, trade in trades.items():
             trade_instrument = get_fxcm_symbol(trade.get_currency())
             if trade_instrument == instrument and is_buy == trade.get_isBuy():
                 return True
