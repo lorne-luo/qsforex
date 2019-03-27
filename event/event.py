@@ -219,7 +219,7 @@ class TradeCloseEvent(Event):
         self.profit = Decimal(str(profit))
         self.close_time = Decimal(str(close_time))
         self.close_price = Decimal(str(close_price))
-        self.pips = Decimal(str(pips))
+        self.pips = Decimal(str(pips)) if pips else None
         super(TradeCloseEvent, self).__init__()
 
 
@@ -227,7 +227,7 @@ class TradeOpenEvent(Event):
     type = EventType.TRADE_OPEN
 
     def __init__(self, broker, account_id, trade_id, instrument, side, lots, open_time, open_price, stop_loss=None,
-                 take_profit=None):
+                 take_profit=None, magic_number=None):
         self.broker = broker
         self.account_id = account_id
         self.trade_id = trade_id
@@ -238,6 +238,7 @@ class TradeOpenEvent(Event):
         self.open_price = Decimal(str(open_price))
         self.stop_loss = Decimal(str(stop_loss)) if stop_loss else None
         self.take_profit = Decimal(str(take_profit)) if take_profit else None
+        self.magic_number = magic_number
         super(TradeOpenEvent, self).__init__()
 
 

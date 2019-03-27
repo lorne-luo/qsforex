@@ -19,9 +19,9 @@ class TradeManageHandler(BaseHandler):
     def process(self, event):
         if event.type == TickPriceEvent.type:
             self.process_price(event)
-        elif event.type == TickPriceEvent.type:
+        elif event.type == TradeOpenEvent.type:
             self.trade_open(event)
-        elif event.type == TickPriceEvent.type:
+        elif event.type == TradeCloseEvent.type:
             self.trade_close(event)
         elif event.type == StartUpEvent.type:
             self.load_trades()

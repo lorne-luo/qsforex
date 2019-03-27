@@ -176,6 +176,7 @@ PIP_DICT = {
 
 
 def get_mt4_symbol(symbol):
+    symbol = str(symbol)
     return symbol.replace(' ', '').replace('_', '').replace('-', '').replace('/', '')
 
 

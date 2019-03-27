@@ -94,7 +94,8 @@ class FXCMExecutionHandler(BaseExecutionHandler):
                                    instrument=event.instrument, side=event.side, open_time=open_time,
                                    open_price=open_price,
                                    stop_loss=trade.get_stopRate(),
-                                   take_profit=trade.get_limitRate())
+                                   take_profit=trade.get_limitRate(),
+                                   magic_number=event.magic_number)
             self.put(event)
         else:
             logger.info('[TRADE_OPEN] event = %s' % event_dict)
