@@ -41,8 +41,9 @@ class HLHBTrendStrategy(StrategyBase):
               'adx': 14,
               'rsi': 14, }
 
-    take_profit = 400
-    trailing_stop = 150
+    take_profit = 50
+    stop_loss = 30
+    trailing_stop = 40
 
     def signal_pair(self, symbol):
         short_ema = self.params.get('short_ema')
@@ -75,17 +76,18 @@ class HLHBTrendStrategy(StrategyBase):
         event = None
         if side == OrderSide.BUY and 70 > rsi[-1] > 50:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
-                                symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
-                                take_profit=self.take_profit)
+                                symbol, side,trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit,stop_loss=self.stop_loss)
             self.send_event(event)
         elif side == OrderSide.SELL and 50 > rsi[-1] > 30:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
-                                symbol, OrderType.MARKET, side, trailing_stop=self.trailing_stop,
-                                take_profit=self.take_profit)
+                                symbol,  side,trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit,stop_loss=self.stop_loss)
             self.send_event(event)
         if event:
-            logger.info('[ORDER_OPEN]%s|%s@%s %s, param=%0.5f, %0.5f, %0.2f, %0.2f' % (
-                self.name, self.magic_number, symbol, side, ema_short[-1], ema_long[-1], adx[-1], rsi[-1]))
+            logger.info('[ORDER_%s] %s@%s %s, param=%0.5f, %0.5f, %0.2f, %0.2f' % (
+                event.action, event.strategy, event.instrument, event.to_dict(), ema_short[-1],
+                ema_long[-1], adx[-1], rsi[-1]))
 
         return side
 

@@ -63,7 +63,7 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
     def get_lots(self, instrument, stop_loss_pips=None, risk_ratio=Decimal('0.05')):
         max_trade = 5
-        if len(self.get_trades() >= max_trade):
+        if len(self.get_trades()) >= max_trade:
             return 0
 
         equity = self.get_equity()
