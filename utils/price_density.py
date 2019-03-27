@@ -1,6 +1,8 @@
 import json
 import logging
-
+import plotly
+import plotly.plotly as py
+import plotly.graph_objs as go
 import numpy as np
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_EVEN
@@ -99,7 +101,7 @@ def update_density(symbol, account=None):
     return now
 
 
-def _draw(data, symbol, price, filename=None):
+def _draw(data, symbol, price, filename=None, to_plotly=False):
     symbol = get_mt4_symbol(symbol)
     pip_unit = get_pip_unit(symbol)
     fig = plt.figure()
@@ -114,6 +116,11 @@ def _draw(data, symbol, price, filename=None):
     if filename:
         fig.savefig('/tmp/%s.png' % filename)
 
+    if to_plotly:
+        trace = go.Bar(x=x, y=y)
+        result = py.iplot([trace], filename=filename)
+        print(result.embed_code)
+
 
 def draw_history(symbol, price):
     price = float(price)
@@ -127,11 +134,11 @@ def draw_history(symbol, price):
     _draw(data, symbol, price, filename)
 
 
-def draw_rencent(symbol, days=None, account=None):
+def draw_recent(symbol, days=30, account=None, to_plotly=False):
     symbol = get_mt4_symbol(symbol)
     now = datetime.utcnow()
 
-    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
     df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', number=FXCM.MAX_CANDLES, end=now,
                                  columns=['askclose', 'askhigh', 'bidlow', 'tickqty'])
     price = df.iloc[-1].askclose
@@ -163,8 +170,12 @@ def draw_rencent(symbol, days=None, account=None):
         }''' % output
     sorted_result = eval(output)
 
-    filename = '%s_%s' % (symbol, now.strftime('%Y-%m-%d %H:%M'))
-    _draw(sorted_result, symbol, price, filename)
+    filename = '%s_%s days' % (symbol, days)
+    _draw(sorted_result, symbol, price, filename, to_plotly)
+
+
+def price_density_one_month(symbol, account=None, to_plotly=False):
+    draw_recent(symbol, 30, account, to_plotly)
 
 
 class PriceDensityHandler(BaseHandler):
