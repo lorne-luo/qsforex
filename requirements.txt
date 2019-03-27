@@ -32,3 +32,4 @@ git+https://github.com/Telstra/MessagingAPI-SDK-python.git
 Django==1.11.17
 mysqlclient==1.4.2.post1
 psycopg2-binary==2.7.5
+plotly==3.7.1

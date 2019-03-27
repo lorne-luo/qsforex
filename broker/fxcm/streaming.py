@@ -39,13 +39,13 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.market_open = is_market_open()
 
     def run(self):
-        logger.info('\n')
         logger.info('%s statup.' % self.__class__.__name__)
         logger.info('Registered handler: %s' % ', '.join([x.__class__.__name__ for x in self.handlers]))
 
         self.pairs = [get_fxcm_symbol(pair) for pair in self.pairs]
         pair_list = ",".join(self.pairs)
-        logger.info('Pairs: %s\n' % pair_list)
+        logger.info('Pairs: %s' % pair_list)
+        logger.info('####################################')
 
         while self.running:
             while True:
