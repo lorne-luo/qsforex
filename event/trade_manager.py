@@ -176,7 +176,7 @@ class TradeManageHandler(BaseHandler):
 
     def saved_to_redis(self):
         data = {}
-        for trade_id, trade in self.trades:
+        for trade_id, trade in self.trades.items():
             data[trade_id] = {'max': float(trade['max']),
                               'min': float(trade['min']),
                               'last_profitable_start': datetime_to_str(trade['last_profitable_start']),
