@@ -20,3 +20,12 @@ def check_reverse(data, shift=1):
     if data[first] < data[second] > data[third]:
         return OrderSide.SELL
     return None
+
+
+def gradient(data, shift=0):
+    first = -1 - shift
+    second = -2 - shift
+    if data[first] > data[second]:
+        return OrderSide.BUY
+    else:
+        return OrderSide.SELL
