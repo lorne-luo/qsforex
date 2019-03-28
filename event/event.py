@@ -218,8 +218,8 @@ class TradeCloseEvent(Event):
         self.instrument = get_mt4_symbol(instrument)
         self.lots = lots
         self.profit = Decimal(str(profit))
-        self.close_time = Decimal(str(close_time))
         self.close_price = Decimal(str(close_price))
+        self.close_time = close_time
         self.pips = Decimal(str(pips)) if pips else None
         super(TradeCloseEvent, self).__init__()
 

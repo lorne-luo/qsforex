@@ -179,6 +179,8 @@ class TradeManageHandler(BaseHandler):
         for trade_id, trade in self.trades.items():
             data[trade_id] = {'max': float(trade['max']),
                               'min': float(trade['min']),
+                              'current': float(trade['current']),
+                              'instrument': trade['instrument'],
                               'last_profitable_start': datetime_to_str(trade['last_profitable_start']),
                               'profitable_time': int(trade['profitable_time'])}
 

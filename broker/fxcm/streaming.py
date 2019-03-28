@@ -79,16 +79,13 @@ class FXCMStreamRunner(StreamRunnerBase):
         if not self.fxcm.is_connected():
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
-            self.reconnect()
-            time.sleep(settings.HEARTBEAT)
 
-            if not self.fxcm.is_connected():
-                # close and connect again
-                self.fxcm.close()
-                time.sleep(5)
-                self.fxcm.connect()
-                self.subscribe_pair()
-                logger.info('[Check_Connection] Closed and Reconnected')
+            # close and connect again
+            self.fxcm.close()
+            time.sleep(5)
+            self.fxcm.connect()
+            self.subscribe_pair()
+            logger.info('[Check_Connection] Closed and Reconnected')
 
     def reconnect(self):
         retry = 11
