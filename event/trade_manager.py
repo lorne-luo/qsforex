@@ -123,7 +123,7 @@ class TradeManageHandler(BaseHandler):
                     last_profit_period = 0
                     if trade['last_profitable_start']:
                         last_profit_period = datetime.utcnow() - trade['last_profitable_start']
-                    total_profit_seconds = trade['profitable_seconds'] + last_profit_period
+                    total_profit_seconds = trade['profitable_seconds'] + last_profit_period.seconds
                     trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
