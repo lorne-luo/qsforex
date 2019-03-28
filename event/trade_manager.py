@@ -54,9 +54,7 @@ class TradeManageHandler(BaseHandler):
                 trade['last_profitable_start'] = datetime.utcnow()
         else:
             if trade['last_profitable_start']:
-                delta = datetime.utcnow() - trade['last_profitable_start']
-                trade['profitable_seconds'] += delta.seconds
-                trade['last_profitable_start'] = None
+                self.update_profitable_seconds(trade)
 
         trade['last_tick_time'] = event.time
 
@@ -84,6 +82,9 @@ class TradeManageHandler(BaseHandler):
         # exit accuracy= 1 - profit missed / (max-min)
         # risk:reward= 1: max/-min or 1:max
 
+        if trade['last_profitable_start']:
+            self.update_profitable_seconds(trade)
+
         close_time = event.close_time
         close_price = event.close_price
         max = trade.get('max')
@@ -101,6 +102,11 @@ class TradeManageHandler(BaseHandler):
 
         logger.info('[Trade_Manage] trade closed=%s' % trade)
 
+    def update_profitable_seconds(self, trade):
+        delta = datetime.utcnow() - trade['last_profitable_start']
+        trade['profitable_seconds'] += delta.seconds
+        trade['last_profitable_start'] = None
+
     def heartbeat(self, event):
         if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             if settings.DEBUG:
@@ -108,7 +114,11 @@ class TradeManageHandler(BaseHandler):
             else:
                 for trade_id, trade in self.trades.items():
                     total_time = datetime.utcnow() - trade['start_from']
-                    trade['profitable_time'] = round(trade['profitable_seconds'] / float(total_time.seconds), 3)
+                    last_profit_period = 0
+                    if trade['last_profitable_start']:
+                        last_profit_period = datetime.utcnow() - trade['last_profitable_start']
+                    total_profit_seconds = trade['profitable_seconds'] + last_profit_period
+                    trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s: max=%s, min=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
                             trade_id, trade['max'], trade['min'], trade['last_profitable_start'],
