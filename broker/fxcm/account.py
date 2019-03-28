@@ -61,12 +61,21 @@ class FXCM(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, B
 
         raise Exception('Cant get equity.')
 
+    def get_balance(self):
+        summarys = self.fxcmpy.get_accounts('list')
+        for s in summarys:
+            if str(s.get('accountId')) == str(self.account_id):
+                balance = s.get('balance')
+                return Decimal(str(balance))
+
+        raise Exception('Cant get balance.')
+
     def get_lots(self, instrument, stop_loss_pips=None, risk_ratio=Decimal('0.05')):
         max_trade = 5
         if len(self.get_trades()) >= max_trade:
             return 0
 
-        equity = self.get_equity()
+        equity = self.get_balance()
         if not stop_loss_pips:
             return equity / 1000 * Decimal('0.1')
 
