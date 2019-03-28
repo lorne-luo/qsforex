@@ -1,10 +1,17 @@
+import time
 from datetime import datetime
 from dateparser import parse
 
 
-def parse_timestamp(timestamp):
-    dt = datetime.fromtimestamp(timestamp)
-    return dt
+def parse_timestamp(timestamp, utc=False):
+    if utc:
+        return datetime.utcfromtimestamp(timestamp)
+    else:
+        return datetime.fromtimestamp(timestamp)
+
+
+def datetime_to_timestamp(dt):
+    return time.mktime(dt.timetuple())
 
 
 def datetime_to_str(dt, format='%Y-%m-%d %H:%M:%S:%f'):
