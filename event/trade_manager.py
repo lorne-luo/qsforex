@@ -163,7 +163,7 @@ class TradeManageHandler(BaseHandler):
         if redis_data:
             redis_data = json.loads(redis_data)
 
-            for k, v in redis_data:
+            for k, v in redis_data.items():
                 if k in self.trades:
                     self.trades[k]['max'] = Decimal(redis_data[k]['max'])
                     self.trades[k]['min'] = Decimal(redis_data[k]['min'])
