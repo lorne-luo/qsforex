@@ -68,12 +68,14 @@ class DebugHandler(BaseHandler):
 
     def process(self, event):
         if event.type == DebugEvent.type and self.account:
-            if event.action == 'account':
+            if event.action.lower() == 'account':
                 self.account.log_account()
-            elif event.action == 'trade':
+            elif event.action.lower() == 'trade':
                 self.account.log_trade()
-            elif event.action == 'order':
+            elif event.action.lower() == 'order':
                 self.account.log_order()
+            elif event.action.lower() == 'test_message':
+                tg.send_me('Test message')
         else:
             print('[%s] %s' % (event.type, event.__dict__))
 
