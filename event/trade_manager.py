@@ -165,8 +165,8 @@ class TradeManageHandler(BaseHandler):
 
             for k, v in redis_data.items():
                 if k in self.trades:
-                    self.trades[k]['max'] = Decimal(redis_data[k]['max'])
-                    self.trades[k]['min'] = Decimal(redis_data[k]['min'])
+                    self.trades[k]['max'] = Decimal(str(redis_data[k]['max']))
+                    self.trades[k]['min'] = Decimal(str(redis_data[k]['min']))
                     self.trades[k]['profitable_time'] = redis_data[k]['profitable_time']
                     self.trades[k]['last_profitable_start'] = str_to_datetime(redis_data[k]['last_profitable_start'])
 
