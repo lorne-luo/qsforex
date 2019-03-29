@@ -1,7 +1,9 @@
 import logging
+import os
 import sys
 import time
 import traceback
+from signal import signal, SIGINT, SIGTERM, SIGABRT
 
 import settings
 from event.handler import QueueBase, HeartBeatEvent, BaseHandler
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Runner(QueueBase):
     handlers = []
     running = True
-    initialized =False
+    initialized = False
 
     def run(self):
         raise NotImplementedError
@@ -54,7 +56,27 @@ class Runner(QueueBase):
     def stop(self):
         del self.queue
         self.running = False
-        sys.exit(0)
+        os._exit(1)
+
+    def idle(self, stop_signals=(SIGINT, SIGTERM, SIGABRT)):
+        for sig in stop_signals:
+            signal(sig, self.signal_handler)
+
+    def signal_handler(self, signum, frame):
+        self.is_idle = False
+        if self.running:
+            logger.info('Received signal {} ({}), stopping...'.format(
+                signum, self._get_signal_name(signum)))
+            self.stop()
+        else:
+            logger.warning('Exiting immediately!')
+            os._exit(1)
+
+    def _get_signal_name(self, signum):
+        _signames = {v: k
+                     for k, v in reversed(sorted(vars(signal).items()))
+                     if k.startswith('SIG') and not k.startswith('SIG_')}
+        return _signames[signum]
 
 
 class HeartbeatRunner(Runner):
