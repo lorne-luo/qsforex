@@ -9,6 +9,7 @@ from mt4.constants import PERIOD_CHOICES, get_candle_time, PERIOD_H1, get_mt4_sy
 from utils.market import is_market_open
 from utils.redis import system_redis, set_last_tick, get_last_tick, price_redis
 from utils.telstra_api_v2 import send_to_admin
+import utils.telegram as tg
 
 logger = logging.getLogger(__name__)
 
@@ -240,3 +241,10 @@ class PriceAlertHandler(BaseHandler):
                 key = '%s_%s' % (instrument, su)
                 self.remove(key)
                 # todo reset resistance and support
+
+
+class TelegramHandler(BaseHandler):
+    subscription = [TradeOpenEvent.type, TradeCloseEvent.type]
+
+    def process(self, event):
+        tg.send_me(event.to_text())
