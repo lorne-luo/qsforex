@@ -13,7 +13,7 @@ from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent
 from event.runner import StreamRunnerBase
-from mt4.constants import get_mt4_symbol
+from mt4.constants import get_mt4_symbol, OrderSide
 from utils.market import is_market_open
 from utils.redis import set_last_tick
 from utils.telstra_api_v2 import send_to_admin
@@ -181,10 +181,12 @@ class FXCMStreamRunner(StreamRunnerBase):
                     account_id=self.fxcm.default_account,
                     trade_id=trade_id,
                     instrument=closed_trade.get_currency(),
+                    side=OrderSide.BUY if closed_trade.get_isBuy() else OrderSide.SELL,
                     lots=closed_trade.get_amount(),
                     profit=closed_trade.get_grossPL(),
                     close_time=closed_trade.get_close_time(),
                     close_price=closed_trade.get_close(),
+                    open_time=closed_trade.get_open_time(),
                     pips=closed_trade.get_visiblePL(),
                 )
                 self.put(event)

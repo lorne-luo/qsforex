@@ -211,17 +211,32 @@ class OrderHoldingEvent(Event):
 class TradeCloseEvent(Event):
     type = EventType.ORDER_CLOSE
 
-    def __init__(self, broker, account_id, trade_id, instrument, lots, profit, close_time, close_price, pips=None):
+    def __init__(self, broker, account_id, trade_id, instrument, side, lots, profit, close_time, close_price, pips=None,
+                 open_time=None):
         self.broker = broker
         self.account_id = account_id
         self.trade_id = trade_id
         self.instrument = get_mt4_symbol(instrument)
+        self.side = side
         self.lots = lots
         self.profit = Decimal(str(profit))
         self.close_price = Decimal(str(close_price))
         self.close_time = close_time
+        self.open_time = open_time
         self.pips = Decimal(str(pips)) if pips else None
         super(TradeCloseEvent, self).__init__()
+
+    def to_text(self):
+        last = ''
+        if self.open_time:
+            last = self.open_time - self.close_time
+        text = '%s#%s\n%s = %s\nprofit = %s' % (
+            self.instrument, self.trade_id, self.side, self.lots, self.profit)
+        if self.pips:
+            text += '\npips = %s' % self.pips
+        if last:
+            text += '\nlast = %s' % str(last)
+        return text
 
 
 class TradeOpenEvent(Event):
@@ -241,6 +256,12 @@ class TradeOpenEvent(Event):
         self.take_profit = Decimal(str(take_profit)) if take_profit else None
         self.magic_number = magic_number
         super(TradeOpenEvent, self).__init__()
+
+    def to_text(self):
+        text = 'ST#%s\n%s#%s\n%s = %s\nprice = %s\nSL = %s\nTP = %s' % (
+            self.magic_number, self.instrument, self.trade_id, self.side, self.lots, self.open_price, self.stop_loss,
+            self.take_profit)
+        return text
 
 
 class OrderEvent(Event):
