@@ -42,6 +42,7 @@ class Event(object):
 
     def __init__(self):
         self.time = datetime.utcnow()
+        self.tried = 0  # some event may push back to queue for re-process
 
     def to_dict(self):
         data = self.__dict__.copy()

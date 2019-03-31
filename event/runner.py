@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class Runner(QueueBase):
     handlers = []
     running = True
-    initialized =False
+    initialized = False
 
     def run(self):
         raise NotImplementedError
@@ -29,18 +29,22 @@ class Runner(QueueBase):
         for handler in self.handlers:
             if '*' in handler.subscription:
                 result = self.process_event(handler, event)
-                re_put = re_put or result
+                re_put = result or re_put
                 continue
             elif event.type in handler.subscription:
                 result = self.process_event(handler, event)
-                re_put = re_put or result
+                re_put = result or re_put
         if re_put:
-            self.put(event)
+            if event.tried > 10:
+                logger.error('[EVENT_RETRY] tried to many times abort, event=%s' % event)
+            else:
+                event.tried += 1
+                self.put(event)
 
     def process_event(self, handler, event):
         """process event by single handler"""
         try:
-            handler.process(event)
+            return handler.process(event)
         except Exception as ex:
             logger.error('[EVENT_PROCESS] %s, event=%s' % (ex, event.__dict__))
             # print trace stack
