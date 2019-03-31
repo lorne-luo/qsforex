@@ -32,11 +32,13 @@ class FXCMStreamRunner(StreamRunnerBase):
 
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
-        server = 'real' if account_type == AccountType.REAL else 'demo'
+        self.access_token = access_token
+        self.account_type = account_type
+        self.server = 'real' if account_type == AccountType.REAL else 'demo'
         self.is_market_open = is_market_open()
         handlers = handlers or []
         try:
-            self.fxcm = api or fxcmpy(access_token=access_token, server=server)
+            self.fxcm = api or fxcmpy(access_token=access_token, server=self.server)
             self.fxcm.set_max_prices(self.max_prices)
             self.register(*handlers)
             self.subscribe_pair()
@@ -94,9 +96,13 @@ class FXCMStreamRunner(StreamRunnerBase):
 
     def market_open(self):
         try:
-            self.fxcm.close()
-            time.sleep(5)
-            self.fxcm.connect()
+            if self.fxcm:
+                self.fxcm.close()
+                time.sleep(5)
+                self.fxcm.connect()
+            else:
+                self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
+
             self.subscribe_pair()
         except Exception as ex:
             logger.error('[MARKET_OPEN] %s' % ex)
