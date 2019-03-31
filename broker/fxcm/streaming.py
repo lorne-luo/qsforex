@@ -69,26 +69,42 @@ class FXCMStreamRunner(StreamRunnerBase):
             time.sleep(settings.LOOP_SLEEP)
             self.loop_counter += 1
 
-            self.set_market_open()
+            self.check_market_status()
 
             if self.is_market_open:
                 self.generate_heartbeat()
                 self.check_connection()
 
-    def set_market_open(self):
+    def check_market_status(self):
         current_status = is_market_open()
         if self.is_market_open != current_status:
-            if current_status:
+            if current_status and self.market_open():
+                self.is_market_open = current_status
                 event = MarketEvent(MarketAction.OPEN)
-                self.handle_event(event)
+                self.put(event)
                 logger.info('[MarketEvent] Market opened.')
                 tg.send_me('[MarketEvent] Market opened.')
             else:
                 event = MarketEvent(MarketAction.CLOSE)
                 self.handle_event(event)
+                self.market_close()
                 logger.info('[MarketEvent] Market closed.')
                 tg.send_me('[MarketEvent] Market closed.')
-            self.is_market_open = current_status
+                self.is_market_open = current_status
+
+    def market_open(self):
+        try:
+            self.fxcm.close()
+            time.sleep(5)
+            self.fxcm.connect()
+            self.subscribe_pair()
+        except Exception as ex:
+            logger.error('[MARKET_OPEN] %s' % ex)
+            return False
+        return True
+
+    def market_close(self):
+        self.fxcm.close()
 
     def generate_heartbeat(self):
         if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
