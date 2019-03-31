@@ -16,7 +16,7 @@ from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol, OrderSide
 from utils import telegram as tg
 from utils.market import is_market_open
-from utils.redis import price_redis, RedisQueue
+from utils.redis import price_redis, RedisQueue, set_tick_price
 from utils.redis import set_last_tick
 from utils.telstra_api_v2 import send_to_admin
 
@@ -55,6 +55,8 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.pairs = [get_fxcm_symbol(pair) for pair in self.pairs]
         pair_list = ",".join(self.pairs)
         logger.info('Pairs: %s' % pair_list)
+        if not self.is_market_open:
+            logger.info('Market is closed now.')
         logger.info('####################################')
 
         while self.running:
@@ -205,9 +207,9 @@ class FXCMStreamRunner(StreamRunnerBase):
             ask = Decimal(str(data['Rates'][1]))
             tick = TickPriceEvent(self.broker, instrument, time, bid, ask)
             self.put(tick)
-            price_redis.set('%s_TICK' % instrument.upper(),
-                            json.dumps(
-                                {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')}))
+            data=json.dumps(
+                {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')})
+            set_tick_price(instrument,data)
             set_last_tick(time.strftime('%Y-%m-%d %H:%M:%S:%f'))
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)

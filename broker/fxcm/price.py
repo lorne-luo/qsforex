@@ -6,7 +6,7 @@ from broker.base import PriceBase
 from broker.fxcm.constants import get_fxcm_symbol, get_fxcm_timeframe
 from broker.oanda.base import OANDABase
 from mt4.constants import get_mt4_symbol, pip, pip_unit
-from utils.redis import price_redis
+from utils.redis import price_redis, get_tick_price
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,9 @@ class PriceMixin(OANDABase, PriceBase):
     def get_price(self, instrument, type='mid'):
         instrument = get_mt4_symbol(instrument)
         pip_u = pip_unit(instrument)
-        data = price_redis.get('%s_TICK' % instrument.upper())
-        if not data:
+        price = get_tick_price(instrument)
+        if not price:
             raise Exception('get_price, %s price is None' % instrument)
-        price = json.loads(data)
         if type == 'ask':
             return Decimal(str(price.get('ask'))).quantize(pip_u)
         elif type == 'bid':
