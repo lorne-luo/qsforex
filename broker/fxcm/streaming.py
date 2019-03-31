@@ -207,9 +207,9 @@ class FXCMStreamRunner(StreamRunnerBase):
             ask = Decimal(str(data['Rates'][1]))
             tick = TickPriceEvent(self.broker, instrument, time, bid, ask)
             self.put(tick)
-            data=json.dumps(
+            data = json.dumps(
                 {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')})
-            set_tick_price(instrument,data)
+            set_tick_price(instrument, data)
             set_last_tick(time.strftime('%Y-%m-%d %H:%M:%S:%f'))
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)

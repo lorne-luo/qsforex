@@ -13,8 +13,9 @@ from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import OrderType
 from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction, TradeOpenEvent
-from event.handler import BaseHandler
-from mt4.constants import OrderSide
+from event.handler import BaseHandler, get_mt4_symbol
+from mt4.constants import OrderSide, pip
+from utils.redis import get_tick_price
 from utils.time import str_to_datetime
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,15 @@ class FXCMExecutionHandler(BaseExecutionHandler):
                 return False
         return True
 
+    def get_spread(self, instrument):
+        tick_price = get_tick_price(instrument)
+        if tick_price:
+            spread = tick_price['ask'] - tick_price['bid']
+            spread_pips = pip(spread)
+            return spread_pips
+
+        return None
+
     def open(self, event):
         if not self.validate_event(event):
             return
@@ -85,7 +95,15 @@ class FXCMExecutionHandler(BaseExecutionHandler):
             logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
             return
 
-        # check spread
+        spread_pips = self.get_spread(event.instruent)
+        if not spread_pips:
+            logger.info('[ORDER_OPEN] cant get spread for %s' % event.instrument)
+            return
+        if spread_pips > 3:
+            logger.warning('[ORDER_OPEN] spread of %s is too large = %s' % (event.instrument, spread_pips))
+            return True  # push back into queue
+
+            # check spread
         lots = self.account.get_lots(event.instrument)
 
         if not lots:
