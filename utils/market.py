@@ -7,7 +7,7 @@ def is_market_open():
     now = datetime.utcnow()
 
     close_hour = 19
-    open_hour = 22
+    open_hour = 21
 
     HOLIDAY = [(1, 1)]
     if now.weekday() == 5:
