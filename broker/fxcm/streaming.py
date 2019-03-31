@@ -31,12 +31,18 @@ class FXCMStreamRunner(StreamRunnerBase):
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.fxcm = api or fxcmpy(access_token=access_token, server=server)
-        self.fxcm.set_max_prices(self.max_prices)
-        handlers = handlers or []
-        self.register(*handlers)
-        self.subscribe_pair()
         self.market_open = is_market_open()
+        handlers = handlers or []
+        try:
+            self.fxcm = api or fxcmpy(access_token=access_token, server=server)
+            self.fxcm.set_max_prices(self.max_prices)
+            self.register(*handlers)
+            self.subscribe_pair()
+        except Exception as ex:
+            if self.market_open:
+                logger.error('Start error: %s' % ex)
+            else:
+                logger.info('Market is closed, init error skiped')
 
     def run(self):
         logger.info('%s statup.' % self.__class__.__name__)
@@ -194,7 +200,6 @@ class FXCMStreamRunner(StreamRunnerBase):
 
 
 if __name__ == '__main__':
-    from utils.redis import price_redis, RedisQueue
     from event.handler import DebugHandler, TimeFrameTicker
 
     # from broker.fxcm.streaming import *
