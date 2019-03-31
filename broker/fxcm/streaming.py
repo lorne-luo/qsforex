@@ -5,9 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from fxcmpy import fxcmpy, fxcmpy_closed_position
+from utils.redis import price_redis, RedisQueue
 
 import settings
-from utils.redis import price_redis
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol
@@ -60,22 +60,23 @@ class FXCMStreamRunner(StreamRunnerBase):
 
             time.sleep(settings.LOOP_SLEEP)
             self.loop_counter += 1
-            # if not datetime.now().second % settings.HEARTBEAT:
-            #     self.put(HeartBeatEvent())
 
-            if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
-                self.put(HeartBeatEvent(self.loop_counter))
-                if not self.initialized:
-                    self.initialized = True
-                    self.put(StartUpEvent())
-
-            if not self.loop_counter % (12 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+            if is_market_open():
+                self.generate_heartbeat()
                 self.check_connection()
 
+    def generate_heartbeat(self):
+        if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
+            self.put(HeartBeatEvent(self.loop_counter))
+            if not self.initialized:
+                self.initialized = True
+                self.put(StartUpEvent())
+
     def check_connection(self):
-        if not is_market_open():
-            time.sleep(3600)
+        if self.loop_counter % (12 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+            # check connection every minute
             return
+
         if not self.fxcm.is_connected():
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
