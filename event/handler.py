@@ -138,13 +138,6 @@ class TimeFrameTicker(BaseHandler):
         return now
 
     def process(self, event):
-        if isinstance(event, TickPriceEvent):
-            self.set_market_open(True)
-            return
-        else:
-            open = is_market_open()
-            self.set_market_open(open)
-
         now = self.get_now()
         for timeframe in PERIOD_CHOICES:
             new = get_candle_time(now, timeframe)
@@ -157,19 +150,6 @@ class TimeFrameTicker(BaseHandler):
                 if timeframe == PERIOD_H1:
                     last_tick = get_last_tick()
                     logger.info('TimeFrame H1 , market_open=%s, last_tick=%s' % (self.market_open, last_tick))
-
-    def set_market_open(self, current_status):
-        if self.market_open != current_status:
-            if current_status:
-                self.put(MarketEvent(MarketAction.OPEN))
-                logger.info('[MarketEvent] Market opened.')
-            else:
-                self.put(MarketEvent(MarketAction.CLOSE))
-                logger.info('[MarketEvent] Market closed.')
-            self.market_open = current_status
-
-
-pass
 
 
 class PriceAlertHandler(BaseHandler):

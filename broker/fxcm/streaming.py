@@ -5,16 +5,18 @@ from datetime import datetime
 from decimal import Decimal
 
 from fxcmpy import fxcmpy, fxcmpy_closed_position
-from utils.redis import price_redis, RedisQueue
 
 import settings
 from broker import SingletonFXCM
 from broker.base import AccountType
 from broker.fxcm.constants import get_fxcm_symbol
-from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent
+from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent, \
+    MarketEvent, MarketAction
 from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol, OrderSide
+from utils import telegram as tg
 from utils.market import is_market_open
+from utils.redis import price_redis, RedisQueue
 from utils.redis import set_last_tick
 from utils.telstra_api_v2 import send_to_admin
 
@@ -54,7 +56,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         logger.info('####################################')
 
         while self.running:
-            while True:
+            while self.market_open:
                 event = self.get(False)
                 if event:
                     if event.type == ConnectEvent.type:
@@ -67,9 +69,26 @@ class FXCMStreamRunner(StreamRunnerBase):
             time.sleep(settings.LOOP_SLEEP)
             self.loop_counter += 1
 
-            if is_market_open():
+            self.set_market_open()
+
+            if self.market_open:
                 self.generate_heartbeat()
                 self.check_connection()
+
+    def set_market_open(self):
+        current_status = is_market_open()
+        if self.market_open != current_status:
+            if current_status:
+                event = MarketEvent(MarketAction.OPEN)
+                self.handle_event(event)
+                logger.info('[MarketEvent] Market opened.')
+                tg.send_me('[MarketEvent] Market opened.')
+            else:
+                event = MarketEvent(MarketAction.CLOSE)
+                self.handle_event(event)
+                logger.info('[MarketEvent] Market closed.')
+                tg.send_me('[MarketEvent] Market closed.')
+            self.market_open = current_status
 
     def generate_heartbeat(self):
         if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
@@ -170,7 +189,6 @@ class FXCMStreamRunner(StreamRunnerBase):
             set_last_tick(time.strftime('%Y-%m-%d %H:%M:%S:%f'))
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)
-
 
     def stop(self):
         self.fxcm.close()
