@@ -28,12 +28,12 @@ class FXCMStreamRunner(StreamRunnerBase):
     broker = 'FXCM'
     max_prices = 4000
     loop_counter = 0
-    market_open = True
+    is_market_open = True
 
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
         server = 'real' if account_type == AccountType.REAL else 'demo'
-        self.market_open = is_market_open()
+        self.is_market_open = is_market_open()
         handlers = handlers or []
         try:
             self.fxcm = api or fxcmpy(access_token=access_token, server=server)
@@ -41,7 +41,7 @@ class FXCMStreamRunner(StreamRunnerBase):
             self.register(*handlers)
             self.subscribe_pair()
         except Exception as ex:
-            if self.market_open:
+            if self.is_market_open:
                 logger.error('Start error: %s' % ex)
             else:
                 logger.info('Market is closed, init error skiped')
@@ -56,7 +56,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         logger.info('####################################')
 
         while self.running:
-            while self.market_open:
+            while self.is_market_open:
                 event = self.get(False)
                 if event:
                     if event.type == ConnectEvent.type:
@@ -71,13 +71,13 @@ class FXCMStreamRunner(StreamRunnerBase):
 
             self.set_market_open()
 
-            if self.market_open:
+            if self.is_market_open:
                 self.generate_heartbeat()
                 self.check_connection()
 
     def set_market_open(self):
         current_status = is_market_open()
-        if self.market_open != current_status:
+        if self.is_market_open != current_status:
             if current_status:
                 event = MarketEvent(MarketAction.OPEN)
                 self.handle_event(event)
@@ -88,7 +88,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.handle_event(event)
                 logger.info('[MarketEvent] Market closed.')
                 tg.send_me('[MarketEvent] Market closed.')
-            self.market_open = current_status
+            self.is_market_open = current_status
 
     def generate_heartbeat(self):
         if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
