@@ -167,10 +167,10 @@ class FXCMStreamRunner(StreamRunnerBase):
             price_redis.set('%s_TICK' % instrument.upper(),
                             json.dumps(
                                 {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')}))
+            set_last_tick(time.strftime('%Y-%m-%d %H:%M:%S:%f'))
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)
 
-        set_last_tick(datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f'))
 
     def stop(self):
         self.fxcm.close()
