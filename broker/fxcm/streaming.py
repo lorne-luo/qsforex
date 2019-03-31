@@ -37,10 +37,10 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.server = 'real' if account_type == AccountType.REAL else 'demo'
         self.is_market_open = is_market_open()
         handlers = handlers or []
+        self.register(*handlers)
         try:
             self.fxcm = api or fxcmpy(access_token=access_token, server=self.server)
             self.fxcm.set_max_prices(self.max_prices)
-            self.register(*handlers)
             self.subscribe_pair()
         except Exception as ex:
             if self.is_market_open:
@@ -88,7 +88,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.put(event)
                 logger.info('[MarketEvent] Market opened.')
                 tg.send_me('[MarketEvent] Market opened.')
-            else:
+            elif current_status is False:
                 event = MarketEvent(MarketAction.CLOSE)
                 self.handle_event(event)
                 self.market_close()
@@ -96,23 +96,34 @@ class FXCMStreamRunner(StreamRunnerBase):
                 tg.send_me('[MarketEvent] Market closed.')
                 self.is_market_open = current_status
 
+    def new_connect(self):
+        self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
+        self.fxcm.set_max_prices(self.max_prices)
+        self.subscribe_pair()
+        for handler in self.handlers:
+            if getattr(handler, 'account'):
+                try:
+                    handler.account.fxcmpy.close()
+                except:
+                    pass
+                del handler.account.fxcmpy
+                handler.account.fxcmpy = self.fxcm
+
     def market_open(self):
         try:
-            if self.fxcm:
-                self.fxcm.close()
-                time.sleep(5)
-                self.fxcm.connect()
-            else:
-                self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
-
-            self.subscribe_pair()
+            if not self.fxcm:
+                self.new_connect()
+            elif not self.fxcm.is_connected():
+                self.reconnect()
         except Exception as ex:
             logger.error('[MARKET_OPEN] %s' % ex)
             return False
+        logger.info('[MARKET_OPEN] Connected.')
         return True
 
     def market_close(self):
         self.fxcm.close()
+        logger.info('[MARKET_CLOSE] Connection closed.')
 
     def generate_heartbeat(self):
         if not self.loop_counter % (settings.HEARTBEAT / settings.LOOP_SLEEP):
@@ -125,31 +136,28 @@ class FXCMStreamRunner(StreamRunnerBase):
         if self.loop_counter % (12 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             # check connection every minute
             return
-
-        if not self.fxcm.is_connected():
+        if not self.fxcm:
+            self.new_connect()
+        elif not self.fxcm.is_connected():
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
 
-            # close and connect again
-            self.fxcm.close()
-            time.sleep(5)
-            self.fxcm.connect()
-            self.subscribe_pair()
-            logger.info('[Check_Connection] Closed and Reconnected')
+            self.reconnect()
 
     def reconnect(self):
-        retry = 11
-        count = 1
-        while not self.fxcm.is_connected() and count < retry:
-            self.fxcm.__reconnect__(count)
-            count += 1
-            time.sleep(settings.HEARTBEAT)
+        try:
+            self.fxcm.close()
+        except:
+            pass
+        del self.fxcm
+        self.fxcm = None
+        self.new_connect()
+
+        if not self.fxcm.is_connected():
+            logger.error('[System Exit] Cant connect to server')
+            send_to_admin('[System Exit] Cant connect to server')
         else:
-            if not self.fxcm.is_connected():
-                logger.error('[System Exit] Cant connect to server')
-                send_to_admin('[System Exit] Cant connect to server')
-            else:
-                logger.info('Reconnected')
+            logger.info('Closed and reconnected')
 
     def process_connect_event(self, event):
         if event.action == 'CONNECT':
@@ -162,10 +170,6 @@ class FXCMStreamRunner(StreamRunnerBase):
         logger.info('[ConnectEvent] %s' % event.action)
 
     def subscribe_pair(self):
-        # for symbol in ALL_SYMBOLS:
-        #     if symbol not in self.pairs:
-        #         self.fxcm.unsubscribe_instrument(symbol)
-
         if not self.pairs:
             logger.info('No valid FXCM symbol exists.')
             return
