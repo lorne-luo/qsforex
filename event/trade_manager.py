@@ -7,7 +7,7 @@ from decimal import Decimal
 import settings
 from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent
 from event.handler import BaseHandler
-from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
+from mt4.constants import profit_pip, OrderSide, get_mt4_symbol, pip
 from utils.redis import system_redis, OPENING_TRADE_COUNT_KEY
 from utils.time import datetime_to_timestamp, datetime_to_str, str_to_datetime
 
@@ -102,6 +102,9 @@ class TradeManageHandler(BaseHandler):
         trade['entry_accuracy'] = round(1 - (abs(min) / (max - min)), 3)
         trade['exit_accuracy'] = round(1 - (profit_missed / (max - min)), 3)
         trade['risk'] = round(max / abs(min), 3) if min else max
+        trade['close_price'] = close_price
+        trade['close_time'] = close_time
+        trade['profit_pips'] = profit_pips
         # trade['drawdown'] =
 
         trade['profitable_time'] = round(trade['profitable_seconds'] / (close_time - trade['open_time']).seconds, 3)
@@ -127,7 +130,7 @@ class TradeManageHandler(BaseHandler):
                     trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
-                            trade_id, trade['max'], trade['min'], trade['current'],trade['last_profitable_start'],
+                            trade_id, trade['max'], trade['min'], trade['current'], trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
                 system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
                 self.saved_to_redis()
