@@ -95,7 +95,7 @@ class FXCMExecutionHandler(BaseExecutionHandler):
             logger.info('[ORDER_OPEN_SKIP] %s' % event.__dict__)
             return
 
-        spread_pips = self.get_spread(event.instruent)
+        spread_pips = self.get_spread(event.instrument)
         if not spread_pips:
             logger.info('[ORDER_OPEN] cant get spread for %s' % event.instrument)
             return
