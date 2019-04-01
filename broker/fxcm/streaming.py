@@ -166,6 +166,8 @@ class FXCMStreamRunner(StreamRunnerBase):
             self.reconnect()
         elif event.action == 'DISCONNECT':
             self.fxcm.close()
+        elif event.action == 'STATUS':
+            logger.info('[ConnectEvent] %s' % self.fxcm.is_connected())
 
         logger.info('[ConnectEvent] %s' % event.action)
 

@@ -195,6 +195,7 @@ class PriceAlertHandler(BaseHandler):
                 msg = '%s up corss %s = %s' % (symbol, resistance_level, price)
                 logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
+                tg.send_me(msg)
                 self.remove(key)
 
         for support_level in self.support_suffix:
@@ -208,6 +209,7 @@ class PriceAlertHandler(BaseHandler):
                 msg = '%s down corss %s = %s' % (symbol, support_level, price)
                 logger.info('[PRICE_ALERT] %s' % msg)
                 send_to_admin(msg)
+                tg.send_me(msg)
                 self.remove(key)
 
     def remove(self, key):
