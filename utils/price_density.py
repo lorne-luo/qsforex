@@ -18,7 +18,6 @@ from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TimeFrameEvent
 from event.handler import BaseHandler
 from mt4.constants import pip, get_mt4_symbol
-from mt4.constants import pip_unit as get_pip_unit
 from utils.redis import price_redis
 
 TIME_SUFFIX = '_LAST_TIME'
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def _process_df(df, result, symbol):
-    pip_unit = get_pip_unit(symbol)
+    pip_unit = pip(symbol)
     for index, row in df.iterrows():
         high = Decimal(str(row['askhigh'])).quantize(pip_unit, rounding=ROUND_HALF_EVEN)
         low = Decimal(str(row['bidlow'])).quantize(pip_unit, rounding=ROUND_HALF_EVEN)
@@ -103,7 +102,7 @@ def update_density(symbol, account=None):
 
 def _draw(data, symbol, price, filename=None, to_plotly=False):
     symbol = get_mt4_symbol(symbol)
-    pip_unit = get_pip_unit(symbol)
+    pip_unit = pip(symbol)
     fig = plt.figure()
     ax = plt.axes()
     items = data.items()

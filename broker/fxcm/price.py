@@ -24,7 +24,7 @@ class PriceMixin(OANDABase, PriceBase):
 
     def get_price(self, instrument, type='mid'):
         instrument = get_mt4_symbol(instrument)
-        pip_u = pip_unit(instrument)
+        pip_u = pip(instrument)
         price = get_tick_price(instrument)
         if not price:
             raise Exception('get_price, %s price is None' % instrument)
@@ -38,7 +38,7 @@ class PriceMixin(OANDABase, PriceBase):
 
     # def get_price(self, instrument, type='mid'):
     #     instrument = get_fxcm_symbol(instrument)
-    #     pip_u = pip_unit(instrument)
+    #     pip_u = pip(instrument)
 
     #     data = self.fxcmpy.get_last_price(instrument)
     #     if type == 'mid':

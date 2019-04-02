@@ -33,8 +33,6 @@ class StrategyBase(BaseHandler, QueueBase):
         self.data_reader = reader
 
     def signal(self):
-        if not is_market_open():
-            return
         for symbol in self.pairs:
             self.signal_pair(symbol)
 
