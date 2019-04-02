@@ -81,7 +81,7 @@ class FXCMExecutionHandler(BaseExecutionHandler):
         tick_price = get_tick_price(instrument)
         if tick_price:
             spread = tick_price['ask'] - tick_price['bid']
-            spread_pips = pip(spread)
+            spread_pips = pip(instrument, spread, _abs=True)
             return spread_pips
 
         return None

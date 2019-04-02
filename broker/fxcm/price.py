@@ -5,7 +5,7 @@ from decimal import Decimal
 from broker.base import PriceBase
 from broker.fxcm.constants import get_fxcm_symbol, get_fxcm_timeframe
 from broker.oanda.base import OANDABase
-from mt4.constants import get_mt4_symbol, pip, pip_unit
+from mt4.constants import get_mt4_symbol, pip
 from utils.redis import price_redis, get_tick_price
 
 logger = logging.getLogger(__name__)
