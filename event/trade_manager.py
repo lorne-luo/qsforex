@@ -130,8 +130,8 @@ class TradeManageHandler(BaseHandler):
                     total_profit_seconds = trade['profitable_seconds'] + last_profit_period
                     trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
-                        '[Trade_Monitor] %s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
-                            trade_id, trade['max'], trade['min'], trade['current'], trade['last_profitable_start'],
+                        '[Trade_Monitor] %s@%s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
+                            trade_id, trade['instrument'], trade['max'], trade['min'], trade['current'], trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
                 system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
                 self.saved_to_redis()
