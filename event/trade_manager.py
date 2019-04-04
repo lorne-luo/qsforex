@@ -16,9 +16,15 @@ TRADES_KEY = 'TRADES'
 
 
 class TradeManageHandler(BaseHandler):
-    subscription = [TickPriceEvent.type, TradeOpenEvent.type, TradeCloseEvent.type, StartUpEvent.type,
+    subscription = [TickPriceEvent.type,
+                    TradeOpenEvent.type,
+                    TradeCloseEvent.type,
                     HeartBeatEvent.type]
     trades = {}
+
+    def __init__(self, queue, account=None, *args, **kwargs):
+        super(TradeManageHandler, self).__init__(queue, account)
+        self.load_trades()
 
     def process(self, event):
         if event.type == TickPriceEvent.type:
@@ -27,8 +33,6 @@ class TradeManageHandler(BaseHandler):
             self.trade_open(event)
         elif event.type == TradeCloseEvent.type:
             self.trade_close(event)
-        elif event.type == StartUpEvent.type:
-            self.load_trades()
         elif event.type == HeartBeatEvent.type:
             self.heartbeat(event)
 
@@ -140,7 +144,7 @@ class TradeManageHandler(BaseHandler):
 
     def load_trades(self):
         logger.info('[Trade_Manage] loading trades.')
-        if self.account.broker == 'FXCM':
+        if self.account and self.account.broker == 'FXCM':
             for trade_id, trade in self.account.get_trades().items():
                 if str(trade_id) in self.trades:
                     continue
