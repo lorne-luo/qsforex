@@ -15,16 +15,20 @@ def datetime_to_timestamp(dt):
 
 
 def datetime_to_str(dt, format='%Y-%m-%d %H:%M:%S:%f'):
-    return dt.strftime(format)
+    if dt:
+        return dt.strftime(format)
+    return None
 
 
 def str_to_datetime(string, format='%Y-%m-%d %H:%M:%S:%f'):
-    try:
-        dt = datetime.strptime(string, format)
-    except:
-        dt = parse(string)
+    if string:
+        try:
+            dt = datetime.strptime(string, format)
+        except:
+            dt = parse(string)
 
-    return dt
+        return dt
+    return None
 
 
 def timestamp_to_str(timestamp, datetime_fmt="%Y/%m/%d %H:%M:%S:%f"):
