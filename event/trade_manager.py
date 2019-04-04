@@ -130,7 +130,8 @@ class TradeManageHandler(BaseHandler):
                     trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s@%s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
-                            trade_id, trade['instrument'], trade['max'], trade['min'], trade['current'], trade['last_profitable_start'],
+                            trade_id, trade['instrument'], trade['max'], trade['min'], trade['current'],
+                            trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
                 system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
                 self.saved_to_redis()
@@ -169,8 +170,14 @@ class TradeManageHandler(BaseHandler):
                 if k in self.trades:
                     self.trades[k]['max'] = Decimal(str(redis_data[k]['max']))
                     self.trades[k]['min'] = Decimal(str(redis_data[k]['min']))
-                    self.trades[k]['profitable_time'] = redis_data[k]['profitable_time']
+                    self.trades[k]['profitable_seconds'] = redis_data[k]['profitable_seconds']
                     self.trades[k]['last_profitable_start'] = str_to_datetime(redis_data[k]['last_profitable_start'])
+                    total_time = datetime.utcnow() - self.trades[k]['open_time']
+                    last_profit_period = 0
+                    if self.trades[k]['last_profitable_start']:
+                        last_profit_period = (datetime.utcnow() - self.trades[k]['last_profitable_start']).seconds
+                    total_profit_seconds = self.trades[k]['profitable_seconds'] + last_profit_period
+                    self.trades[k]['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
 
         if settings.DEBUG:
             if self.trades:
@@ -184,6 +191,6 @@ class TradeManageHandler(BaseHandler):
                               'current': float(trade['current']),
                               'instrument': trade['instrument'],
                               'last_profitable_start': datetime_to_str(trade['last_profitable_start']),
-                              'profitable_time': int(trade['profitable_time'])}
+                              'profitable_seconds': int(trade['profitable_seconds'])}
 
         system_redis.set(TRADES_KEY, json.dumps(data))
