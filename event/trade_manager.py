@@ -116,25 +116,27 @@ class TradeManageHandler(BaseHandler):
         trade['last_profitable_start'] = None
 
     def heartbeat(self, event):
+        for trade_id, trade in self.trades.items():
+            total_time = datetime.utcnow() - trade['open_time']
+            last_profit_period = 0
+            if trade['last_profitable_start']:
+                last_profit_period = (datetime.utcnow() - trade['last_profitable_start']).seconds
+
+            total_profit_seconds = trade['profitable_seconds'] + last_profit_period
+            trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
+        system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
+        self.saved_to_redis()
+
         if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
             if settings.DEBUG:
                 print(self.trades)
             else:
                 for trade_id, trade in self.trades.items():
-                    total_time = datetime.utcnow() - trade['open_time']
-                    last_profit_period = 0
-                    if trade['last_profitable_start']:
-                        last_profit_period = (datetime.utcnow() - trade['last_profitable_start']).seconds
-
-                    total_profit_seconds = trade['profitable_seconds'] + last_profit_period
-                    trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
                     logger.info(
                         '[Trade_Monitor] %s@%s: max=%s, min=%s, current=%s, last_profit=%s, profit_seconds=%s, profitable_time=%s, last_tick=%s' % (
                             trade_id, trade['instrument'], trade['max'], trade['min'], trade['current'],
                             trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
-                system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
-                self.saved_to_redis()
 
     def load_trades(self):
         logger.info('[Trade_Manage] loading trades.')
