@@ -40,6 +40,8 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.register(*handlers)
         try:
             self.fxcm = api or fxcmpy(access_token=access_token, server=self.server)
+            if not self.access_token:
+                self.access_token = self.fxcm.access_token
             self.fxcm.set_max_prices(self.max_prices)
             self.subscribe_pair()
         except Exception as ex:
