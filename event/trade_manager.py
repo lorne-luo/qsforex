@@ -73,7 +73,6 @@ class TradeManageHandler(BaseHandler):
             trade['profitable_seconds'] = 0
             trade['last_profitable_start'] = None
             trade['last_tick_time'] = None
-            trade['start_from'] = datetime.utcnow()
 
             self.trades[trade_id] = trade
 
@@ -122,7 +121,7 @@ class TradeManageHandler(BaseHandler):
                 print(self.trades)
             else:
                 for trade_id, trade in self.trades.items():
-                    total_time = datetime.utcnow() - trade['start_from']
+                    total_time = datetime.utcnow() - trade['open_time']
                     last_profit_period = 0
                     if trade['last_profitable_start']:
                         last_profit_period = (datetime.utcnow() - trade['last_profitable_start']).seconds
@@ -157,7 +156,6 @@ class TradeManageHandler(BaseHandler):
                     'profitable_seconds': 0,
                     'last_profitable_start': None,
                     'last_tick_time': None,
-                    'start_from': datetime.utcnow()
                 }
         else:
             raise NotImplementedError
