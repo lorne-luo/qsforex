@@ -167,6 +167,7 @@ class TradeManageHandler(BaseHandler):
                     'open_price': Decimal(str(trade.get_open())),
                     'take_profit': Decimal(str(trade.get_limit())),
                     'stop_loss': Decimal(str(trade.get_stop())),
+                    'current': 0,
                     'max': 0,
                     'min': 0,
                     'profitable_seconds': 0,

@@ -33,8 +33,7 @@ class EventType(object):
     TRADE_OPEN = 'TRADE_OPEN'
     TRADE_CLOSE = 'TRADE_CLOSE'
     ORDER = 'ORDER'
-    MARKET_OPEN = 'MARKET_OPEN'
-    MARKET_CLOSE = 'MARKET_CLOSE'
+    MARKET = 'MARKET'
 
 
 class Event(object):
@@ -112,7 +111,7 @@ class TimeFrameEvent(Event):
 
 
 class MarketEvent(Event):
-    type = EventType.MARKET_OPEN
+    type = EventType.MARKET
 
     def __init__(self, action):
         super(MarketEvent, self).__init__()

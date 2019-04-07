@@ -161,13 +161,18 @@ class FXCMStreamRunner(StreamRunnerBase):
             logger.info('Closed and reconnected')
 
     def process_connect_event(self, event):
-        if event.action == 'CONNECT':
+        action = event.action.upper()
+        if action == 'CONNECT':
             self.fxcm.connect()
-        elif event.action == 'RECONNECT':
+        elif action == 'RECONNECT':
             self.reconnect()
-        elif event.action == 'DISCONNECT':
+        elif action == 'DISCONNECT':
             self.fxcm.close()
-        elif event.action == 'STATUS':
+        elif action == 'MARKET_CLOSE':
+            self.market_close()
+        elif action == 'MARKET_OPEN':
+            self.market_open()
+        elif action == 'STATUS':
             logger.info('[ConnectEvent] %s' % self.fxcm.is_connected())
 
         logger.info('[ConnectEvent] %s' % event.action)
