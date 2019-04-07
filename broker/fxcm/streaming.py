@@ -100,14 +100,11 @@ class FXCMStreamRunner(StreamRunnerBase):
 
     def market_open(self):
         try:
-            if not self.fxcm:
-                self.new_connect()
-            elif not self.fxcm.is_connected():
-                self.reconnect()
+            self.new_connect()
         except Exception as ex:
             logger.error('[MARKET_OPEN] %s' % ex)
             return False
-        logger.info('[MARKET_OPEN] Connected.')
+        logger.info('[MARKET_OPEN]')
         return True
 
     def market_close(self):
@@ -131,9 +128,17 @@ class FXCMStreamRunner(StreamRunnerBase):
             logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
                 self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
 
-            self.reconnect()
+            self.new_connect()
 
     def new_connect(self):
+        if self.fxcm:
+            try:
+                self.fxcm.close()
+            except:
+                pass
+            del self.fxcm
+            self.fxcm = None
+
         self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
         self.fxcm.set_max_prices(self.max_prices)
         self.subscribe_pair()
@@ -147,14 +152,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                 handler.account.fxcmpy = self.fxcm
 
     def reconnect(self):
-        try:
-            self.fxcm.close()
-        except:
-            pass
-        del self.fxcm
-        self.fxcm = None
         self.new_connect()
-
         time.sleep(10)
         if not self.fxcm.is_connected():
             logger.error('[System reconnect] Cant connect to server')
@@ -173,6 +171,8 @@ class FXCMStreamRunner(StreamRunnerBase):
             self.market_close()
         elif action == 'MARKET_OPEN':
             self.market_open()
+        elif action == 'NEW_CONNECT':
+            self.new_connect()
         elif action == 'STATUS':
             logger.info('[ConnectEvent] %s' % self.fxcm.is_connected())
 
