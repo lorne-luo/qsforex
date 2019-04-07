@@ -13,7 +13,7 @@ def debug(action, queue='FXCM'):
 
 
 def connect_debug(action, queue='FXCM'):
-    """action: connect,reconnect,disconnect"""
+    """action: connect,reconnect,disconnect, market_close, market_open"""
     queue = RedisQueue(queue)
     event = ConnectEvent(action)
     data = json.dumps(event.to_dict())

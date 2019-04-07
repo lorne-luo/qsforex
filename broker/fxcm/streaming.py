@@ -98,19 +98,6 @@ class FXCMStreamRunner(StreamRunnerBase):
                 tg.send_me('[MarketEvent] Market closed.')
                 self.is_market_open = current_status
 
-    def new_connect(self):
-        self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
-        self.fxcm.set_max_prices(self.max_prices)
-        self.subscribe_pair()
-        for handler in self.handlers:
-            if getattr(handler, 'account'):
-                try:
-                    handler.account.fxcmpy.close()
-                except:
-                    pass
-                del handler.account.fxcmpy
-                handler.account.fxcmpy = self.fxcm
-
     def market_open(self):
         try:
             if not self.fxcm:
@@ -146,6 +133,19 @@ class FXCMStreamRunner(StreamRunnerBase):
 
             self.reconnect()
 
+    def new_connect(self):
+        self.fxcm = fxcmpy(access_token=self.access_token, server=self.server)
+        self.fxcm.set_max_prices(self.max_prices)
+        self.subscribe_pair()
+        for handler in self.handlers:
+            if getattr(handler, 'account'):
+                try:
+                    handler.account.fxcmpy.close()
+                except:
+                    pass
+                del handler.account.fxcmpy
+                handler.account.fxcmpy = self.fxcm
+
     def reconnect(self):
         try:
             self.fxcm.close()
@@ -155,6 +155,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.fxcm = None
         self.new_connect()
 
+        time.sleep(10)
         if not self.fxcm.is_connected():
             logger.error('[System reconnect] Cant connect to server')
         else:
