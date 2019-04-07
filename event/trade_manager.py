@@ -5,7 +5,7 @@ from datetime import timedelta, datetime
 from decimal import Decimal
 
 import settings
-from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent
+from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent, MarketEvent
 from event.handler import BaseHandler
 from mt4.constants import profit_pip, OrderSide, get_mt4_symbol, pip
 from utils.redis import system_redis, OPENING_TRADE_COUNT_KEY
@@ -19,6 +19,7 @@ class TradeManageHandler(BaseHandler):
     subscription = [TickPriceEvent.type,
                     TradeOpenEvent.type,
                     TradeCloseEvent.type,
+                    MarketEvent.type,
                     HeartBeatEvent.type]
     trades = {}
 
@@ -35,6 +36,8 @@ class TradeManageHandler(BaseHandler):
             self.trade_close(event)
         elif event.type == HeartBeatEvent.type:
             self.heartbeat(event)
+        elif event.type == MarketEvent.type:
+            self.load_trades()
 
     def get_trade(self, trade_id):
         trade_id = str(trade_id)
