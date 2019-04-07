@@ -71,6 +71,15 @@ class TradeManageHandler(BaseHandler):
         trade_id = str(event.trade_id)
         if trade_id not in self.trades:
             trade = event.to_dict().copy()
+            trade['broker'] = event.broker
+            trade['account_id'] = event.account_id
+            trade['trade_id'] = event.trade_id
+            trade['instrument'] = event.instrument
+            trade['side'] = event.side
+            trade['lots'] = event.lots
+            trade['open_time'] = event.open_time
+            trade['open_price'] = event.open_price
+            trade['magic_number'] = event.magic_number
             trade['max'] = 0
             trade['min'] = 0
             trade['current'] = 0
