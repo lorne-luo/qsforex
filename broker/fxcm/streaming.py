@@ -156,8 +156,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.new_connect()
 
         if not self.fxcm.is_connected():
-            logger.error('[System Exit] Cant connect to server')
-            send_to_admin('[System Exit] Cant connect to server')
+            logger.error('[System reconnect] Cant connect to server')
         else:
             logger.info('Closed and reconnected')
 
