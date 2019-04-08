@@ -91,13 +91,13 @@ class FXCMStreamRunner(StreamRunnerBase):
                 event = MarketEvent(MarketAction.OPEN)
                 self.put(event)
                 logger.info('[MarketEvent] Market opened.')
-                tg.send_me('[MarketEvent] Market opened.')
+                tg.send_me('[MarketEvent] Forex market opened.')
             elif current_status is False:
                 event = MarketEvent(MarketAction.CLOSE)
                 self.handle_event(event)
                 self.market_close()
                 logger.info('[MarketEvent] Market closed.')
-                tg.send_me('[MarketEvent] Market closed.')
+                tg.send_me('[MarketEvent] Forex market closed.')
                 self.is_market_open = current_status
 
     def market_open(self):
@@ -273,6 +273,12 @@ class FXCMStreamRunner(StreamRunnerBase):
                     pips=closed_trade.get_visiblePL(),
                 )
                 self.put(event)
+                tg.send_me('%s %s %s->%s closed, lots=%s, profit=%s' % (
+                    event.instrument, event.side,
+                    closed_trade.get_open(),
+                    closed_trade.get_close(),
+                    closed_trade.get_amount(),
+                    closed_trade.get_grossPL()))
 
 
 if __name__ == '__main__':

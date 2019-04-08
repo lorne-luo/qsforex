@@ -17,6 +17,7 @@ from event.handler import BaseHandler, get_mt4_symbol
 from mt4.constants import OrderSide, pip
 from utils.redis import get_tick_price
 from utils.time import str_to_datetime
+from utils import telegram as tg
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +140,15 @@ class FXCMExecutionHandler(BaseExecutionHandler):
             open_time = trade.get_time()
             open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
 
-            event = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
-                                   trade_id=int(trade.get_tradeId()), lots=lots,
-                                   instrument=event.instrument, side=event.side, open_time=open_time,
-                                   open_price=open_price,
-                                   stop_loss=trade.get_stopRate(),
-                                   take_profit=trade.get_limitRate(),
-                                   magic_number=event.magic_number)
-            self.put(event)
+            e = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
+                               trade_id=int(trade.get_tradeId()), lots=lots,
+                               instrument=event.instrument, side=event.side, open_time=open_time,
+                               open_price=open_price,
+                               stop_loss=trade.get_stopRate(),
+                               take_profit=trade.get_limitRate(),
+                               magic_number=event.magic_number)
+            self.put(e)
+            tg.send_me('[%s] %s %s@%s lots=%s' % (event.strategy, event.instrument, event.side, open_price, lots))
         else:
             logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
 
