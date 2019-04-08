@@ -29,9 +29,11 @@ class FXCMStreamRunner(StreamRunnerBase):
     max_prices = 4000
     loop_counter = 0
     is_market_open = True
+    last_tick_time = None
 
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
+        self.last_tick_time = datetime.utcnow()
         self.access_token = access_token
         self.account_type = account_type
         self.server = 'real' if account_type == AccountType.REAL else 'demo'
@@ -100,7 +102,10 @@ class FXCMStreamRunner(StreamRunnerBase):
 
     def market_open(self):
         try:
-            self.new_connect()
+            if not self.fxcm:
+                self.new_connect()
+            else:
+                self.reconnect()
         except Exception as ex:
             logger.error('[MARKET_OPEN] %s' % ex)
             return False
@@ -119,23 +124,30 @@ class FXCMStreamRunner(StreamRunnerBase):
                 self.put(StartUpEvent())
 
     def check_connection(self):
-        if self.loop_counter % (12 * settings.HEARTBEAT / settings.LOOP_SLEEP):
-            # check connection every minute
-            return
-        if not self.fxcm:
-            self.new_connect()
-        elif not self.fxcm.is_connected():
-            logger.error('[Connect_Lost] disconnected=%s, thread.is_alive=%s' % (
-                self.fxcm.__disconnected__, self.fxcm.socket_thread.is_alive()))
+        seconds = (datetime.utcnow() - self.last_tick_time).seconds
+        if seconds > 60:
+            if self.fxcm.__disconnected__:
+                logger.error('[CONNECT_CLOSED] Connect again')
+                self.reconnect()
 
-            self.new_connect()
+            if not self.fxcm.is_connected():
+                logger.error('[CONNECT_LOST] socket.connected=%s, thread.is_alive=%s, create new connect.' % (
+                    self.fxcm.socket.connected, self.fxcm.socket_thread.is_alive()))
+                # count = 1
+                # while not self.fxcm.is_connected() and count < 11:
+                #     self.fxcm.__reconnect__(count)
+                #     count += 1
+                #     time.sleep(5)
+                self.new_connect()
 
     def new_connect(self):
         if self.fxcm:
-            try:
-                self.fxcm.close()
-            except:
-                pass
+            if not self.fxcm.__disconnected__:
+                try:
+                    self.fxcm.close()
+                    time.sleep(5)
+                except:
+                    pass
             del self.fxcm
             self.fxcm = None
 
@@ -144,20 +156,27 @@ class FXCMStreamRunner(StreamRunnerBase):
         self.subscribe_pair()
         for handler in self.handlers:
             if getattr(handler, 'account'):
-                try:
-                    handler.account.fxcmpy.close()
-                except:
-                    pass
                 del handler.account.fxcmpy
                 handler.account.fxcmpy = self.fxcm
 
-    def reconnect(self):
-        self.new_connect()
-        time.sleep(10)
         if not self.fxcm.is_connected():
-            logger.error('[System reconnect] Cant connect to server')
+            logger.error('[NEW_CONNECT] Failed, socket.connected=%s, thread.is_alive=%s' % (
+                self.fxcm.socket.connected, self.fxcm.socket_thread.is_alive()))
         else:
-            logger.info('Closed and reconnected')
+            logger.info('[NEW_CONNECT] Succeed.')
+
+    def reconnect(self):
+        if not self.fxcm.__disconnected__:
+            self.fxcm.close()
+            time.sleep(5)
+        self.fxcm.connect()
+        time.sleep(5)
+        self.subscribe_pair()
+
+        if not self.fxcm.is_connected():
+            logger.error('[RECONNECT] Failed')
+        else:
+            logger.info('[RECONNECT] Closed and reconnected')
 
     def process_connect_event(self, event):
         action = event.action.upper()
@@ -185,6 +204,7 @@ class FXCMStreamRunner(StreamRunnerBase):
         for pair in self.pairs:
             self.fxcm.subscribe_market_data(pair, (self.tick_data,))
             self.fxcm.subscribe_instrument(pair)
+        logger.info('[INIT] Subscribe Pairs: %s' % self.pairs)
 
         self.fxcm.subscribe_data_model('ClosedPosition', [self.trade_closed])
 
@@ -224,6 +244,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                 {'ask': float(ask), 'bid': float(bid), 'time': time.strftime('%Y-%m-%d %H:%M:%S:%f')})
             set_tick_price(instrument, data)
             set_last_tick(time.strftime('%Y-%m-%d %H:%M:%S:%f'))
+            self.last_tick_time = datetime.utcnow()
         except Exception as ex:
             logger.error('tick_data error = %s' % ex)
 
