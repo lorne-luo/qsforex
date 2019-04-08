@@ -129,8 +129,7 @@ class FXCMStreamRunner(StreamRunnerBase):
             if self.fxcm.__disconnected__:
                 logger.error('[CONNECT_CLOSED] Connect again')
                 self.reconnect()
-
-            if not self.fxcm.is_connected():
+            elif not self.fxcm.is_connected():
                 logger.error('[CONNECT_LOST] socket.connected=%s, thread.is_alive=%s, create new connect.' % (
                     self.fxcm.socket.connected, self.fxcm.socket_thread.is_alive()))
                 # count = 1
@@ -138,6 +137,9 @@ class FXCMStreamRunner(StreamRunnerBase):
                 #     self.fxcm.__reconnect__(count)
                 #     count += 1
                 #     time.sleep(5)
+                self.new_connect()
+            else:
+                logger.error('[CONNECT_LOST] long time no tick price, create new connect.')
                 self.new_connect()
 
     def new_connect(self):
