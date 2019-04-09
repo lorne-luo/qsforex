@@ -1,15 +1,14 @@
 import json
 import logging
-import time
-from datetime import timedelta, datetime
+from datetime import datetime
 from decimal import Decimal
 
 import settings
-from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, StartUpEvent, HeartBeatEvent, MarketEvent
+from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, HeartBeatEvent, MarketEvent
 from event.handler import BaseHandler
-from mt4.constants import profit_pip, OrderSide, get_mt4_symbol, pip
+from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
 from utils.redis import system_redis, OPENING_TRADE_COUNT_KEY
-from utils.time import datetime_to_timestamp, datetime_to_str, str_to_datetime
+from utils.time import datetime_to_str, str_to_datetime
 
 logger = logging.getLogger(__name__)
 TRADES_KEY = 'TRADES'
@@ -132,6 +131,10 @@ class TradeManageHandler(BaseHandler):
         trade['last_profitable_start'] = None
 
     def heartbeat(self, event):
+        for id, trade in self.account.get_trades().items():
+            if id not in self.trades:
+                self._load_trade(id, trade)
+
         for trade_id, trade in self.trades.items():
             total_time = datetime.utcnow() - trade['open_time']
             last_profit_period = 0
@@ -160,23 +163,7 @@ class TradeManageHandler(BaseHandler):
             for trade_id, trade in self.account.get_trades().items():
                 if str(trade_id) in self.trades:
                     continue
-                self.trades[str(trade_id)] = {
-                    'broker': self.account.broker,
-                    'account_id': self.account.account_id,
-                    'trade_id': trade.get_tradeId(),
-                    'instrument': get_mt4_symbol(trade.get_currency()),
-                    'side': OrderSide.BUY if trade.get_isBuy() else OrderSide.SELL,
-                    'open_time': trade.get_time(),
-                    'open_price': Decimal(str(trade.get_open())),
-                    'take_profit': Decimal(str(trade.get_limit())),
-                    'stop_loss': Decimal(str(trade.get_stop())),
-                    'current': 0,
-                    'max': 0,
-                    'min': 0,
-                    'profitable_seconds': 0,
-                    'last_profitable_start': None,
-                    'last_tick_time': None,
-                }
+                self._load_trade(trade_id, trade)
         else:
             raise NotImplementedError
 
@@ -201,6 +188,25 @@ class TradeManageHandler(BaseHandler):
         if settings.DEBUG:
             if self.trades:
                 print(self.trades)
+
+    def _load_trade(self, trade_id, trade):
+        self.trades[str(trade_id)] = {
+            'broker': self.account.broker,
+            'account_id': self.account.account_id,
+            'trade_id': trade.get_tradeId(),
+            'instrument': get_mt4_symbol(trade.get_currency()),
+            'side': OrderSide.BUY if trade.get_isBuy() else OrderSide.SELL,
+            'open_time': trade.get_time(),
+            'open_price': Decimal(str(trade.get_open())),
+            'take_profit': Decimal(str(trade.get_limit())),
+            'stop_loss': Decimal(str(trade.get_stop())),
+            'current': 0,
+            'max': 0,
+            'min': 0,
+            'profitable_seconds': 0,
+            'last_profitable_start': None,
+            'last_tick_time': None,
+        }
 
     def saved_to_redis(self):
         data = {}
