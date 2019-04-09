@@ -132,7 +132,7 @@ class TradeManageHandler(BaseHandler):
 
     def heartbeat(self, event):
         for id, trade in self.account.get_trades().items():
-            if id not in self.trades:
+            if str(id) not in self.trades:
                 self._load_trade(id, trade)
 
         for trade_id, trade in self.trades.items():

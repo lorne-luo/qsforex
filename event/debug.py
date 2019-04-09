@@ -5,7 +5,7 @@ from utils.redis import RedisQueue
 
 
 def debug(action, queue='FXCM'):
-    """ action: order,trade,account"""
+    """ action: order, trade, account"""
     event = DebugEvent(action)
     data = json.dumps(event.to_dict())
     queue = RedisQueue(queue)
@@ -13,7 +13,7 @@ def debug(action, queue='FXCM'):
 
 
 def connect_debug(action, queue='FXCM'):
-    """action: connect,reconnect,disconnect, market_close, market_open"""
+    """action: connect, reconnect, disconnect, status, market_close, market_open"""
     queue = RedisQueue(queue)
     event = ConnectEvent(action)
     data = json.dumps(event.to_dict())
