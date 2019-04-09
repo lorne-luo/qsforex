@@ -148,7 +148,7 @@ class FXCMExecutionHandler(BaseExecutionHandler):
                                take_profit=trade.get_limitRate(),
                                magic_number=event.magic_number)
             self.put(e)
-            tg.send_me('[%s] %s %s@%s lots=%s' % (event.strategy, event.instrument, event.side, open_price, lots))
+            tg.send_me('[FOREX_TRADE_OPEN]\n%s@%s %s@%s lots=%s' % (event.strategy, event.instrument, event.side, open_price, lots))
         else:
             logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
 

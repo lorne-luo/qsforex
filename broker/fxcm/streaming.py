@@ -275,7 +275,7 @@ class FXCMStreamRunner(StreamRunnerBase):
                     pips=closed_trade.get_visiblePL(),
                 )
                 self.put(event)
-                tg.send_me('%s %s %s->%s closed, lots=%s, profit=%s' % (
+                tg.send_me('[FOREX_TRADE_CLOSE]\n%s %s %s->%s closed, lots=%s, profit=%s' % (
                     event.instrument, event.side,
                     closed_trade.get_open(),
                     closed_trade.get_close(),
