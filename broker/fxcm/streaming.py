@@ -13,7 +13,7 @@ from broker.fxcm.constants import get_fxcm_symbol
 from event.event import TickPriceEvent, TimeFrameEvent, HeartBeatEvent, StartUpEvent, ConnectEvent, TradeCloseEvent, \
     MarketEvent, MarketAction
 from event.runner import StreamRunnerBase
-from mt4.constants import get_mt4_symbol, OrderSide
+from mt4.constants import get_mt4_symbol, OrderSide, pip
 from utils import telegram as tg
 from utils.market import is_market_open
 from utils.redis import price_redis, RedisQueue, set_tick_price
@@ -238,8 +238,8 @@ class FXCMStreamRunner(StreamRunnerBase):
             instrument = get_mt4_symbol(data['Symbol'])
             time = datetime.utcfromtimestamp(int(data['Updated']) / 1000.0)
 
-            bid = Decimal(str(data['Rates'][0]))
-            ask = Decimal(str(data['Rates'][1]))
+            bid = Decimal(str(data['Rates'][0])).quantize(pip(instrument))
+            ask = Decimal(str(data['Rates'][1])).quantize(pip(instrument))
             tick = TickPriceEvent(self.broker, instrument, time, bid, ask)
             self.put(tick)
             data = json.dumps(
