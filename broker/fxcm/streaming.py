@@ -5,6 +5,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from fxcmpy import fxcmpy, fxcmpy_closed_position
+from fxcmpy.fxcmpy import ServerError
 
 import settings
 from broker import SingletonFXCM
@@ -281,6 +282,13 @@ class FXCMStreamRunner(StreamRunnerBase):
                     closed_trade.get_close(),
                     closed_trade.get_amount(),
                     closed_trade.get_grossPL()))
+
+    def handle_error(self, ex):
+        if isinstance(ex, ServerError):
+            error = str(ex)
+            if error.startswith('FXCM Server reports an error: Unauthorized'):
+                logger.error('[Account Unauthorized] create new connect replace old')
+                self.new_connect()
 
 
 if __name__ == '__main__':

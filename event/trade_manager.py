@@ -158,7 +158,7 @@ class TradeManageHandler(BaseHandler):
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
 
     def load_trades(self):
-        logger.info('[Trade_Manage] loading trades.')
+        logger.info('[Trade_Manage] loading %s trades.' % len(self.account.get_trades()))
         if self.account and self.account.broker == 'FXCM':
             for trade_id, trade in self.account.get_trades().items():
                 if str(trade_id) in self.trades:

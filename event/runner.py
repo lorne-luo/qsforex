@@ -3,8 +3,7 @@ import sys
 import time
 import traceback
 
-import settings
-from event.handler import QueueBase, HeartBeatEvent, BaseHandler
+from event.handler import QueueBase
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +50,10 @@ class Runner(QueueBase):
             extracted_list = traceback.extract_tb(ex.__traceback__)
             for item in traceback.StackSummary.from_list(extracted_list).format()[:8]:
                 logger.error(item.strip())
+            self.handle_error(ex)
+
+    def handle_error(self, ex):
+        pass
 
     def print(self):
         print(self.handlers)
