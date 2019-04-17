@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 
-from event.handler import QueueBase
+from event.handler import BaseHandler, QueueBase
 
 logger = logging.getLogger(__name__)
 
