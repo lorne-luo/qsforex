@@ -31,6 +31,7 @@ class FXCMStreamRunner(StreamRunnerBase):
     loop_counter = 0
     is_market_open = True
     last_tick_time = None
+    error_counter = 0
 
     def __init__(self, queue, *, pairs, handlers, access_token=None, account_type=AccountType.DEMO, api=None, **kwargs):
         super(FXCMStreamRunner, self).__init__(queue=queue, pairs=pairs)
@@ -284,11 +285,18 @@ class FXCMStreamRunner(StreamRunnerBase):
                     closed_trade.get_grossPL()))
 
     def handle_error(self, ex):
+        self.error_counter += 1
+
         if isinstance(ex, ServerError):
             error = str(ex)
             if error.startswith('FXCM Server reports an error: Unauthorized'):
                 logger.error('[Account Unauthorized] create new connect replace old')
                 self.new_connect()
+                return
+
+        if not self.error_counter % 5:
+            logger.error('[ERROR_COUNTER] =%s, renew connect' % self.error_counter)
+            self.new_connect()
 
 
 if __name__ == '__main__':
