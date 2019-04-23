@@ -1,7 +1,7 @@
 import json
 import logging
 from decimal import Decimal
-
+import pandas as pd
 from broker.base import PriceBase
 from broker.fxcm.constants import get_fxcm_symbol, get_fxcm_timeframe
 from broker.oanda.base import OANDABase
@@ -53,3 +53,26 @@ class PriceMixin(OANDABase, PriceBase):
         instrument = get_fxcm_symbol(instrument)
         granularity = get_fxcm_timeframe(granularity)
         return self.fxcmpy.get_candles(instrument, period=granularity, number=count, start=fromTime, end=toTime)
+
+    def get_dataframe(self, instrument, granularity, fromTime, toTime):
+        instrument = get_fxcm_symbol(instrument)
+        granularity = get_fxcm_timeframe(granularity)
+        granularity_seconds = int(granularity)
+        end = toTime
+        result = None
+
+        while end > fromTime:
+            seconds = (end - fromTime).seconds
+            if seconds / granularity_seconds > self.MAX_CANDLES:
+                data = self.fxcmpy.get_candles(instrument, period=granularity, number=self.MAX_CANDLES, end=toTime,
+                                               columns=['askhigh', 'bidlow', 'tickqty'])
+            else:
+                data = self.fxcmpy.get_candles(instrument, period=granularity, start=fromTime, end=toTime,
+                                               columns=['askhigh', 'bidlow', 'tickqty'])
+            if result is not None:
+                result = pd.concat([result, data])
+            else:
+                result = data
+            end = result.tail.name.to_pydatetime()
+
+        return result
