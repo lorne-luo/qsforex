@@ -84,7 +84,7 @@ def update_density(symbol, account=None):
     data = price_redis.get('%s_H1' % symbol)
     data = json.loads(data) if data else {}
 
-    fxcm = account or SingletonFXCM(AccountType.DEMO, ACCOUNT_ID, ACCESS_TOKEN)
+    fxcm = account or SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
     if last_time:
         df = fxcm.fxcmpy.get_candles(get_fxcm_symbol(symbol), period='m1', start=last_time, end=now,
                                      columns=['askhigh', 'bidlow', 'tickqty'])
