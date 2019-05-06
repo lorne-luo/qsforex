@@ -164,6 +164,9 @@ class TradeManageHandler(BaseHandler):
                 if str(trade_id) in self.trades:
                     continue
                 self._load_trade(trade_id, trade)
+            for key in self.trades.keys():
+                if int(key) not in self.account.get_trades():
+                    self.pop_trade(key)
         else:
             raise NotImplementedError
 
