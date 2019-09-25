@@ -14,7 +14,7 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-SECRET_KEY = 'test_secret'
+SECRET_KEY = 'test_secretsadfsaGQGGEGq14^&(&912dgSDG14a1240-'
 
 INSTALLED_APPS = [
     'django_orm.trade',
