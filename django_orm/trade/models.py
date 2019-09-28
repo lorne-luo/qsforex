@@ -17,6 +17,7 @@ class Trade(models.Model):
 
     open_price = models.DecimalField(_('open_price'), max_digits=8, decimal_places=5, blank=True, null=True)
     close_price = models.DecimalField(_('close_price'), max_digits=8, decimal_places=5, blank=True, null=True)
+    side = models.CharField(_('side'), max_length=12, blank=True, null=False)
     lots = models.DecimalField(_('lots'), max_digits=8, decimal_places=2, blank=True, null=True)
     pips = models.DecimalField(_('pips'), max_digits=8, decimal_places=2, blank=True, null=True)
     profit = models.DecimalField(_('profit'), max_digits=8, decimal_places=2, blank=True, null=True)
