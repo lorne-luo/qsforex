@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 
 import settings
+from django_orm import Trade
 from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, HeartBeatEvent, MarketEvent
 from event.handler import BaseHandler
 from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
@@ -146,7 +147,10 @@ class TradeManageHandler(BaseHandler):
         system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
         self.saved_to_redis()
 
-        if not event.counter % (120 * settings.HEARTBEAT / settings.LOOP_SLEEP):
+        if not event.counter % (30 * int(1 / settings.LOOP_SLEEP)):  # 30 secs
+            self.save_to_db()
+
+        if not event.counter % (60 * 15 * int(1 / settings.LOOP_SLEEP)):  # 15 mins
             if settings.DEBUG:
                 print(self.trades)
             else:
@@ -210,6 +214,28 @@ class TradeManageHandler(BaseHandler):
             'last_profitable_start': None,
             'last_tick_time': None,
         }
+
+    def save_to_db(self):
+        for trade_id, trade_data in self.trades.items():
+            trade = Trade.objects.filter(id=trade_id).first()
+            if not trade:
+                trade = Trade(trade_id=trade_id,
+                              broker=trade_data.get('broker'),
+                              account_id=trade_data.get('account_id'),
+                              side=trade_data.get('side'),
+                              open_price=trade_data.get('open_price'),
+                              open_time=trade_data.get('open_time'),
+                              instrument=trade_data.get('instrument'))
+                trade.save()
+
+            if trade_data.get('current'):
+                trade.pips = Decimal(str(trade_data['current']))
+            if trade_data.get('max'):
+                trade.max_profit = Decimal(str(trade_data['max']))
+            if trade_data.get('min'):
+                trade.min_profit = Decimal(str(trade_data['min']))
+
+            trade.save()
 
     def saved_to_redis(self):
         data = {}
