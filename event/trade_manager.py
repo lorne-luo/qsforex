@@ -217,7 +217,8 @@ class TradeManageHandler(BaseHandler):
 
     def save_to_db(self):
         for trade_id, trade_data in self.trades.items():
-            trade = Trade.objects.filter(id=trade_id).first()
+            trade = Trade.objects.filter(account_id=trade_data.get('account_id'),
+                                         trade_id=trade_id).first()
             if not trade:
                 trade = Trade(trade_id=trade_id,
                               broker=trade_data.get('broker'),
