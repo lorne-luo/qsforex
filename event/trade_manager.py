@@ -126,7 +126,7 @@ class TradeManageHandler(BaseHandler):
         trade['profitable_time'] = round(trade['profitable_seconds'] / (close_time - trade['open_time']).seconds, 3)
         logger.info('[Trade_Manage] trade closed=%s' % trade)
 
-        self.save_to_db()
+        self.close_trade_to_db(event, trade)
         self.pop_trade(event.trade_id)
         self.saved_to_redis()
         tg.send_me(
@@ -230,7 +230,11 @@ class TradeManageHandler(BaseHandler):
         for trade_id, trade_data in self.trades.items():
             trade = Trade.objects.filter(account_id=trade_data.get('account_id'),
                                          trade_id=trade_id).first()
-            if not trade:
+
+            if trade:
+                if trade.close_price:
+                    return
+            else:
                 trade = Trade(trade_id=trade_id,
                               broker=trade_data.get('broker'),
                               account_id=trade_data.get('account_id'),
@@ -238,7 +242,6 @@ class TradeManageHandler(BaseHandler):
                               open_price=trade_data.get('open_price'),
                               open_time=trade_data.get('open_time'),
                               instrument=trade_data.get('instrument'))
-                trade.save()
 
             if trade_data.get('current'):
                 trade.pips = Decimal(str(trade_data['current']))
@@ -248,6 +251,32 @@ class TradeManageHandler(BaseHandler):
                 trade.min_profit = Decimal(str(trade_data['min']))
 
             trade.save()
+
+    def close_trade_to_db(self, event, trade_data):
+        trade = Trade.objects.filter(account_id=event.account_id,
+                                     trade_id=event.trade_id).first()
+        if trade:
+            if trade.close_price:
+                return
+        else:
+            trade = Trade(account_id=event.account_id,
+                          trade_id=event.trade_id,
+                          broker=event.broker,
+                          side=event.side,
+                          lots=Decimal(str(event.lots)),
+                          instrument=event.instrument,
+                          open_time=event.open_time)
+            trade.pips = Decimal(str(event.pips))
+            trade.close_time = event.close_time
+            trade.close_price = Decimal(str(event.close_price))
+            trade.profit = Decimal(str(event.profit))
+            if trade_data.get('max'):
+                trade.max_profit = Decimal(str(trade_data['max']))
+            if trade_data.get('min'):
+                trade.min_profit = Decimal(str(trade_data['min']))
+            if not trade.open_price:
+                trade.open_price = Decimal(str(trade_data['open_price']))
+        trade.save()
 
     def saved_to_redis(self):
         data = {}
