@@ -13,11 +13,10 @@ from broker.fxcm.constants import get_fxcm_symbol
 from broker.oanda.common.constants import OrderType
 from broker.oanda.common.convertor import get_symbol
 from event.event import SignalEvent, SignalAction, TradeOpenEvent
-from event.handler import BaseHandler, get_mt4_symbol
+from event.handler import BaseHandler
 from mt4.constants import OrderSide, pip
-from utils.redis import get_tick_price
-from utils.time import str_to_datetime
 from utils import telegram as tg
+from utils.redis import get_tick_price
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +147,8 @@ class FXCMExecutionHandler(BaseExecutionHandler):
                                take_profit=trade.get_limitRate(),
                                magic_number=event.magic_number)
             self.put(e)
-            tg.send_me('[FOREX_TRADE_OPEN]\n%s@%s %s@%s lots=%s' % (event.strategy, event.instrument, event.side, open_price, lots))
+            tg.send_me('[FOREX_TRADE_OPEN]\n%s@%s#%s %s@%s lots=%s' % (event.strategy, event.instrument,
+                                                                       event.trade_id, event.side, open_price, lots))
         else:
             logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
 
@@ -221,10 +221,11 @@ class OANDAExecutionHandler(BaseExecutionHandler):
         try:
             # Try and execute order
             rv = api.request(r)
+            # response = self.conn.getresponse().read().decode("utf-8").replace("\n","").replace("\t","")
+            logger.debug(json.dumps(rv, indent=2))
         except oandapyV20.exceptions.V20Error as err:
             print(r.status_code, err)
         else:
             print(json.dumps(rv, indent=2))
 
-        # response = self.conn.getresponse().read().decode("utf-8").replace("\n","").replace("\t","")
-        logger.debug(json.dumps(rv, indent=2))
+

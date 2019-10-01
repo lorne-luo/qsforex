@@ -17,9 +17,8 @@ from event.runner import StreamRunnerBase
 from mt4.constants import get_mt4_symbol, OrderSide, pip
 from utils import telegram as tg
 from utils.market import is_market_open
-from utils.redis import price_redis, RedisQueue, set_tick_price
+from utils.redis import RedisQueue, set_tick_price
 from utils.redis import set_last_tick
-from utils.telstra_api_v2 import send_to_admin
 
 logger = logging.getLogger(__name__)
 
@@ -277,10 +276,11 @@ class FXCMStreamRunner(StreamRunnerBase):
                     pips=closed_trade.get_visiblePL(),
                 )
                 self.put(event)
-                tg.send_me('[FOREX_TRADE_CLOSE]\n%s %s %s->%s closed, lots=%s, profit=%s' % (
-                    event.instrument, event.side,
+                tg.send_me('[FOREX_TRADE_CLOSE]\n%s#%s#%s %s->%s, pips=%s, lots=%s, profit=%s' % (
+                    event.trade_id, event.instrument, event.side,
                     closed_trade.get_open(),
                     closed_trade.get_close(),
+                    closed_trade.get_visiblePL(),
                     closed_trade.get_amount(),
                     closed_trade.get_grossPL()))
 

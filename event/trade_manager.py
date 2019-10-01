@@ -8,6 +8,7 @@ from django_orm import Trade
 from event.event import TickPriceEvent, TradeOpenEvent, TradeCloseEvent, HeartBeatEvent, MarketEvent
 from event.handler import BaseHandler
 from mt4.constants import profit_pip, OrderSide, get_mt4_symbol
+from utils import telegram as tg
 from utils.redis import system_redis, OPENING_TRADE_COUNT_KEY
 from utils.time import datetime_to_str, str_to_datetime
 
@@ -95,7 +96,7 @@ class TradeManageHandler(BaseHandler):
         system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
 
     def trade_close(self, event):
-        trade = self.pop_trade(event.trade_id)
+        trade = self.get_trade(event.trade_id)
         if not trade:
             logger.error('[Trade_Manage] Trade closed with no data in trade manager.')
             return
@@ -124,7 +125,17 @@ class TradeManageHandler(BaseHandler):
 
         trade['profitable_time'] = round(trade['profitable_seconds'] / (close_time - trade['open_time']).seconds, 3)
         logger.info('[Trade_Manage] trade closed=%s' % trade)
-        # todo store into db
+
+        self.save_to_db()
+        self.pop_trade(event.trade_id)
+        self.saved_to_redis()
+        tg.send_me(
+            '[FOREX_TRADE_CLOSE_ANALYSIS]\n%s, profit_missed=%s, entry_accuracy=%s, exit_accuracy=%s, risk=%s' % (
+                event.trade_id,
+                trade['profit_missed'],
+                trade['entry_accuracy'],
+                trade['exit_accuracy'],
+                trade['risk']))
 
     def update_profitable_seconds(self, trade):
         delta = datetime.utcnow() - trade['last_profitable_start']
