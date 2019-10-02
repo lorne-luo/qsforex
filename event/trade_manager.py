@@ -143,6 +143,7 @@ class TradeManageHandler(BaseHandler):
         trade['last_profitable_start'] = None
 
     def heartbeat(self, event):
+        heartbeat_counter = event.counter
         for id, trade in self.account.get_trades().items():
             if str(id) not in self.trades:
                 self._load_trade(id, trade)
@@ -158,10 +159,11 @@ class TradeManageHandler(BaseHandler):
         system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
         self.saved_to_redis()
 
-        if not event.counter % (30 * int(1 / settings.LOOP_SLEEP)):  # 30 secs
+        if not heartbeat_counter % (30 * int(1 / settings.LOOP_SLEEP)):  # 30 secs
             self.save_to_db()
 
-        if not event.counter % (60 * 15 * int(1 / settings.LOOP_SLEEP)):  # 15 mins
+        if not heartbeat_counter % (60 * 15 * int(1 / settings.LOOP_SLEEP)):  # 15 mins
+            self.sync_trades()
             if settings.DEBUG:
                 print(self.trades)
             else:
@@ -171,6 +173,17 @@ class TradeManageHandler(BaseHandler):
                             trade_id, trade['instrument'], trade['max'], trade['min'], trade['current'],
                             trade['last_profitable_start'],
                             trade['profitable_seconds'], trade['profitable_time'], trade['last_tick_time']))
+
+    def sync_trades(self):
+        for trade_id, trade in self.account.get_trades().items():
+            if str(trade_id) not in self.trades:
+                self._load_trade(trade_id, trade)
+
+        for key in self.trades.keys():
+            if int(key) not in self.account.get_trades():
+                self.pop_trade(key)
+                logger.info('[TRADE_MANAGE_ERROR] trade close not trigger redis update.')
+                self.saved_to_redis()
 
     def load_trades(self):
         logger.info('[Trade_Manage] loading %s trades.' % len(self.account.get_trades()))
