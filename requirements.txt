@@ -20,7 +20,7 @@ tabulate==0.8.2
 requests==2.20.0
 ujson==1.35
 dateparser==0.7.1
-fxcmpy==1.2.3
+fxcmpy==1.2.5
 socketIO-client
 jupyter
 redis==3.2.0
