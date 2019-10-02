@@ -18,7 +18,7 @@ class PositionMixin(PositionBase):
         return self.fxcmpy.get_closed_positions()
 
     def pull_position(self, instrument):
-        return
+        return self.open_positions()
 
     def list_all_positions(self):
         data = {}
@@ -27,10 +27,10 @@ class PositionMixin(PositionBase):
         for k, v in self.fxcmpy.closed_pos.items():
             data[k] = v
 
-        return True, data
+        return data
 
     def list_open_positions(self):
-        return True, self.fxcmpy.get_open_positions()
+        return self.fxcmpy.get_open_positions()
 
     def close_all_position(self):
         self.fxcmpy.close_all()

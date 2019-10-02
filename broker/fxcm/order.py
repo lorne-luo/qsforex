@@ -164,18 +164,12 @@ class OrderMixin(OrderBase):
         if is_in_pips and stop_loss and stop_loss > 0:
             stop_loss = -1 * stop_loss
 
-        try:
-            order = self.fxcmpy.open_trade(symbol, is_buy,
-                                           amount, timeInForce, order_type='AtMarket', rate=0,
-                                           is_in_pips=is_in_pips, limit=take_profit, at_market=0, stop=stop_loss,
-                                           trailing_step=trailing_pip, account_id=self.account_id)
-        except Exception as ex:
-            logger.error('[Market Order] %s' % ex)
-            print(ex)
-            return False, str(ex)
-        return True, order
+        return self.fxcmpy.open_trade(symbol, is_buy,
+                                      amount, timeInForce, order_type='AtMarket', rate=0,
+                                      is_in_pips=is_in_pips, limit=take_profit, at_market=0, stop=stop_loss,
+                                      trailing_step=trailing_pip, account_id=self.account_id)
 
-    # TP , SL and trailing SL
+    # ================================================================================= TP , SL and trailing SL
 
     def take_profit(self, trade_id, price, order_id=None, client_trade_id=None,
                     timeInForce=TimeInForce.GTC, gtd_time=None,

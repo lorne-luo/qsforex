@@ -113,44 +113,44 @@ class FXCMExecutionHandler(BaseExecutionHandler):
         if event.percent:
             lots = lots * event.percent
 
-        if event.order_type == OrderType.MARKET:
-            success, trade = self.account.market_order(event.instrument, event.side, lots,
-                                                       take_profit=event.take_profit,
-                                                       stop_loss=event.stop_loss,
-                                                       trailing_pip=event.trailing_stop)
-        elif event.order_type == OrderType.LIMIT:
-            success, trade = self.account.limit_order(event.instrument, event.side, event.price, lots,
-                                                      take_profit=event.take_profit,
-                                                      stop_loss=event.stop_loss,
-                                                      trailing_pip=event.trailing_stop)
-        elif event.order_type == OrderType.STOP:
-            success, trade = self.account.stop_order(event.instrument, event.side, event.price, lots,
-                                                     take_profit=event.take_profit,
-                                                     stop_loss=event.stop_loss,
-                                                     trailing_pip=event.trailing_stop)
-        else:
+        try:
+            trade = None
+            if event.order_type == OrderType.MARKET:
+                trade = self.account.market_order(event.instrument, event.side, lots,
+                                                           take_profit=event.take_profit,
+                                                           stop_loss=event.stop_loss,
+                                                           trailing_pip=event.trailing_stop)
+            elif event.order_type == OrderType.LIMIT:
+                trade = self.account.limit_order(event.instrument, event.side, event.price, lots,
+                                                          take_profit=event.take_profit,
+                                                          stop_loss=event.stop_loss,
+                                                          trailing_pip=event.trailing_stop)
+            elif event.order_type == OrderType.STOP:
+                trade = self.account.stop_order(event.instrument, event.side, event.price, lots,
+                                                         take_profit=event.take_profit,
+                                                         stop_loss=event.stop_loss,
+                                                         trailing_pip=event.trailing_stop)
+        except Exception as ex:
+            logger.error('[TRADE_OPEN_FAILED] %s, event=%s' % (ex,event))
             return
 
         event_dict = event.__dict__.copy()
         event_dict.pop('time')
         logger.info('[TRADE_OPEN] event = %s' % event_dict)
 
-        if success:
-            open_time = trade.get_time()
-            open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
+        open_time = trade.get_time()
+        open_price = trade.get_buy() if trade.get_isBuy() else trade.get_sell()
 
-            e = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
-                               trade_id=int(trade.get_tradeId()), lots=lots,
-                               instrument=event.instrument, side=event.side, open_time=open_time,
-                               open_price=open_price,
-                               stop_loss=trade.get_stopRate(),
-                               take_profit=trade.get_limitRate(),
-                               magic_number=event.magic_number)
-            self.put(e)
-            tg.send_me('[FOREX_TRADE_OPEN]\n%s@%s#%s %s@%s lots=%s' % (event.strategy, event.instrument,
-                                                                       event.trade_id, event.side, open_price, lots))
-        else:
-            logger.error('[TRADE_OPEN_FAILED] error = %s' % trade)
+        e = TradeOpenEvent(broker=self.account.broker, account_id=self.account.account_id,
+                           trade_id=int(trade.get_tradeId()), lots=lots,
+                           instrument=event.instrument, side=event.side, open_time=open_time,
+                           open_price=open_price,
+                           stop_loss=trade.get_stopRate(),
+                           take_profit=trade.get_limitRate(),
+                           magic_number=event.magic_number)
+        self.put(e)
+        tg.send_me('[FOREX_TRADE_OPEN]\n%s@%s#%s %s@%s lots=%s' % (event.strategy, event.instrument,
+                                                                   event.trade_id, event.side, open_price, lots))
 
     def close(self, event):
         closed_trade = self.account.close_symbol(event.instrument, event.side, event.percent)

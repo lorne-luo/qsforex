@@ -20,7 +20,7 @@ class TradeMixin(OANDABase, TradeBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_TRADE')
-            return []
+            raise Exception(response.body.get('errorMessage'))
 
         trades = response.get("trades", "200")
         for trade in trades:
@@ -84,7 +84,7 @@ class TradeMixin(OANDABase, TradeBase):
         response = api.trade.close(self.account_id, trade_id, units=str(units))
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'CLOSE_TRADE')
-            return False, response.body.get('errorMessage')
+            raise Exception(response.body.get('errorMessage'))
 
         transactions = []
         trade_ids = []
@@ -108,12 +108,12 @@ class TradeMixin(OANDABase, TradeBase):
                 print_entity(t, title=t.__class__.__name__)
                 print('')
         # orderCreateTransaction, orderFillTransaction, orderCancelTransaction
-        return True, transactions
+        return transactions
 
     def trade_client_extensions(self, trade_id, client_id=None, client_tag=None, client_comment=None):
         data = {'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
         kwargs = self._process_order_paramters(**data)
         response = api.trade.set_client_extensions(self.account_id, trade_id, **kwargs)
-        success, transactions = self._process_order_response(response, 'TRADE_CLIENT_EXTENSIONS')
+        transactions = self._process_order_response(response, 'TRADE_CLIENT_EXTENSIONS')
 
-        return success, transactions
+        return transactions
