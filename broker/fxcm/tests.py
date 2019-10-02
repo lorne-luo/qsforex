@@ -1,8 +1,8 @@
 import unittest
 
 import settings
-from broker.base import AccountType
 from broker import SingletonFXCM
+from broker.base import AccountType
 from mt4.constants import OrderSide
 
 
@@ -22,8 +22,8 @@ class TestAccount(unittest.TestCase):
         position_count = len(self.account.open_positions)
         trade_count = len(self.account.list_open_trade())
         # market order
-        success, order = self.account.market_order('EUR/USD', OrderSide.BUY, 0.01, take_profit=30, stop_loss=-30)
-        self.assertTrue(success)
+        order = self.account.market_order('EUR/USD', OrderSide.BUY, 0.01, take_profit=30, stop_loss=-30)
+        self.assertTrue(order)
         self.assertEqual(len(self.account.open_positions), 1 + position_count)
         self.assertEqual(len(self.account.list_open_trade()), 1 + trade_count)
 
@@ -45,10 +45,10 @@ class TestAccount(unittest.TestCase):
 
         # limit stop order
         order_count = len(self.account.open_order_ids())
-        success, order1 = self.account.limit_order('EUR/USD', OrderSide.BUY, 1.1132, 0.1, take_profit=60, stop_loss=-30)
-        self.assertTrue(success)
-        success, order2 = self.account.stop_order('EUR/USD', OrderSide.SELL, 1.1139, 0.1, take_profit=60, stop_loss=-30)
-        self.assertTrue(success)
+        order1 = self.account.limit_order('EUR/USD', OrderSide.BUY, 1.1132, 0.1, take_profit=60, stop_loss=-30)
+        self.assertTrue(order1)
+        order2 = self.account.stop_order('EUR/USD', OrderSide.SELL, 1.1139, 0.1, take_profit=60, stop_loss=-30)
+        self.assertTrue(order2)
         self.assertEqual(len(self.account.open_order_ids()), 2 + order_count)
 
         self.account.take_profit(self, order1.get_orderId(), 40, is_in_pips=True)

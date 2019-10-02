@@ -1,10 +1,9 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
 
 from broker.base import PositionBase
 from broker.oanda.base import OANDABase
-from broker.oanda.common.logger import log_error
 from broker.oanda.common.convertor import get_symbol
+from broker.oanda.common.logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +17,14 @@ class PositionMixin(OANDABase, PositionBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'QEURY_POSITION')
-            return False, response.body['errorMessage']
+            raise Exception(response.body['errorMessage'])
 
         last_transaction_id = response.get('lastTransactionID', 200)
         position = response.get('position', 200)
         if position:
             self.positions[position.instrument] = position
 
-        return True, position
+        return position
 
     def list_all_positions(self):
         response = self.api.position.list(
@@ -34,14 +33,14 @@ class PositionMixin(OANDABase, PositionBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_ALL_POSITION')
-            return False, response.body['errorMessage']
+            raise Exception(response.body['errorMessage'])
 
         last_transaction_id = response.get('lastTransactionID', 200)
         positions = response.get('positions', 200)
         for position in positions:
             self.positions[position.instrument] = position
 
-        return True, positions
+        return positions
 
     def list_open_positions(self):
         response = self.api.position.list_open(
@@ -50,13 +49,13 @@ class PositionMixin(OANDABase, PositionBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'LIST_OPEN_POSITION')
-            return False, response.body['errorMessage']
+            raise Exception(response.body['errorMessage'])
 
         last_transaction_id = response.get('lastTransactionID', 200)
         positions = response.get('positions', 200)
         for position in positions:
             self.positions[position.instrument] = position
-        return True, positions
+        return positions
 
     def close_all_position(self):
         instruments = self.positions.keys()
@@ -76,7 +75,7 @@ class PositionMixin(OANDABase, PositionBase):
 
         if response.status < 200 or response.status > 299:
             log_error(logger, response, 'CLOSE_POSITION')
-            return False, response.body['errorMessage']
+            raise Exception(response.body['errorMessage'])
 
         longOrderCreateTransaction = response.get('longOrderCreateTransaction', None)
         longOrderFillTransaction = response.get('longOrderFillTransaction', None)
@@ -94,4 +93,4 @@ class PositionMixin(OANDABase, PositionBase):
         print(shortOrderCancelTransaction.__dict__)
         print(relatedTransactionIDs.__dict__)
         print(lastTransactionID)
-        return True, 'done'
+        return True
