@@ -38,18 +38,50 @@ class OrderMixin(OrderBase):
         if is_in_pips and stop_loss and stop_loss > 0:
             stop_loss = -1 * stop_loss
 
-        try:
-            order = self.fxcmpy.create_entry_order(symbol, is_buy, amount,
-                                                   is_in_pips=is_in_pips,
-                                                   time_in_force=time_in_force, rate=price,
-                                                   stop=stop_loss,
-                                                   limit=take_profit,
-                                                   trailing_stop_step=trailing_pip,
-                                                   trailing_step=trailing_step)
-            return True, order
-        except Exception as ex:
-            logger.error('[Order Error] %s' % ex)
-            return False, str(ex)
+        return self.fxcmpy.create_entry_order(symbol, is_buy, amount,
+                                              is_in_pips=is_in_pips,
+                                              time_in_force=time_in_force, rate=price,
+                                              stop=stop_loss,
+                                              limit=take_profit,
+                                              trailing_stop_step=trailing_pip,
+                                              trailing_step=trailing_step)
+
+    def _make_limit_or_stop_order(self, instrument, side, price,
+                                  lots, timeInForce=TimeInForce.GTC,
+                                  positionFill=OrderPositionFill.DEFAULT,
+                                  trigger_condition=OrderTriggerCondition.DEFAULT,
+                                  gtd_time=None,
+                                  take_profit=None,
+                                  stop_loss=None,
+                                  trailing_pip=None,
+                                  order_id=None,  # order to replace
+                                  client_id=None, client_tag=None, client_comment=None,
+                                  **kwargs):
+        symbol = get_fxcm_symbol(instrument)
+        is_buy = side == OrderSide.BUY
+        amount = lots_to_units(lots) / 1000
+        is_in_pips = kwargs.get('is_in_pips', True)
+
+        if order_id:
+            order = self.get_order(order_id)
+            if trailing_pip:
+                order.set_trailing_step(trailing_pip)
+
+            kw = {}
+            if stop_loss:
+                kw['stop'] = stop_loss
+                kw['is_stop_in_pips'] = is_in_pips
+            if take_profit:
+                kw['limit'] = take_profit
+                kw['is_limit_in_pips'] = is_in_pips
+            if kw:
+                self.fxcmpy.change_order_stop_limit(order_id, **kw)
+        else:
+            return self.create_entry_order(symbol, is_buy, amount,
+                                           time_in_force=TimeInForce.GTC, price=price,
+                                           take_profit=take_profit,
+                                           stop_loss=stop_loss, trailing_pip=trailing_pip,
+                                           **kwargs)
 
     def limit_order(self, instrument, side, price,
                     lots, timeInForce=TimeInForce.GTC,
@@ -62,39 +94,21 @@ class OrderMixin(OrderBase):
                     order_id=None,  # order to replace
                     client_id=None, client_tag=None, client_comment=None,
                     **kwargs):
-        symbol = get_fxcm_symbol(instrument)
-        is_buy = side == OrderSide.BUY
-        amount = lots_to_units(lots) / 1000
-        is_in_pips = kwargs.get('is_in_pips', True)
-
-        try:
-            if order_id:
-                order = self.get_order(order_id)
-                if trailing_pip:
-                    order.set_trailing_step(trailing_pip)
-
-                kw = {}
-                if stop_loss:
-                    kw['stop'] = stop_loss
-                    kw['is_stop_in_pips'] = is_in_pips
-                if take_profit:
-                    kw['limit'] = take_profit
-                    kw['is_limit_in_pips'] = is_in_pips
-                if kw:
-                    self.fxcmpy.change_order_stop_limit(order_id, **kw)
-            else:
-                return self.create_entry_order(symbol, is_buy, amount,
-                                               time_in_force=TimeInForce.GTC, price=price,
-                                               take_profit=take_profit,
-                                               stop_loss=stop_loss, trailing_pip=trailing_pip,
-                                               **kwargs)
-        except Exception as ex:
-            logger.error('[Limit Order] %s' % ex)
-            return False, str(ex)
+        return self._make_limit_or_stop_order(instrument, side, price,
+                                              lots, timeInForce,
+                                              positionFill,
+                                              trigger_condition,
+                                              gtd_time,
+                                              take_profit,
+                                              stop_loss,
+                                              trailing_pip,
+                                              order_id,  # order to replace
+                                              client_id, client_tag, client_comment,
+                                              **kwargs)
 
     def stop_order(self, instrument, side, price,
                    lots, timeInForce=TimeInForce.GTC,
-                   positionFill=OrderPositionFill.DEFAULT, priceBound=None,
+                   positionFill=OrderPositionFill.DEFAULT,
                    trigger_condition=OrderTriggerCondition.DEFAULT,
                    gtd_time=None,
                    take_profit=None,
@@ -103,36 +117,17 @@ class OrderMixin(OrderBase):
                    order_id=None,  # order to replace
                    client_id=None, client_tag=None, client_comment=None,
                    **kwargs):
-        symbol = get_fxcm_symbol(instrument)
-        is_buy = side == OrderSide.BUY
-        amount = lots_to_units(lots) / 1000
-        is_in_pips = kwargs.get('is_in_pips', True)
-
-        try:
-            if order_id:
-                order = self.get_order(order_id)
-                if trailing_pip:
-                    order.set_trailing_step(trailing_pip)
-
-                kw = {}
-                if stop_loss:
-                    kw['stop'] = stop_loss
-                    kw['is_stop_in_pips'] = is_in_pips
-                if take_profit:
-                    kw['limit'] = take_profit
-                    kw['is_limit_in_pips'] = is_in_pips
-                if kw:
-                    self.fxcmpy.change_order_stop_limit(order_id, **kw)
-
-            else:
-                return self.create_entry_order(symbol, is_buy, amount,
-                                               time_in_force=TimeInForce.GTC, price=price,
-                                               take_profit=take_profit,
-                                               stop_loss=stop_loss, trailing_pip=trailing_pip,
-                                               **kwargs)
-        except Exception as ex:
-            logger.error('[Stop Order] %s' % ex)
-            return False, str(ex)
+        return self._make_limit_or_stop_order(instrument, side, price,
+                                              lots, timeInForce,
+                                              positionFill,
+                                              trigger_condition,
+                                              gtd_time,
+                                              take_profit,
+                                              stop_loss,
+                                              trailing_pip,
+                                              order_id,  # order to replace
+                                              client_id, client_tag, client_comment,
+                                              **kwargs)
 
     def update_order(self, order_id,
                      take_profit=None,
@@ -235,7 +230,7 @@ class OrderMixin(OrderBase):
         logger.info('[LOG_ORDER]')
         orders = self.fxcmpy.get_orders('list')
         for order in orders:
-            content=format_dict(order)
+            content = format_dict(order)
             if settings.DEBUG:
                 print(content)
             else:
