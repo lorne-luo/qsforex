@@ -109,8 +109,8 @@ class TradeManageHandler(BaseHandler):
 
         close_time = event.close_time
         close_price = event.close_price
-        max = trade.get('max')
-        min = trade.get('min')
+        max = trade.get('max', 0)
+        min = trade.get('min', 0)
         profit_pips = event.pips or profit_pip(trade.get('instrument'), trade.get('open_price'), close_price,
                                                trade.get('side'))
         profit_missed = max - profit_pips
@@ -267,7 +267,7 @@ class TradeManageHandler(BaseHandler):
                           instrument=event.instrument,
                           open_time=event.open_time)
             trade.pips = Decimal(str(event.pips))
-            trade.close_time = event.close_time
+            trade.close_time = trade_data.get('close_time') or datetime.utcnow()
             trade.close_price = Decimal(str(event.close_price))
             trade.profit = Decimal(str(event.profit))
             if trade_data.get('max'):
