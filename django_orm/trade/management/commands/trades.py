@@ -16,9 +16,11 @@ class Command(BaseCommand):
         if last:
             trades = trades[:last]
 
-        trades=reversed(trades)
+        trades = reversed(trades)
 
         print(f"Trade_id  Symbol OpenTime            Max   Pips  Min   CloseTime")
-#               209463688 USDCHF 2019-09-24 01:05:06 49.60 None -21.40 2019-09-25 09:41:37
+        #       209463688 USDCHF 2019-09-24 01:05:06 49.60 None -21.40 2019-09-25 09:41:37
         for t in trades:
-            print(t.trade_id, t.instrument.strip(), t.open_time.strftime('%Y-%m-%d %H:%M:%S'), t.max_profit, t.pips, t.min_profit, t.close_time.strftime('%Y-%m-%d %H:%M:%S'))
+            open_time = t.open_time.strftime('%Y-%m-%d %H:%M:%S') if t.open_time else t.open_time
+            close_time = t.close_time.strftime('%Y-%m-%d %H:%M:%S') if t.close_time else t.close_time
+            print(t.trade_id, t.instrument.strip(), open_time, t.max_profit, t.pips, t.min_profit, close_time)
