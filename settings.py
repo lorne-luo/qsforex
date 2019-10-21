@@ -1,5 +1,4 @@
 from decimal import Decimal
-import os
 from environs import Env
 
 env = Env()
@@ -12,12 +11,12 @@ APPLICATION_NAME = 'qsforex'
 BASE_CURRENCY = "USD"
 EQUITY = Decimal("1000.00")
 
-OANDA_DOMAIN = os.environ.get('OANDA_DOMAIN', 'DEMO')
-OANDA_ACCESS_TOKEN = os.environ.get('OANDA_ACCESS_TOKEN', None)
-OANDA_ACCOUNT_ID = os.environ.get('OANDA_ACCOUNT_ID', None)
+OANDA_DOMAIN = env.str('OANDA_DOMAIN', 'DEMO')
+OANDA_ACCESS_TOKEN = env.str('OANDA_ACCESS_TOKEN', None)
+OANDA_ACCOUNT_ID = env.str('OANDA_ACCOUNT_ID', None)
 
-CSV_DATA_DIR = os.environ.get('QSFOREX_CSV_DATA_DIR', None)
-OUTPUT_RESULTS_DIR = os.environ.get('QSFOREX_OUTPUT_RESULTS_DIR', None)
+CSV_DATA_DIR = env.str('QSFOREX_CSV_DATA_DIR', None)
+OUTPUT_RESULTS_DIR = env.str('QSFOREX_OUTPUT_RESULTS_DIR', None)
 
 TELSTRA_CLIENT_KEY = env.str('TELSTRA_CLIENT_KEY', '')
 TELSTRA_CLIENT_SECRET = env.str('TELSTRA_CLIENT_SECRET', '')
