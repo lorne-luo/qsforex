@@ -36,7 +36,7 @@ class OrderMixin(OrderBase):
         is_in_pips = kwargs.get('is_in_pips', True)
 
         if is_in_pips and stop_loss and stop_loss > 0:
-            stop_loss = -1 * stop_loss
+            stop_loss = -1 * stop_loss # change to negtive if using pips
 
         return self.fxcmpy.create_entry_order(symbol, is_buy, amount,
                                               is_in_pips=is_in_pips,
@@ -46,22 +46,14 @@ class OrderMixin(OrderBase):
                                               trailing_stop_step=trailing_pip,
                                               trailing_step=trailing_step)
 
-    def _make_limit_or_stop_order(self, instrument, side, price,
-                                  lots, timeInForce=TimeInForce.GTC,
-                                  positionFill=OrderPositionFill.DEFAULT,
-                                  trigger_condition=OrderTriggerCondition.DEFAULT,
-                                  gtd_time=None,
-                                  take_profit=None,
-                                  stop_loss=None,
-                                  trailing_pip=None,
-                                  order_id=None,  # order to replace
-                                  client_id=None, client_tag=None, client_comment=None,
-                                  **kwargs):
+    def _make_limit_or_stop_order(self, instrument, side, price, lots, take_profit=None, stop_loss=None,
+                                  trailing_pip=None, **kwargs):
         symbol = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
         amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
+        order_id = kwargs.get('order_id', None)
         if order_id:
             order = self.get_order(order_id)
             if trailing_pip:
@@ -83,50 +75,18 @@ class OrderMixin(OrderBase):
                                            stop_loss=stop_loss, trailing_pip=trailing_pip,
                                            **kwargs)
 
-    def limit_order(self, instrument, side, price,
-                    lots, timeInForce=TimeInForce.GTC,
-                    positionFill=OrderPositionFill.DEFAULT,
-                    trigger_condition=OrderTriggerCondition.DEFAULT,
-                    gtd_time=None,
-                    take_profit=None,
-                    stop_loss=None,
-                    trailing_pip=None,
-                    order_id=None,  # order to replace
-                    client_id=None, client_tag=None, client_comment=None,
+    def limit_order(self, instrument, side, price, lots, take_profit=None, stop_loss=None, trailing_pip=None,
                     **kwargs):
+
         return self._make_limit_or_stop_order(instrument, side, price,
-                                              lots, timeInForce,
-                                              positionFill,
-                                              trigger_condition,
-                                              gtd_time,
                                               take_profit,
                                               stop_loss,
                                               trailing_pip,
-                                              order_id,  # order to replace
-                                              client_id, client_tag, client_comment,
                                               **kwargs)
 
-    def stop_order(self, instrument, side, price,
-                   lots, timeInForce=TimeInForce.GTC,
-                   positionFill=OrderPositionFill.DEFAULT,
-                   trigger_condition=OrderTriggerCondition.DEFAULT,
-                   gtd_time=None,
-                   take_profit=None,
-                   stop_loss=None,
-                   trailing_pip=None,
-                   order_id=None,  # order to replace
-                   client_id=None, client_tag=None, client_comment=None,
-                   **kwargs):
-        return self._make_limit_or_stop_order(instrument, side, price,
-                                              lots, timeInForce,
-                                              positionFill,
-                                              trigger_condition,
-                                              gtd_time,
-                                              take_profit,
-                                              stop_loss,
-                                              trailing_pip,
-                                              order_id,  # order to replace
-                                              client_id, client_tag, client_comment,
+    def stop_order(self, instrument, side, price, lots, take_profit=None, stop_loss=None, trailing_pip=None, **kwargs):
+
+        return self._make_limit_or_stop_order(instrument, side, price, lots, take_profit, stop_loss, trailing_pip,
                                               **kwargs)
 
     def update_order(self, order_id,
@@ -147,22 +107,15 @@ class OrderMixin(OrderBase):
         if kw:
             self.fxcmpy.change_order_stop_limit(order_id, **kw)
 
-    def market_order(self, instrument, side,
-                     lots, timeInForce=TimeInForce.FOK,
-                     priceBound=None, positionFill=OrderPositionFill.DEFAULT,
-                     take_profit=None,
-                     stop_loss=None,
-                     trailing_pip=None,
-                     client_id=None, client_tag=None, client_comment=None,
-                     trade_client_id=None, trade_client_tag=None, trade_client_comment=None,
-                     **kwargs):
+    def market_order(self, instrument, side, lots, take_profit=None, stop_loss=None, trailing_pip=None, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
         symbol = get_fxcm_symbol(instrument)
         is_buy = side == OrderSide.BUY
         amount = lots_to_units(lots) / 1000
         is_in_pips = kwargs.get('is_in_pips', True)
 
         if is_in_pips and stop_loss and stop_loss > 0:
-            stop_loss = -1 * stop_loss
+            stop_loss = -1 * stop_loss  # change to negtive if using pips
 
         return self.fxcmpy.open_trade(symbol, is_buy,
                                       amount, timeInForce, order_type='AtMarket', rate=0,
@@ -171,11 +124,11 @@ class OrderMixin(OrderBase):
 
     # ================================================================================= TP , SL and trailing SL
 
-    def take_profit(self, trade_id, price, order_id=None, client_trade_id=None,
-                    timeInForce=TimeInForce.GTC, gtd_time=None,
-                    trigger_condition=OrderTriggerCondition.DEFAULT,
-                    client_id=None, client_tag=None, client_comment=None,
-                    **kwargs):
+    def take_profit(self, trade_id, price, **kwargs):
+        """
+        1. self.take_profit(order_id, 40, is_in_pips=True)
+        2. self.take_profit(order_id, 1.1324)
+        """
         trade_id = int(trade_id)
         is_in_pips = kwargs.get('is_in_pips', True)
 
@@ -184,27 +137,22 @@ class OrderMixin(OrderBase):
         elif trade_id in self.open_trade_ids():
             self.fxcmpy.change_trade_stop_limit(trade_id, False, price, is_in_pips=is_in_pips)
 
-    def stop_loss(self, trade_id, stop_loss_pip=None, price=None, order_id=None, client_trade_id=None,
-                  timeInForce=TimeInForce.GTC, gtd_time=None,
-                  trigger_condition=OrderTriggerCondition.DEFAULT,
-                  guaranteed=None,
-                  client_id=None, client_tag=None, client_comment=None,
-                  **kwargs):
+    def stop_loss(self, trade_id, price, **kwargs):
+        """
+        1. self.stop_loss(order_id, -40, is_in_pips=True)
+        2. self.stop_loss(order_id, 1.1324)
+        """
         trade_id = int(trade_id)
         is_in_pips = kwargs.get('is_in_pips', True)
-        if is_in_pips:
-            price = -1 * price
+        if is_in_pips and price > 0:
+            price = -1 * price # change to negtive if using pips
 
         if trade_id in self.open_order_ids():
             self.fxcmpy.change_order_stop_limit(trade_id, stop=price, is_stop_in_pips=is_in_pips)
         elif trade_id in self.open_trade_ids():
             self.fxcmpy.change_trade_stop_limit(trade_id, True, price, is_in_pips=is_in_pips)
 
-    def trailing_stop_loss(self, trade_id, stop_loss_pip=None, order_id=None, client_trade_id=None,
-                           timeInForce=TimeInForce.GTC, gtd_time=None,
-                           trigger_condition=OrderTriggerCondition.DEFAULT,
-                           client_id=None, client_tag=None, client_comment=None,
-                           **kwargs):
+    def trailing_stop_loss(self, trade_id, pips, **kwargs):
         trade_id = int(trade_id)
         is_in_pips = kwargs.get('is_in_pips', True)
 
@@ -212,7 +160,7 @@ class OrderMixin(OrderBase):
         if trade_id in self.open_order_ids():
             pass
         elif trade_id in self.open_trade_ids():
-            self.fxcmpy.change_trade_stop_limit(trade_id, is_in_pips=is_in_pips, trailing_step=stop_loss_pip)
+            self.fxcmpy.change_trade_stop_limit(trade_id, is_in_pips=is_in_pips, trailing_step=pips)
 
     # cancel & extensions
     def cancel_order(self, order_id, **kwargs):
@@ -225,7 +173,4 @@ class OrderMixin(OrderBase):
         orders = self.fxcmpy.get_orders('list')
         for order in orders:
             content = format_dict(order)
-            if settings.DEBUG:
-                print(content)
-            else:
-                logger.info(content)
+            logger.info(content)

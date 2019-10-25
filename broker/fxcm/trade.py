@@ -28,6 +28,7 @@ class TradeMixin(OANDABase, TradeBase):
         return self.fxcmpy.get_closed_trade_ids()
 
     def get_trade(self, trade_id):
+        trade_id = int(trade_id)
         return self.fxcmpy.open_pos.get(trade_id)
 
     def close_trade(self, trade_id, lots=None, percent=None):

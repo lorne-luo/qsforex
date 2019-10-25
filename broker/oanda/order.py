@@ -189,21 +189,22 @@ class OrderMixin(OANDABase, OrderBase):
             print_orders([order])
         return order
 
-    def limit_order(self, instrument, side, price,
-                    lots=0.1, timeInForce=TimeInForce.GTC,
-                    positionFill=OrderPositionFill.DEFAULT,
-                    trigger_condition=OrderTriggerCondition.DEFAULT,
-                    gtd_time=None,
-                    take_profit=None,
-                    stop_loss=None,
-                    trailing_pip=None,
-                    order_id=None,  # order to replace
-                    client_id=None, client_tag=None, client_comment=None,
+    def limit_order(self, instrument, side, price, lots, take_profit=None, stop_loss=None, trailing_pip=None,
                     **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        positionFill = kwargs.get('positionFill', OrderPositionFill.DEFAULT)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        priceBound = kwargs.get('priceBound', None)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.LIMIT,
                 'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit,
-                'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
+                'trigger_condition': trigger_condition, 'gtd_time': gtd_time, 'priceBound': priceBound,
                 'stop_loss_pip': stop_loss, 'trailing_pip': trailing_pip, 'client_id': client_id,
                 'client_tag': client_tag, 'client_comment': client_comment}
         kwargs = self._process_order_paramters(**data)
@@ -215,17 +216,18 @@ class OrderMixin(OANDABase, OrderBase):
 
         return self._process_order_response(response, 'LIMIT_ORDER', "201")
 
-    def stop_order(self, instrument, side, price,
-                   lots=0.1, timeInForce=TimeInForce.GTC,
-                   positionFill=OrderPositionFill.DEFAULT, priceBound=None,
-                   trigger_condition=OrderTriggerCondition.DEFAULT,
-                   gtd_time=None,
-                   take_profit=None,
-                   stop_loss=None,
-                   trailing_pip=None,
-                   order_id=None,  # order to replace
-                   client_id=None, client_tag=None, client_comment=None,
+    def stop_order(self, instrument, side, price, lots, take_profit=None, stop_loss=None, trailing_pip=None,
                    **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        positionFill = kwargs.get('positionFill', OrderPositionFill.DEFAULT)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        priceBound = kwargs.get('priceBound', None)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.STOP,
                 'timeInForce': timeInForce,
                 'price': price, 'positionFill': positionFill, 'take_profit_price': take_profit,
@@ -241,15 +243,16 @@ class OrderMixin(OANDABase, OrderBase):
 
         return self._process_order_response(response, 'STOP_ORDER', "201")
 
-    def market_order(self, instrument, side,
-                     lots=0.1, timeInForce=TimeInForce.FOK,
-                     priceBound=None, positionFill=OrderPositionFill.DEFAULT,
-                     take_profit=None,
-                     stop_loss=None,
-                     trailing_pip=None,
-                     client_id=None, client_tag=None, client_comment=None,
-                     trade_client_id=None, trade_client_tag=None, trade_client_comment=None,
-                     **kwargs):
+    def market_order(self, instrument, side, lots, take_profit=None, stop_loss=None, trailing_pip=None, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        positionFill = kwargs.get('positionFill', OrderPositionFill.DEFAULT)
+        priceBound = kwargs.get('priceBound', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+        trade_client_id = kwargs.get('trade_client_id', None)
+        trade_client_tag = kwargs.get('trade_client_tag', None)
+        trade_client_comment = kwargs.get('trade_client_comment', None)
 
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.MARKET,
                 'timeInForce': timeInForce,
@@ -266,17 +269,23 @@ class OrderMixin(OANDABase, OrderBase):
         # todo fail: ORDER_CANCEL,MARKET_ORDER_REJECT
         # todo success:MARKET_ORDER + ORDER_FILL
 
-    def market_if_touched(self, instrument, side, price, lots=0.1,
-                          priceBound=None, timeInForce=TimeInForce.GTC,
-                          gtd_time=None, positionFill=OrderPositionFill.DEFAULT,
-                          trigger_condition=OrderTriggerCondition.DEFAULT,
-                          take_profit=None,
-                          stop_loss=None,
-                          trailing_pip=None,
-                          order_id=None,  # order to replace
-                          client_id=None, client_tag=None, client_comment=None,
-                          trade_client_id=None, trade_client_tag=None, trade_client_comment=None,
-                          **kwargs):
+    def market_if_touched(self, instrument, side, price, lots, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        positionFill = kwargs.get('positionFill', OrderPositionFill.DEFAULT)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        priceBound = kwargs.get('priceBound', None)
+        take_profit = kwargs.get('take_profit', None)
+        stop_loss = kwargs.get('stop_loss', None)
+        trailing_pip = kwargs.get('trailing_pip', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+        trade_client_id = kwargs.get('trade_client_id', None)
+        trade_client_tag = kwargs.get('trade_client_tag', None)
+        trade_client_comment = kwargs.get('trade_client_comment', None)
+
         data = {'instrument': instrument, 'side': side, 'lots': lots, 'type': OrderType.MARKET_IF_TOUCHED,
                 'timeInForce': timeInForce, 'gtd_time': gtd_time, 'trigger_condition': trigger_condition,
                 'priceBound': priceBound, 'positionFill': positionFill, 'take_profit_price': take_profit,
@@ -296,11 +305,16 @@ class OrderMixin(OANDABase, OrderBase):
 
     # TP , SL and trailing SL
 
-    def take_profit(self, trade_id, price, order_id=None, client_trade_id=None,
-                    timeInForce=TimeInForce.GTC, gtd_time=None,
-                    trigger_condition=OrderTriggerCondition.DEFAULT,
-                    client_id=None, client_tag=None, client_comment=None,
-                    **kwargs):
+    def take_profit(self, trade_id, price, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+        client_trade_id = kwargs.get('client_trade_id', None)
+
         data = {'price': price, 'client_trade_id': client_trade_id, 'trade_id': trade_id,
                 'type': OrderType.TAKE_PROFIT, 'timeInForce': timeInForce,
                 'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
@@ -316,14 +330,19 @@ class OrderMixin(OANDABase, OrderBase):
 
         return transactions
 
-    def stop_loss(self, trade_id, stop_loss_pip=None, price=None, order_id=None, client_trade_id=None,
-                  timeInForce=TimeInForce.GTC, gtd_time=None,
-                  trigger_condition=OrderTriggerCondition.DEFAULT,
-                  guaranteed=None,
-                  client_id=None, client_tag=None, client_comment=None,
-                  **kwargs):
+    def stop_loss(self, trade_id, price=None, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        guaranteed = kwargs.get('guaranteed', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+        client_trade_id = kwargs.get('client_trade_id', None)
+
         data = {'client_trade_id': client_trade_id, 'trade_id': trade_id,
-                'price': price, 'stop_loss_pip': stop_loss_pip,
+                'price': price,
                 'type': OrderType.STOP_LOSS, 'timeInForce': timeInForce, 'guaranteed': guaranteed,
                 'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
                 'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
@@ -338,22 +357,27 @@ class OrderMixin(OANDABase, OrderBase):
 
         return transactions
 
-    def trailing_stop_loss(self, trade_id, stop_loss_pip=None, order_id=None, client_trade_id=None,
-                           timeInForce=TimeInForce.GTC, gtd_time=None,
-                           trigger_condition=OrderTriggerCondition.DEFAULT,
-                           client_id=None, client_tag=None, client_comment=None,
-                           **kwargs):
+    def trailing_stop_loss(self, trade_id, pips, **kwargs):
+        timeInForce = kwargs.get('timeInForce', TimeInForce.FOK)
+        trigger_condition = kwargs.get('trigger_condition', OrderTriggerCondition.DEFAULT)
+        gtd_time = kwargs.get('gtd_time', None)
+        order_id = kwargs.get('order_id', None)
+        client_id = kwargs.get('client_id', None)
+        client_tag = kwargs.get('client_tag', None)
+        client_comment = kwargs.get('client_comment', None)
+        client_trade_id = kwargs.get('client_trade_id', None)
+
         data = {'trade_id': trade_id, 'client_trade_id': client_trade_id,
-                'stop_loss_pip': stop_loss_pip,
+                'distance': pips,
                 'type': OrderType.TRAILING_STOP_LOSS, 'timeInForce': timeInForce,
                 'trigger_condition': trigger_condition, 'gtd_time': gtd_time,
                 'client_id': client_id, 'client_tag': client_tag, 'client_comment': client_comment}
-        kwargs = self._process_order_paramters(**data)
+        data = self._process_order_paramters(**data)
 
         if order_id:
-            response = self.api.order.trailing_stop_loss_replace(self.account_id, str(order_id), **kwargs)
+            response = self.api.order.trailing_stop_loss_replace(self.account_id, str(order_id), **data)
         else:
-            response = self.api.order.trailing_stop_loss(self.account_id, **kwargs)
+            response = self.api.order.trailing_stop_loss(self.account_id, **data)
 
         transactions = self._process_order_response(response, 'TRAILING_STOP_LOSS', "201")
 
