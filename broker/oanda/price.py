@@ -65,7 +65,7 @@ class PriceMixin(OANDABase, PriceBase):
         if isinstance(fromTime, str):
             fromTime = dateparser.parse(fromTime).strftime('%Y-%m-%dT%H:%M:%S')
         if isinstance(toTime, str):
-            fromTime = dateparser.parse(toTime).strftime('%Y-%m-%dT%H:%M:%S')
+            toTime = dateparser.parse(toTime).strftime('%Y-%m-%dT%H:%M:%S')
 
         response = self.api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
                                                toTime=toTime, price=price_type, smooth=smooth)
