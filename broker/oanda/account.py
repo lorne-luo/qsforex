@@ -25,7 +25,7 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
     broker = 'OANDA'
 
     # all_currencies=['name', 'type', 'displayName', 'pipLocation', 'displayPrecision', 'tradeUnitsPrecision', 'minimumTradeSize', 'maximumTrailingStopDistance', 'minimumTrailingStopDistance', 'maximumPositionSize', 'maximumOrderUnits', 'marginRate', 'commission']
-    default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD', 'USD_CNH', 'XAU_USD']
+    default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD']
 
     def setup_api(self, type, access_token, application_name):
         self.type = type
@@ -42,10 +42,11 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
         Args:
             account: a v20.account.Account fetched from the server
         """
+        super(OANDA, self).__init__(*args, **kwargs)
         self.account_id = account_id
         self.access_token = access_token
         self.setup_api(type, access_token, application_name)
-        super(OANDA, self).__init__(*args, **kwargs)
+        self.default_pairs = ['EUR_USD', 'GBP_USD', 'USD_JPY', 'USD_CHF', 'AUD_USD', 'NZD_USD']
 
         #
         # The collection of Trades open in the Account
@@ -135,7 +136,7 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
         Update the Account state with a set of changes provided by the server.
 
         Args:
-            changes: a v20.account.AccountChanges object representing the 
+            changes: a v20.account.AccountChanges object representing the
                      changes that have been made to the Account
         """
 
@@ -238,7 +239,7 @@ class OANDA(PositionMixin, OrderMixin, TradeMixin, InstrumentMixin, PriceMixin, 
 
     def apply_state(self, state):
         """
-        Update the state of an Account 
+        Update the state of an Account
 
         Args:
             state: A v20.account.AccountState object representing changes to

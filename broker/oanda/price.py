@@ -1,15 +1,15 @@
 import logging
-from decimal import Decimal, ROUND_HALF_UP
-import pandas as pd
+from decimal import Decimal
 
 import dateparser
+import pandas as pd
 
+import settings
 from broker.base import PriceBase
 from broker.oanda.base import OANDABase
-from mt4.constants import pip
+from broker.oanda.common.convertor import get_symbol, get_timeframe_granularity
 from broker.oanda.common.view import price_to_string, heartbeat_to_string
-from broker.oanda.common.convertor import get_symbol, lots_to_units, get_timeframe_granularity
-import settings
+from mt4.constants import pip
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +59,26 @@ class PriceMixin(OANDABase, PriceBase):
         elif type == 'ask':
             return price['ask']
 
-    def get_candle(self, instrument, granularity, count=120, fromTime=None, toTime=None, price_type='M', smooth=False):
+    def get_candle(self, instrument, granularity, count=None, fromTime=None, toTime=None, price_type='M', smooth=False):
         instrument = get_symbol(instrument)
         granularity = get_timeframe_granularity(granularity)
+
         if isinstance(fromTime, str):
             fromTime = dateparser.parse(fromTime).strftime('%Y-%m-%dT%H:%M:%S')
+        elif fromTime:
+            fromTime = fromTime.strftime('%Y-%m-%dT%H:%M:%S')
+
         if isinstance(toTime, str):
             toTime = dateparser.parse(toTime).strftime('%Y-%m-%dT%H:%M:%S')
+        elif toTime:
+            toTime = toTime.strftime('%Y-%m-%dT%H:%M:%S')
 
-        response = self.api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
-                                               toTime=toTime, price=price_type, smooth=smooth)
+        if toTime:
+            response = self.api.instrument.candles(instrument, granularity=granularity, fromTime=fromTime,
+                                                   toTime=toTime, price=price_type, smooth=smooth)
+        else:
+            response = self.api.instrument.candles(instrument, granularity=granularity, count=count, fromTime=fromTime,
+                                                   price=price_type, smooth=smooth)
 
         if response.status != 200:
             logger.error('[GET_Candle]', response, response.body)
