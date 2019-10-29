@@ -20,7 +20,7 @@ logging.getLogger('FXCM').setLevel(logging.WARN)
 
 queue = RedisQueue('FXCM')
 # trade_queue = RedisQueue('Trading')
-pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'XAU/USD']
+pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD', 'NZD/USD']
 
 fxcm = SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_ACCESS_TOKEN)
 
