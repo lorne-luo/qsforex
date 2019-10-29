@@ -93,12 +93,10 @@ class TradeManageHandler(BaseHandler):
 
             self.trades[trade_id] = trade
 
-        system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
-
     def trade_close(self, event):
         trade = self.get_trade(event.trade_id)
         if not trade:
-            logger.error('[Trade_Manage] Trade closed with no data in trade manager.')
+            logger.error('[TRADE_MANAGER] Trade closed with no data in trade manager.')
             return
         # entry accuracy= 1 - min / (max-min)
         # exit accuracy= 1 - profit missed / (max-min)
@@ -124,10 +122,13 @@ class TradeManageHandler(BaseHandler):
         # trade['drawdown'] =
 
         trade['profitable_time'] = round(trade['profitable_seconds'] / (close_time - trade['open_time']).seconds, 3)
-        logger.info('[Trade_Manage] trade closed=%s' % trade)
+        logger.info('[TRADE_MANAGER] trade closed=%s' % trade)
 
         self.close_trade_to_db(event, trade)
-        self.pop_trade(event.trade_id)
+        pop_trade = self.pop_trade(event.trade_id)
+        if not pop_trade:
+            logger.error(f'[TRADE_MANAGER] Managed trade missed before trade actual closed, trade_id={event.trade_id}')
+
         self.saved_to_redis()
         tg.send_me(
             '[FOREX_TRADE_CLOSE_ANALYSIS]\n%s, profit_missed=%s, entry_accuracy=%s, exit_accuracy=%s, risk=%s' % (
@@ -156,7 +157,6 @@ class TradeManageHandler(BaseHandler):
 
             total_profit_seconds = trade['profitable_seconds'] + last_profit_period
             trade['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
-        system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
         self.saved_to_redis()
 
         if not heartbeat_counter % (30 * int(1 / settings.LOOP_SLEEP)):  # 30 secs
@@ -178,21 +178,25 @@ class TradeManageHandler(BaseHandler):
         for trade_id, trade in self.account.get_trades().items():
             if str(trade_id) not in self.trades:
                 self._load_trade(trade_id, trade)
+                logger.error(f'[TRADE_MANAGER] trade open not trigger self.trades update, trade_id={trade_id}.')
 
-        for key in self.trades.keys():
+        key_list = list(self.trades.keys())
+        for key in key_list:
             if int(key) not in self.account.get_trades():
                 self.pop_trade(key)
-                logger.info('[TRADE_MANAGE_ERROR] trade close not trigger redis update.')
-                self.saved_to_redis()
+                logger.error(f'[TRADE_MANAGER] trade close not trigger self.trades update, trade_id={trade_id}.')
+        self.saved_to_redis()
 
     def load_trades(self):
-        logger.info('[Trade_Manage] loading %s trades.' % len(self.account.get_trades()))
+        logger.info('[TRADE_MANAGER] loading %s trades.' % len(self.account.get_trades()))
         if self.account and self.account.broker == 'FXCM':
             for trade_id, trade in self.account.get_trades().items():
                 if str(trade_id) in self.trades:
                     continue
                 self._load_trade(trade_id, trade)
-            for key in self.trades.keys():
+
+            key_list = list(self.trades.keys())
+            for key in key_list:
                 if int(key) not in self.account.get_trades():
                     self.pop_trade(key)
         else:
@@ -216,9 +220,11 @@ class TradeManageHandler(BaseHandler):
                     total_profit_seconds = self.trades[k]['profitable_seconds'] + last_profit_period
                     self.trades[k]['profitable_time'] = round(total_profit_seconds / float(total_time.seconds), 3)
 
-        if settings.DEBUG:
-            if self.trades:
-                print(self.trades)
+        self.saved_to_redis()
+
+        # if settings.DEBUG:
+        #     if self.trades:
+        #         print(self.trades)
 
     def _load_trade(self, trade_id, trade):
         self.trades[str(trade_id)] = {
@@ -302,3 +308,4 @@ class TradeManageHandler(BaseHandler):
                               'profitable_seconds': int(trade['profitable_seconds'])}
 
         system_redis.set(TRADES_KEY, json.dumps(data))
+        system_redis.set(OPENING_TRADE_COUNT_KEY, len(self.trades))
