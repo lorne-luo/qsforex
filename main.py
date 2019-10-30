@@ -27,7 +27,7 @@ fxcm = SingletonFXCM(AccountType.DEMO, settings.FXCM_ACCOUNT_ID, settings.FXCM_A
 timeframe_ticker = TimeFrameTicker(queue, timezone=0)
 heartbeat_handler = HeartBeatHandler(queue)
 price_density = PriceDensityHandler(queue, fxcm, pairs)
-hlhb_trend_strategy = HLHBTrendStrategy(queue, fxcm)
+hlhb_trend_strategy = HLHBTrendStrategy(queue=queue, reader=fxcm)
 fxcm_execution = FXCMExecutionHandler(queue, fxcm)
 trade_manage = TradeManageHandler(queue, fxcm)
 debug = DebugHandler(queue, fxcm)

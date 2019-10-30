@@ -2,13 +2,10 @@ import logging
 
 import talib as ta
 
-from broker.fxcm.constants import get_fxcm_symbol
-from broker.oanda.common.constants import OrderType
 from event.event import SignalEvent, SignalAction, TimeFrameEvent, OrderHoldingEvent, StartUpEvent
-from mt4.constants import PERIOD_H1, OrderSide, PERIOD_M1
+from mt4.constants import PERIOD_H1, OrderSide
 from strategy.base import StrategyBase
 from strategy.helper import check_cross
-from utils.market import is_market_open
 
 logger = logging.getLogger(__name__)
 
@@ -76,13 +73,13 @@ class HLHBTrendStrategy(StrategyBase):
         event = None
         if side == OrderSide.BUY and 70 > rsi[-1] > 50:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
-                                symbol, side,trailing_stop=self.trailing_stop,
-                                take_profit=self.take_profit,stop_loss=self.stop_loss)
+                                symbol, side, trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit, stop_loss=self.stop_loss)
             self.send_event(event)
         elif side == OrderSide.SELL and 50 > rsi[-1] > 30:
             event = SignalEvent(SignalAction.OPEN, self.name, self.version, self.magic_number,
-                                symbol,  side,trailing_stop=self.trailing_stop,
-                                take_profit=self.take_profit,stop_loss=self.stop_loss)
+                                symbol, side, trailing_stop=self.trailing_stop,
+                                take_profit=self.take_profit, stop_loss=self.stop_loss)
             self.send_event(event)
         if event:
             logger.info('[ORDER_%s] %s@%s %s, param=%0.5f, %0.5f, %0.2f, %0.2f' % (

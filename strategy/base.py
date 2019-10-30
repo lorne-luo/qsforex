@@ -1,8 +1,10 @@
+import logging
 from datetime import datetime
 
 from event.event import TimeFrameEvent, OrderHoldingEvent, StartUpEvent
 from event.handler import QueueBase, BaseHandler
-from utils.market import is_market_open
+
+logger = logging.getLogger(__name__)
 
 
 class StrategyBase(BaseHandler, QueueBase):
@@ -34,7 +36,10 @@ class StrategyBase(BaseHandler, QueueBase):
 
     def signal(self):
         for symbol in self.pairs:
-            self.signal_pair(symbol)
+            try:
+                self.signal_pair(symbol)
+            except Exception as ex:
+                logger.error(f'[STRATEGY_SIGNAL] {symbol}={ex}')
 
     def signal_pair(self, symbol):
         raise NotImplementedError
