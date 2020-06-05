@@ -29,7 +29,7 @@ pyllist==0.3
 environs==4.1.0
 graphviz==0.10.1
 git+https://github.com/Telstra/MessagingAPI-SDK-python.git
-Django==2.2.5
+Django==2.2.13
 mysqlclient==1.4.2.post1
 psycopg2-binary==2.7.5
 plotly==3.7.1
