@@ -12,7 +12,7 @@ scikit-learn==0.20.3
 scipy==1.2.1
 seaborn==0.9.0
 six==1.11.0
-urllib3==1.25.6
+urllib3==1.25.8
 v20==3.0.25.0
 oandapyV20==0.6.3
 pyyaml==4.2b1
