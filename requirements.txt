@@ -18,7 +18,7 @@ oandapyV20==0.6.3
 pyyaml==4.2b1
 tabulate==0.8.2
 requests==2.20.0
-ujson==1.35
+ujson==5.4.0
 dateparser==0.7.1
 fxcmpy==1.2.5
 socketIO-client
